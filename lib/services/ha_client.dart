@@ -83,19 +83,89 @@ class HaWarning {
   final String? icon;
 }
 
+/// A running appliance (dishwasher, washer, dryer, vacuum) from the
+/// `laufend` attribute of [warningsEntityId].
+class RunningDevice {
+  const RunningDevice({
+    required this.name,
+    this.icon,
+    this.end,
+    this.start,
+    this.progress,
+  });
+
+  final String name;
+  final String? icon;
+  final DateTime? end;
+  final DateTime? start;
+
+  /// 0..100 as the device reports it.
+  final double? progress;
+
+  /// From [end], or estimated from [start] and [progress] - e.g. the
+  /// Roborock only reports how far it is.
+  Duration? remaining(DateTime now) {
+    if (end case final end?) {
+      final left = end.difference(now);
+      return left.isNegative ? Duration.zero : left;
+    }
+    final progress = this.progress;
+    final start = this.start;
+    if (progress == null || start == null || progress <= 0) return null;
+    final elapsed = now.difference(start);
+    return elapsed * ((100 - progress.clamp(0, 100)) / progress);
+  }
+
+  /// 0..1 for the bar: as reported, or from [start] and [end].
+  double? fraction(DateTime now) {
+    if (progress case final progress?) return (progress / 100).clamp(0, 1);
+    final start = this.start;
+    final end = this.end;
+    if (start == null || end == null || !end.isAfter(start)) return null;
+    return (now.difference(start).inSeconds / end.difference(start).inSeconds)
+        .clamp(0, 1);
+  }
+}
+
 /// What the overlay shows.
 class HaSnapshot {
   const HaSnapshot({
     this.weather,
     this.tomorrow,
     this.warnings = const [],
+    this.running = const [],
     this.isTokenInvalid = false,
   });
 
   final WeatherNow? weather;
   final WeatherDay? tomorrow;
   final List<HaWarning> warnings;
+  final List<RunningDevice> running;
   final bool isTokenInvalid;
+}
+
+/// Reads the `laufend` attribute of [warningsEntityId].
+List<RunningDevice> parseRunning(HaEntity? entity) {
+  final list = entity?.attributes['laufend'];
+  if (list is! List) return const [];
+  DateTime? time(Object? value) =>
+      value is String ? DateTime.tryParse(value)?.toLocal() : null;
+  double? number(Object? value) => switch (value) {
+    final num value => value.toDouble(),
+    final String value => double.tryParse(value),
+    _ => null,
+  };
+  return [
+    for (final entry in list.whereType<Map<String, dynamic>>())
+      if (entry['name'] is String)
+        RunningDevice(
+          name: entry['name'] as String,
+          icon: entry['icon'] as String?,
+          end: time(entry['ende']),
+          start: time(entry['start']),
+          progress: number(entry['fortschritt']),
+        ),
+  ];
 }
 
 WeatherNow? parseWeather(HaEntity? entity) {
@@ -245,6 +315,7 @@ class HaClient {
     weather: parseWeather(_store.entities[weatherEntityId]),
     tomorrow: parseTomorrow(_forecast, DateTime.now()),
     warnings: parseWarnings(_store.entities[warningsEntityId]),
+    running: parseRunning(_store.entities[warningsEntityId]),
   );
 
   void _send(Map<String, Object> message) => _socket?.add(jsonEncode(message));

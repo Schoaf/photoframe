@@ -73,5 +73,7 @@
   "updateInstalling": "Installing the update – the app restarts in a moment.",
   "updateFailed": "Update failed: {message}",
   "updateRepo": "GitHub repository",
-  "githubToken": "GitHub token (private repository only)"
+  "githubToken": "GitHub token (private repository only)",
+  "remainingMinutes": "{minutes} min left",
+  "remainingHours": "{time} h left"
 }

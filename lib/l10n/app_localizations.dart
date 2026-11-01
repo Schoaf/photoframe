@@ -541,6 +541,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'GitHub-Token (nur bei privatem Repository)'**
   String get githubToken;
+
+  /// No description provided for @remainingMinutes.
+  ///
+  /// In de, this message translates to:
+  /// **'noch {minutes} min'**
+  String remainingMinutes(int minutes);
+
+  /// No description provided for @remainingHours.
+  ///
+  /// In de, this message translates to:
+  /// **'noch {time} h'**
+  String remainingHours(String time);
 }
 
 class _AppLocalizationsDelegate

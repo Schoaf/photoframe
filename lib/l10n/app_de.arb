@@ -146,5 +146,21 @@
     }
   },
   "updateRepo": "GitHub-Repository",
-  "githubToken": "GitHub-Token (nur bei privatem Repository)"
+  "githubToken": "GitHub-Token (nur bei privatem Repository)",
+  "remainingMinutes": "noch {minutes} min",
+  "@remainingMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "remainingHours": "noch {time} h",
+  "@remainingHours": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

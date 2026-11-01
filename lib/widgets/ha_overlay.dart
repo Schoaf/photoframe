@@ -175,7 +175,78 @@ class _InfoPanel extends StatelessWidget {
               ),
             ],
           ),
+        for (final device in info.running) ...[
+          const SizedBox(height: 12),
+          _RunningTile(device: device, now: now),
+        ],
       ],
+    );
+  }
+}
+
+/// "Waschmaschine · noch 42 min" with a bar filling up to 100 %.
+class _RunningTile extends StatelessWidget {
+  const _RunningTile({required this.device, required this.now});
+
+  final RunningDevice device;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final remaining = device.remaining(now);
+    final fraction = device.fraction(now);
+    final minutes = remaining == null
+        ? null
+        : (remaining.inSeconds / 60).ceil();
+    return Container(
+      width: AppSizes.runningTileWidth,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: const Color(0x99000000),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Row(
+            spacing: 12,
+            children: [
+              Icon(warningIcon(device.icon), size: 28, color: Colors.white),
+              Expanded(
+                child: Text(
+                  device.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              ),
+              if (minutes != null)
+                Text(
+                  minutes < 60
+                      ? l10n.remainingMinutes(minutes)
+                      : l10n.remainingHours(
+                          '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
+                        ),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
+          ),
+          if (fraction != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: fraction,
+                minHeight: 8,
+                backgroundColor: const Color(0x33FFFFFF),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -265,4 +265,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get githubToken => 'GitHub-Token (nur bei privatem Repository)';
+
+  @override
+  String remainingMinutes(int minutes) {
+    return 'noch $minutes min';
+  }
+
+  @override
+  String remainingHours(String time) {
+    return 'noch $time h';
+  }
 }

@@ -113,4 +113,53 @@ void main() {
     expect(dismissed.visible([robot]), [robot]);
     expect(dismissed.visible([washer, robot]), [washer, robot]);
   });
+
+  group('running devices', () {
+    final now = DateTime(2026, 11, 1, 12);
+
+    test('reads the laufend attribute', () {
+      final running = parseRunning(
+        HaEntity('0', {
+          'laufend': [
+            {
+              'name': 'Waschmaschine',
+              'icon': 'mdi:washing-machine',
+              'ende': now
+                  .add(const Duration(minutes: 42))
+                  .toUtc()
+                  .toIso8601String(),
+              'fortschritt': '58',
+            },
+            {'name': 'Roborock', 'start': null, 'fortschritt': 40},
+            {'ende': 'ohne Namen'},
+          ],
+        }),
+      );
+      expect(running.map((device) => device.name), [
+        'Waschmaschine',
+        'Roborock',
+      ]);
+      expect(running.first.remaining(now), const Duration(minutes: 42));
+      expect(running.first.fraction(now), closeTo(0.58, 0.001));
+      expect(parseRunning(null), isEmpty);
+    });
+
+    test('estimates the remaining time from start and progress', () {
+      final roborock = RunningDevice(
+        name: 'Roborock',
+        start: now.subtract(const Duration(minutes: 20)),
+        progress: 40,
+      );
+      expect(roborock.remaining(now), const Duration(minutes: 30));
+    });
+
+    test('derives the bar from start and end without progress', () {
+      final dryer = RunningDevice(
+        name: 'Trockner',
+        start: now.subtract(const Duration(minutes: 30)),
+        end: now.add(const Duration(minutes: 90)),
+      );
+      expect(dryer.fraction(now), closeTo(0.25, 0.001));
+    });
+  });
 }

@@ -3,7 +3,7 @@
 Kiosk app for a wall tablet. It combines a photo frame with a Home Assistant dashboard:
 
 - **Photo frame (resting state):** a full-screen slideshow of a Synology Photos album. You can swipe between photos, and a gallery lets you pick one. Videos play muted, and a sound button appears when you touch the screen.
-- **Overlay from Home Assistant:** clock and weather (now and tomorrow) sit in the top right. Notices that anyone in the family can deal with, such as "Waschmaschine ist fertig", appear at the bottom.
+- **Overlay from Home Assistant:** clock, weather (now and tomorrow) and running appliances with remaining time and a progress bar sit in the top right. Notices that anyone in the family can deal with, such as "Waschmaschine ist fertig", appear at the bottom.
 - **Dashboard on tap:** tapping the weather or a notice brings the dashboard up, full screen with no header or sidebar. After a while untouched (default 2 min) the photos come back.
 
 Home Assistant controls the tablet over MQTT: screen on/off, mode, brightness, next photo and reload.
@@ -119,7 +119,7 @@ automation:
 - **Weather:** the app reads the weather entity from the settings (default `weather.forecast_home`), including its daily forecast for tomorrow.
 - **Notices:** you choose in HA which ones appear. The tablet only reads one template sensor, so labels are evaluated in HA and the tablet's token needs no admin rights.
 
-**1. Template sensor** (in `configuration.yaml`):
+**1. Template sensor** (in `configuration.yaml`). It provides the notices (`warnungen`) and the running appliances (`laufend`). Adjust the entity names to your appliances:
 
 ```yaml
 template:
@@ -135,7 +135,31 @@ template:
               {% set ns.items = ns.items + [{'id': id, 'name': state_attr(id, 'friendly_name'), 'icon': state_attr(id, 'icon')}] %}
             {% endfor %}
             {{ ns.items }}
+          laufend: >
+            {% set ns = namespace(items=[]) %}
+            {% set geraete = [
+              ['Geschirrspüler', 'mdi:dishwasher', 'sensor.geschirrspuler_programm_endzeit', 'sensor.geschirrspuler_programm_fortschritt'],
+              ['Waschmaschine', 'mdi:washing-machine', 'sensor.waschmaschine_programm_endzeit', 'sensor.waschmaschine_programm_fortschritt'],
+              ['Trockner', 'mdi:tumble-dryer', 'sensor.dryer_expected_end', 'sensor.dryer_progress'],
+            ] %}
+            {% for name, icon, ende, fortschritt in geraete %}
+              {% if has_value(ende) and as_datetime(states(ende)) > now() %}
+                {% set ns.items = ns.items + [{'name': name, 'icon': icon, 'ende': states(ende), 'fortschritt': states(fortschritt) | float(none)}] %}
+              {% endif %}
+            {% endfor %}
+            {% if is_state('binary_sensor.roborock_qrevo_s5v_reinigen', 'on') %}
+              {% set ns.items = ns.items + [{'name': 'Roborock', 'icon': 'mdi:robot-vacuum',
+                'start': (now() - timedelta(minutes=states('sensor.roborock_qrevo_s5v_reinigungszeit') | float(0))).isoformat(),
+                'fortschritt': states('sensor.roborock_qrevo_s5v_reinigungsfortschritt') | float(none)}] %}
+            {% endif %}
+            {{ ns.items }}
 ```
+
+**Running appliances:**
+
+- They show below the weather with their remaining time and a bar from 0 to 100 %.
+- `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
+- An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
 
 **2. Mark notices:**
 
