@@ -29,7 +29,7 @@
   "endKioskHint": "Bis zum nächsten Start der App",
   "deviceOwnerMissing": "Kein Device Owner – eingeschränkter Kiosk",
   "deviceOwnerActive": "Kiosk-Modus aktiv",
-  "synologyLoginFailed": "Anmeldung fehlgeschlagen (Fehler {code}). Benutzer ohne 2-Faktor-Anmeldung verwenden.",
+  "synologyLoginFailed": "Anmeldung fehlgeschlagen (Fehler {code}).",
   "@synologyLoginFailed": {
     "placeholders": {
       "code": {
@@ -117,5 +117,8 @@
   "sectionHaInfo": "Wetter und Hinweise aus Home Assistant",
   "haToken": "Token des Tablet-Benutzers",
   "weatherEntity": "Wetter-Entität",
-  "haInfoHint": "Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README)."
+  "haInfoHint": "Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).",
+  "synologyWrongPassword": "Benutzer oder Passwort falsch.",
+  "synologyNoPermission": "Keine Berechtigung (Fehler 402). Der Benutzer braucht Zugriff auf Synology Photos.",
+  "synologyTwoFactor": "Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden."
 }

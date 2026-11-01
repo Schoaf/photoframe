@@ -61,15 +61,20 @@ class PhotoAlbum {
     required this.id,
     required this.name,
     required this.itemCount,
+    this.passphrase = '',
   });
 
   final int id;
   final String name;
   final int itemCount;
 
+  /// Set when someone else shared the album with the user.
+  final String passphrase;
+
   factory PhotoAlbum.fromJson(Map<String, dynamic> json) => PhotoAlbum(
     id: json['id'] as int,
     name: json['name'] as String? ?? '',
     itemCount: json['item_count'] as int? ?? 0,
+    passphrase: json['passphrase'] as String? ?? '',
   );
 }

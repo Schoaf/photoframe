@@ -13,6 +13,7 @@ class Settings {
     this.synologyPassword = '',
     this.albumId,
     this.albumName = '',
+    this.albumPassphrase = '',
     this.mqttHost = '',
     this.mqttPort = 1883,
     this.mqttUser = '',
@@ -34,6 +35,9 @@ class Settings {
   final String synologyPassword;
   final int? albumId;
   final String albumName;
+
+  /// Set when the album was shared with the user by someone else.
+  final String albumPassphrase;
   final String mqttHost;
   final int mqttPort;
   final String mqttUser;
@@ -52,6 +56,7 @@ class Settings {
 
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
+
   final int slideSeconds;
   final bool isShuffled;
   final DisplayMode startMode;
@@ -76,6 +81,7 @@ class Settings {
     String? synologyPassword,
     int? albumId,
     String? albumName,
+    String? albumPassphrase,
     String? mqttHost,
     int? mqttPort,
     String? mqttUser,
@@ -96,6 +102,7 @@ class Settings {
     synologyPassword: synologyPassword ?? this.synologyPassword,
     albumId: albumId ?? this.albumId,
     albumName: albumName ?? this.albumName,
+    albumPassphrase: albumPassphrase ?? this.albumPassphrase,
     mqttHost: mqttHost ?? this.mqttHost,
     mqttPort: mqttPort ?? this.mqttPort,
     mqttUser: mqttUser ?? this.mqttUser,
@@ -129,6 +136,7 @@ Future<Settings> loadSettings() async {
     synologyPassword: secrets[_kSynologyPassword] ?? '',
     albumId: prefs.getInt('album_id'),
     albumName: prefs.getString('album_name') ?? '',
+    albumPassphrase: prefs.getString('album_passphrase') ?? '',
     mqttHost: prefs.getString('mqtt_host') ?? '',
     mqttPort: prefs.getInt('mqtt_port') ?? 1883,
     mqttUser: prefs.getString('mqtt_user') ?? '',
@@ -157,6 +165,7 @@ Future<void> saveSettings(Settings settings) async {
     await prefs.setInt('album_id', albumId);
   }
   await prefs.setString('album_name', settings.albumName);
+  await prefs.setString('album_passphrase', settings.albumPassphrase);
   await prefs.setString('mqtt_host', settings.mqttHost);
   await prefs.setInt('mqtt_port', settings.mqttPort);
   await prefs.setString('mqtt_user', settings.mqttUser);

@@ -15,6 +15,7 @@ final synologyClientProvider = Provider<SynologyPhotosClient>((ref) {
     baseUrl: settings.synologyUrl,
     user: settings.synologyUser,
     password: settings.synologyPassword,
+    passphrase: settings.albumPassphrase,
   );
 });
 

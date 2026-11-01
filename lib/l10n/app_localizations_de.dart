@@ -87,7 +87,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String synologyLoginFailed(int code) {
-    return 'Anmeldung fehlgeschlagen (Fehler $code). Benutzer ohne 2-Faktor-Anmeldung verwenden.';
+    return 'Anmeldung fehlgeschlagen (Fehler $code).';
   }
 
   @override
@@ -212,4 +212,15 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get haInfoHint =>
       'Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).';
+
+  @override
+  String get synologyWrongPassword => 'Benutzer oder Passwort falsch.';
+
+  @override
+  String get synologyNoPermission =>
+      'Keine Berechtigung (Fehler 402). Der Benutzer braucht Zugriff auf Synology Photos.';
+
+  @override
+  String get synologyTwoFactor =>
+      'Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.';
 }

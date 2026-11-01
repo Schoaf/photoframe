@@ -6,7 +6,8 @@ import '../models/photo_item.dart';
 import '../services/synology_photos_client.dart';
 import '../state/settings.dart';
 
-const _defaultAlbumName = 'FotoFrame';
+/// Preselected when found (or when there is just one album).
+const _defaultAlbumNames = {'fotoframe', 'fotorahmen', 'photo frame'};
 
 /// All settings on one scrolling page - used on first start and in the
 /// menu.
@@ -77,22 +78,26 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
         _albums = albums;
         if (_settings.albumId == null ||
             !albums.any((album) => album.id == _settings.albumId)) {
-          final preferred = albums
-              .where((album) => album.name == _defaultAlbumName)
-              .firstOrNull;
-          if (preferred != null) {
-            _settings = _settings.copyWith(
-              albumId: preferred.id,
-              albumName: preferred.name,
-            );
-          }
+          final preferred = albums.length == 1
+              ? albums.single
+              : albums
+                    .where(
+                      (album) =>
+                          _defaultAlbumNames.contains(album.name.toLowerCase()),
+                    )
+                    .firstOrNull;
+          if (preferred != null) _selectAlbum(preferred);
         }
       });
     } on SynologyException catch (e) {
       setState(
-        () => _albumError = e.isLoginError
-            ? l10n.synologyLoginFailed(e.code)
-            : l10n.synologyError(e.code),
+        () => _albumError = switch (e) {
+          _ when e.isWrongPassword => l10n.synologyWrongPassword,
+          _ when e.isPermissionDenied => l10n.synologyNoPermission,
+          _ when e.isTwoFactorRequired => l10n.synologyTwoFactor,
+          _ when e.isLoginError => l10n.synologyLoginFailed(e.code),
+          _ => l10n.synologyError(e.code),
+        },
       );
     } on Exception catch (e) {
       setState(() => _albumError = l10n.connectionFailed('$e'));
@@ -100,6 +105,12 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       if (mounted) setState(() => _isLoadingAlbums = false);
     }
   }
+
+  void _selectAlbum(PhotoAlbum album) => _settings = _settings.copyWith(
+    albumId: album.id,
+    albumName: album.name,
+    albumPassphrase: album.passphrase,
+  );
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -262,11 +273,8 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
                         ),
                     ],
                     onChanged: (id) => setState(
-                      () => _settings = _settings.copyWith(
-                        albumId: id,
-                        albumName: albums
-                            .firstWhere((album) => album.id == id)
-                            .name,
+                      () => _selectAlbum(
+                        albums.firstWhere((album) => album.id == id),
                       ),
                     ),
                   ),

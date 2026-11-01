@@ -22,7 +22,7 @@
   "endKioskHint": "Until the app starts again",
   "deviceOwnerMissing": "Not device owner – limited kiosk",
   "deviceOwnerActive": "Kiosk mode active",
-  "synologyLoginFailed": "Login failed (error {code}). Use a user without 2-factor sign-in.",
+  "synologyLoginFailed": "Login failed (error {code}).",
   "synologyError": "Synology error {code}",
   "connectionFailed": "Connection failed: {message}",
   "settingsSaved": "Settings saved",
@@ -58,5 +58,8 @@
   "sectionHaInfo": "Weather and notices from Home Assistant",
   "haToken": "Token of the tablet user",
   "weatherEntity": "Weather entity",
-  "haInfoHint": "Create a separate HA user \"Tablet\" without admin rights, create a long-lived token under Profile → Security, and sign in to the dashboard with this user too. Notices come from the sensor sensor.tablet_warnungen (see README)."
+  "haInfoHint": "Create a separate HA user \"Tablet\" without admin rights, create a long-lived token under Profile → Security, and sign in to the dashboard with this user too. Notices come from the sensor sensor.tablet_warnungen (see README).",
+  "synologyWrongPassword": "Wrong user or password.",
+  "synologyNoPermission": "No permission (error 402). The user needs access to Synology Photos.",
+  "synologyTwoFactor": "The user requires 2-factor sign-in. Use a user without 2-factor."
 }

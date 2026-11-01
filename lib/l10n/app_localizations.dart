@@ -233,7 +233,7 @@ abstract class AppLocalizations {
   /// No description provided for @synologyLoginFailed.
   ///
   /// In de, this message translates to:
-  /// **'Anmeldung fehlgeschlagen (Fehler {code}). Benutzer ohne 2-Faktor-Anmeldung verwenden.'**
+  /// **'Anmeldung fehlgeschlagen (Fehler {code}).'**
   String synologyLoginFailed(int code);
 
   /// No description provided for @synologyError.
@@ -451,6 +451,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).'**
   String get haInfoHint;
+
+  /// No description provided for @synologyWrongPassword.
+  ///
+  /// In de, this message translates to:
+  /// **'Benutzer oder Passwort falsch.'**
+  String get synologyWrongPassword;
+
+  /// No description provided for @synologyNoPermission.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Berechtigung (Fehler 402). Der Benutzer braucht Zugriff auf Synology Photos.'**
+  String get synologyNoPermission;
+
+  /// No description provided for @synologyTwoFactor.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.'**
+  String get synologyTwoFactor;
 }
 
 class _AppLocalizationsDelegate

@@ -53,11 +53,9 @@ void main() {
         'homeassistant/button/ha_display_abc123/reload/config',
       ]),
     );
-    final mode =
-        jsonDecode(
-              configs['homeassistant/select/ha_display_abc123/mode/config']!,
-            )
-            as Map<String, dynamic>;
+    final mode = jsonDecode(
+      configs['homeassistant/select/ha_display_abc123/mode/config']!,
+    ) as Map<String, dynamic>;
     expect(mode['options'], ['photos', 'dashboard']);
     expect(mode['command_topic'], 'ha_display/abc123/mode/set');
     expect(mode['availability_topic'], 'ha_display/abc123/availability');

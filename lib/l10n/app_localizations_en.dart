@@ -86,7 +86,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String synologyLoginFailed(int code) {
-    return 'Login failed (error $code). Use a user without 2-factor sign-in.';
+    return 'Login failed (error $code).';
   }
 
   @override
@@ -211,4 +211,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get haInfoHint =>
       'Create a separate HA user \"Tablet\" without admin rights, create a long-lived token under Profile → Security, and sign in to the dashboard with this user too. Notices come from the sensor sensor.tablet_warnungen (see README).';
+
+  @override
+  String get synologyWrongPassword => 'Wrong user or password.';
+
+  @override
+  String get synologyNoPermission =>
+      'No permission (error 402). The user needs access to Synology Photos.';
+
+  @override
+  String get synologyTwoFactor =>
+      'The user requires 2-factor sign-in. Use a user without 2-factor.';
 }

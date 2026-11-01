@@ -12,8 +12,18 @@ class SynologyException implements Exception {
 
   final int code;
 
-  /// 400 wrong password, 403/406 2FA required, 407 blocked IP.
-  bool get isLoginError => code >= 400 && code < 410;
+  /// No such user or wrong password.
+  bool get isWrongPassword => code == 400;
+
+  /// The user may not use this login - e.g. no DSM permission on the
+  /// general web API.
+  bool get isPermissionDenied => code == 402;
+
+  /// 2-factor sign-in required (403, 406) or failed (404).
+  bool get isTwoFactorRequired => code == 403 || code == 404 || code == 406;
+
+  /// Disabled account, blocked IP, expired password, ...
+  bool get isLoginError => code >= 400 && code < 411;
 
   @override
   String toString() => 'Synology error $code';
@@ -27,6 +37,7 @@ class SynologyPhotosClient {
     required String baseUrl,
     required this.user,
     required this.password,
+    this.passphrase = '',
     Dio? dio,
   }) : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), ''),
        _dio = dio ?? Dio();
@@ -35,6 +46,10 @@ class SynologyPhotosClient {
   final String baseUrl;
   final String user;
   final String password;
+
+  /// Set for an album someone else shared with [user]: its items and
+  /// thumbnails are only reachable with the album's passphrase.
+  final String passphrase;
   final Dio _dio;
   String? _sid;
 
@@ -47,18 +62,29 @@ class SynologyPhotosClient {
       'method': 'login',
       'account': user,
       'passwd': password,
-      'session': 'SynologyPhotos',
+      // DSM checks the permission of the app the session is named after:
+      // "webui" only needs the DSM permission, other names (e.g.
+      // "SynologyPhotos") fail with 402 for users that aren't admins.
+      'session': 'webui',
       'format': 'sid',
     }, isAuthenticated: false);
     _sid = data['sid'] as String;
   }
 
+  /// The user's own albums and the ones shared with them.
   Future<List<PhotoAlbum>> listAlbums() async {
     final albums = <PhotoAlbum>[];
     await _paginate({
       'api': 'SYNO.Foto.Browse.Album',
       'version': '2',
       'method': 'list',
+      // An own album may carry a passphrase too (shared by link), but
+      // doesn't need it.
+    }, (json) => albums.add(PhotoAlbum.fromJson({...json, 'passphrase': ''})));
+    await _paginate({
+      'api': 'SYNO.Foto.Sharing.Misc',
+      'version': '1',
+      'method': 'list_shared_with_me_album',
     }, (json) => albums.add(PhotoAlbum.fromJson(json)));
     return albums;
   }
@@ -69,7 +95,9 @@ class SynologyPhotosClient {
       'api': 'SYNO.Foto.Browse.Item',
       'version': '1',
       'method': 'list',
-      'album_id': '$albumId',
+      // A shared album answers 609 to its id - only the passphrase works.
+      if (passphrase.isEmpty) 'album_id': '$albumId',
+      if (passphrase.isNotEmpty) 'passphrase': passphrase,
       'sort_by': 'takentime',
       'sort_direction': 'asc',
       'additional': jsonEncode([
@@ -112,10 +140,15 @@ class SynologyPhotosClient {
     'unit_id': '[${item.id}]',
   });
 
-  String _url(Map<String, String> params) =>
-      Uri.parse(_endpoint)
-          .replace(queryParameters: {...params, '_sid': ?_sid})
-          .toString();
+  String _url(Map<String, String> params) => Uri.parse(_endpoint)
+      .replace(
+        queryParameters: {
+          ...params,
+          if (passphrase.isNotEmpty) 'passphrase': passphrase,
+          '_sid': ?_sid,
+        },
+      )
+      .toString();
 
   Future<void> _paginate(
     Map<String, String> params,
