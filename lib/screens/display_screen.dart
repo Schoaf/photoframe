@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../state/display_state.dart';
 import '../state/mqtt.dart';
 import '../state/settings.dart';
+import '../state/updates.dart';
 import '../utils/tap_sequence.dart';
 import '../widgets/pin_dialog.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -85,6 +86,7 @@ class _DisplayScreenState extends ConsumerState<DisplayScreen>
   Widget build(BuildContext context) {
     // Keeps the MQTT connection alive as long as the display exists.
     ref.watch(mqttBridgeProvider);
+    ref.watch(autoUpdateProvider);
     ref.listen(
       displayProvider.select((display) => display.mode),
       (_, _) => _resetIdleTimer(),

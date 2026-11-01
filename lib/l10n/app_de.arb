@@ -123,5 +123,28 @@
   "synologyTwoFactor": "Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.",
   "scanQr": "QR-Code scannen",
   "scanQrHint": "QR-Code vor die Kamera halten",
-  "switchCamera": "Kamera wechseln"
+  "switchCamera": "Kamera wechseln",
+  "sectionUpdates": "App-Updates",
+  "updateHint": "Die App sucht beim Start und einmal täglich nach einem neueren GitHub-Release und installiert es selbst. Für ein privates Repository ein Fine-grained Token mit Lesezugriff nur auf dieses Repository verwenden (Contents: Read).",
+  "checkForUpdates": "Nach Updates suchen",
+  "installedVersion": "Installiert: Version {code}",
+  "@installedVersion": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "updateUpToDate": "Die App ist aktuell.",
+  "updateInstalling": "Update wird installiert – die App startet gleich neu.",
+  "updateFailed": "Update fehlgeschlagen: {message}",
+  "@updateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "updateRepo": "GitHub-Repository",
+  "githubToken": "GitHub-Token (nur bei privatem Repository)"
 }

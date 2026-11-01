@@ -232,4 +232,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get switchCamera => 'Kamera wechseln';
+
+  @override
+  String get sectionUpdates => 'App-Updates';
+
+  @override
+  String get updateHint =>
+      'Die App sucht beim Start und einmal täglich nach einem neueren GitHub-Release und installiert es selbst. Für ein privates Repository ein Fine-grained Token mit Lesezugriff nur auf dieses Repository verwenden (Contents: Read).';
+
+  @override
+  String get checkForUpdates => 'Nach Updates suchen';
+
+  @override
+  String installedVersion(int code) {
+    return 'Installiert: Version $code';
+  }
+
+  @override
+  String get updateUpToDate => 'Die App ist aktuell.';
+
+  @override
+  String get updateInstalling =>
+      'Update wird installiert – die App startet gleich neu.';
+
+  @override
+  String updateFailed(String message) {
+    return 'Update fehlgeschlagen: $message';
+  }
+
+  @override
+  String get updateRepo => 'GitHub-Repository';
+
+  @override
+  String get githubToken => 'GitHub-Token (nur bei privatem Repository)';
 }

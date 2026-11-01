@@ -38,6 +38,11 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
             "screenOn" -> { screenOn(); result.success(null) }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
             "isDeviceOwner" -> result.success(isDeviceOwner)
+            "versionCode" -> result.success(AppUpdater.versionCode(activity))
+            "installUpdate" -> {
+                AppUpdater.install(activity, java.io.File(call.argument<String>("path")!!))
+                result.success(null)
+            }
             "removeDeviceOwner" -> { removeDeviceOwner(); result.success(null) }
             else -> result.notImplemented()
         }

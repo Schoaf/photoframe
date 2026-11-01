@@ -487,6 +487,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Kamera wechseln'**
   String get switchCamera;
+
+  /// No description provided for @sectionUpdates.
+  ///
+  /// In de, this message translates to:
+  /// **'App-Updates'**
+  String get sectionUpdates;
+
+  /// No description provided for @updateHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Die App sucht beim Start und einmal täglich nach einem neueren GitHub-Release und installiert es selbst. Für ein privates Repository ein Fine-grained Token mit Lesezugriff nur auf dieses Repository verwenden (Contents: Read).'**
+  String get updateHint;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Updates suchen'**
+  String get checkForUpdates;
+
+  /// No description provided for @installedVersion.
+  ///
+  /// In de, this message translates to:
+  /// **'Installiert: Version {code}'**
+  String installedVersion(int code);
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In de, this message translates to:
+  /// **'Die App ist aktuell.'**
+  String get updateUpToDate;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In de, this message translates to:
+  /// **'Update wird installiert – die App startet gleich neu.'**
+  String get updateInstalling;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Update fehlgeschlagen: {message}'**
+  String updateFailed(String message);
+
+  /// No description provided for @updateRepo.
+  ///
+  /// In de, this message translates to:
+  /// **'GitHub-Repository'**
+  String get updateRepo;
+
+  /// No description provided for @githubToken.
+  ///
+  /// In de, this message translates to:
+  /// **'GitHub-Token (nur bei privatem Repository)'**
+  String get githubToken;
 }
 
 class _AppLocalizationsDelegate

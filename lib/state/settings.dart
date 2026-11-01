@@ -23,6 +23,8 @@ class Settings {
     this.haToken = '',
     this.weatherEntityId = 'weather.forecast_home',
     this.idleSeconds = 120,
+    this.updateRepo = 'Schoaf/ha-display',
+    this.githubToken = '',
     this.slideSeconds = 15,
     this.isShuffled = true,
     this.startMode = DisplayMode.photos,
@@ -57,6 +59,11 @@ class Settings {
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
 
+  /// GitHub repo (`owner/name`) whose releases carry app updates.
+  final String updateRepo;
+
+  /// Read-only token for [updateRepo] while it is private.
+  final String githubToken;
   final int slideSeconds;
   final bool isShuffled;
   final DisplayMode startMode;
@@ -91,6 +98,8 @@ class Settings {
     String? haToken,
     String? weatherEntityId,
     int? idleSeconds,
+    String? updateRepo,
+    String? githubToken,
     int? slideSeconds,
     bool? isShuffled,
     DisplayMode? startMode,
@@ -112,6 +121,8 @@ class Settings {
     haToken: haToken ?? this.haToken,
     weatherEntityId: weatherEntityId ?? this.weatherEntityId,
     idleSeconds: idleSeconds ?? this.idleSeconds,
+    updateRepo: updateRepo ?? this.updateRepo,
+    githubToken: githubToken ?? this.githubToken,
     slideSeconds: slideSeconds ?? this.slideSeconds,
     isShuffled: isShuffled ?? this.isShuffled,
     startMode: startMode ?? this.startMode,
@@ -126,6 +137,7 @@ const _kSynologyPassword = 'synology_password';
 const _kMqttPassword = 'mqtt_password';
 const _kPin = 'pin';
 const _kHaToken = 'ha_token';
+const _kGithubToken = 'github_token';
 
 Future<Settings> loadSettings() async {
   final prefs = await SharedPreferences.getInstance();
@@ -147,6 +159,8 @@ Future<Settings> loadSettings() async {
     weatherEntityId:
         prefs.getString('weather_entity_id') ?? 'weather.forecast_home',
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
+    updateRepo: prefs.getString('update_repo') ?? 'Schoaf/ha-display',
+    githubToken: secrets[_kGithubToken] ?? '',
     slideSeconds: prefs.getInt('slide_seconds') ?? 15,
     isShuffled: prefs.getBool('is_shuffled') ?? true,
     startMode:
@@ -173,6 +187,7 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setString('dashboard_url', settings.dashboardUrl);
   await prefs.setString('weather_entity_id', settings.weatherEntityId);
   await prefs.setInt('idle_seconds', settings.idleSeconds);
+  await prefs.setString('update_repo', settings.updateRepo);
   await prefs.setInt('slide_seconds', settings.slideSeconds);
   await prefs.setBool('is_shuffled', settings.isShuffled);
   await prefs.setString('start_mode', settings.startMode.name);
@@ -188,6 +203,7 @@ Future<void> saveSettings(Settings settings) async {
   await _secureStorage.write(key: _kMqttPassword, value: settings.mqttPassword);
   await _secureStorage.write(key: _kPin, value: settings.pin);
   await _secureStorage.write(key: _kHaToken, value: settings.haToken);
+  await _secureStorage.write(key: _kGithubToken, value: settings.githubToken);
 }
 
 /// Loaded once in `main()` (Notifier.build() can't be async) and injected

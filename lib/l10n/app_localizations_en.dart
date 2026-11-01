@@ -231,4 +231,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get switchCamera => 'Switch camera';
+
+  @override
+  String get sectionUpdates => 'App updates';
+
+  @override
+  String get updateHint =>
+      'The app looks for a newer GitHub release at start and once a day and installs it itself. For a private repository use a fine-grained token with read access to this repository only (Contents: Read).';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String installedVersion(int code) {
+    return 'Installed: version $code';
+  }
+
+  @override
+  String get updateUpToDate => 'The app is up to date.';
+
+  @override
+  String get updateInstalling =>
+      'Installing the update – the app restarts in a moment.';
+
+  @override
+  String updateFailed(String message) {
+    return 'Update failed: $message';
+  }
+
+  @override
+  String get updateRepo => 'GitHub repository';
+
+  @override
+  String get githubToken => 'GitHub token (private repository only)';
 }

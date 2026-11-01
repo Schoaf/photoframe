@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../services/app_updater.dart';
 import '../state/display_state.dart';
 import '../state/mqtt.dart';
 import '../state/settings.dart';
@@ -19,6 +20,9 @@ class MenuScreen extends ConsumerStatefulWidget {
 
 class _MenuScreenState extends ConsumerState<MenuScreen> {
   bool? _isDeviceOwner;
+  int? _versionCode;
+  String? _updateStatus;
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
@@ -26,11 +30,42 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     ref.read(kioskProvider).isDeviceOwner().then((isDeviceOwner) {
       if (mounted) setState(() => _isDeviceOwner = isDeviceOwner);
     });
+    ref.read(kioskProvider).versionCode().then((versionCode) {
+      if (mounted) setState(() => _versionCode = versionCode);
+    });
   }
 
   void _show(DisplayMode mode) {
     ref.read(displayProvider.notifier).setMode(mode);
     Navigator.of(context).pop();
+  }
+
+  Future<void> _checkUpdate() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _isCheckingUpdate = true;
+      _updateStatus = null;
+    });
+    String status;
+    try {
+      final settings = ref.read(settingsProvider);
+      final result = await AppUpdater(
+        repo: settings.updateRepo,
+        token: settings.githubToken,
+        kiosk: ref.read(kioskProvider),
+      ).checkAndInstall();
+      status = switch (result) {
+        UpdateResult.upToDate => l10n.updateUpToDate,
+        UpdateResult.installing => l10n.updateInstalling,
+      };
+    } on Exception catch (e) {
+      status = l10n.updateFailed('$e');
+    }
+    if (!mounted) return;
+    setState(() {
+      _isCheckingUpdate = false;
+      _updateStatus = status;
+    });
   }
 
   Future<void> _endKiosk() async {
@@ -99,6 +134,21 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                     onTap: () => _show(DisplayMode.dashboard),
                   ),
                   const Divider(),
+                  ListTile(
+                    leading: _isCheckingUpdate
+                        ? const SizedBox.square(
+                            dimension: 24,
+                            child: CircularProgressIndicator(strokeWidth: 3),
+                          )
+                        : const Icon(Icons.system_update),
+                    title: Text(l10n.checkForUpdates),
+                    subtitle: Text(
+                      _updateStatus ?? l10n.installedVersion(_versionCode ?? 0),
+                    ),
+                    enabled:
+                        settings.updateRepo.isNotEmpty && !_isCheckingUpdate,
+                    onTap: _checkUpdate,
+                  ),
                   ListTile(
                     leading: const Icon(Icons.lock_open),
                     title: Text(l10n.endKiosk),

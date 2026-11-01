@@ -25,4 +25,12 @@ class Kiosk {
 
   Future<void> removeDeviceOwner() =>
       _channel.invokeMethod('removeDeviceOwner');
+
+  /// versionCode of the installed app (the `+N` in pubspec.yaml).
+  Future<int> versionCode() async =>
+      await _channel.invokeMethod<int>('versionCode') ?? 0;
+
+  /// Installs the APK at [path] over this app - silently as device owner.
+  Future<void> installUpdate(String path) =>
+      _channel.invokeMethod('installUpdate', {'path': path});
 }
