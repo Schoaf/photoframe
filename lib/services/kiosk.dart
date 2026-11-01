@@ -1,0 +1,27 @@
+import 'package:flutter/services.dart';
+
+/// Dart side of the native kiosk (android/.../Kiosk.kt).
+class Kiosk {
+  const Kiosk([this._channel = const MethodChannel('ha_display/kiosk')]);
+
+  final MethodChannel _channel;
+
+  Future<void> startLock() => _channel.invokeMethod('startLock');
+
+  Future<void> stopLock() => _channel.invokeMethod('stopLock');
+
+  /// false when the screen can't really be switched off (not device owner).
+  Future<bool> screenOff() async =>
+      await _channel.invokeMethod<bool>('screenOff') ?? false;
+
+  Future<void> screenOn() => _channel.invokeMethod('screenOn');
+
+  /// [value] in 0..1, null for the system brightness.
+  Future<void> setBrightness(double? value) =>
+      _channel.invokeMethod('setBrightness', {'value': value});
+
+  Future<bool> isDeviceOwner() async =>
+      await _channel.invokeMethod<bool>('isDeviceOwner') ?? false;
+
+  Future<void> removeDeviceOwner() => _channel.invokeMethod('removeDeviceOwner');
+}

@@ -1,0 +1,173 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+enum DisplayMode { photos, dashboard }
+
+/// Everything configured in the settings screen. Passwords and the PIN are
+/// kept in secure storage, the rest in shared preferences ([saveSettings]).
+class Settings {
+  const Settings({
+    this.synologyUrl = '',
+    this.synologyUser = '',
+    this.synologyPassword = '',
+    this.albumId,
+    this.albumName = '',
+    this.mqttHost = '',
+    this.mqttPort = 1883,
+    this.mqttUser = '',
+    this.mqttPassword = '',
+    this.deviceName = 'HA Display',
+    this.dashboardUrl = '',
+    this.slideSeconds = 15,
+    this.isShuffled = true,
+    this.startMode = DisplayMode.photos,
+    this.pin = '',
+    this.languageCode,
+  });
+
+  final String synologyUrl;
+  final String synologyUser;
+  final String synologyPassword;
+  final int? albumId;
+  final String albumName;
+  final String mqttHost;
+  final int mqttPort;
+  final String mqttUser;
+  final String mqttPassword;
+
+  /// Name of the device in Home Assistant.
+  final String deviceName;
+
+  /// Full dashboard URL, e.g. `http://homeassistant.local:8123/lovelace/0`.
+  final String dashboardUrl;
+  final int slideSeconds;
+  final bool isShuffled;
+  final DisplayMode startMode;
+
+  /// Unlocks the menu; empty until set in the settings screen.
+  final String pin;
+
+  /// null follows the system language.
+  final String? languageCode;
+
+  bool get hasPhotos => synologyUrl.isNotEmpty && albumId != null;
+  bool get hasDashboard => dashboardUrl.isNotEmpty;
+  bool get hasMqtt => mqttHost.isNotEmpty;
+  bool get isConfigured => (hasPhotos || hasDashboard) && pin.isNotEmpty;
+
+  Settings copyWith({
+    String? synologyUrl,
+    String? synologyUser,
+    String? synologyPassword,
+    int? albumId,
+    String? albumName,
+    String? mqttHost,
+    int? mqttPort,
+    String? mqttUser,
+    String? mqttPassword,
+    String? deviceName,
+    String? dashboardUrl,
+    int? slideSeconds,
+    bool? isShuffled,
+    DisplayMode? startMode,
+    String? pin,
+    String? Function()? languageCode,
+  }) => Settings(
+    synologyUrl: synologyUrl ?? this.synologyUrl,
+    synologyUser: synologyUser ?? this.synologyUser,
+    synologyPassword: synologyPassword ?? this.synologyPassword,
+    albumId: albumId ?? this.albumId,
+    albumName: albumName ?? this.albumName,
+    mqttHost: mqttHost ?? this.mqttHost,
+    mqttPort: mqttPort ?? this.mqttPort,
+    mqttUser: mqttUser ?? this.mqttUser,
+    mqttPassword: mqttPassword ?? this.mqttPassword,
+    deviceName: deviceName ?? this.deviceName,
+    dashboardUrl: dashboardUrl ?? this.dashboardUrl,
+    slideSeconds: slideSeconds ?? this.slideSeconds,
+    isShuffled: isShuffled ?? this.isShuffled,
+    startMode: startMode ?? this.startMode,
+    pin: pin ?? this.pin,
+    languageCode: languageCode != null ? languageCode() : this.languageCode,
+  );
+}
+
+const _secureStorage = FlutterSecureStorage();
+
+const _kSynologyPassword = 'synology_password';
+const _kMqttPassword = 'mqtt_password';
+const _kPin = 'pin';
+
+Future<Settings> loadSettings() async {
+  final prefs = await SharedPreferences.getInstance();
+  final secrets = await _secureStorage.readAll();
+  return Settings(
+    synologyUrl: prefs.getString('synology_url') ?? '',
+    synologyUser: prefs.getString('synology_user') ?? '',
+    synologyPassword: secrets[_kSynologyPassword] ?? '',
+    albumId: prefs.getInt('album_id'),
+    albumName: prefs.getString('album_name') ?? '',
+    mqttHost: prefs.getString('mqtt_host') ?? '',
+    mqttPort: prefs.getInt('mqtt_port') ?? 1883,
+    mqttUser: prefs.getString('mqtt_user') ?? '',
+    mqttPassword: secrets[_kMqttPassword] ?? '',
+    deviceName: prefs.getString('device_name') ?? 'HA Display',
+    dashboardUrl: prefs.getString('dashboard_url') ?? '',
+    slideSeconds: prefs.getInt('slide_seconds') ?? 15,
+    isShuffled: prefs.getBool('is_shuffled') ?? true,
+    startMode: DisplayMode.values.asNameMap()[prefs.getString('start_mode')] ??
+        DisplayMode.photos,
+    pin: secrets[_kPin] ?? '',
+    languageCode: prefs.getString('language_code'),
+  );
+}
+
+Future<void> saveSettings(Settings settings) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('synology_url', settings.synologyUrl);
+  await prefs.setString('synology_user', settings.synologyUser);
+  if (settings.albumId case final albumId?) {
+    await prefs.setInt('album_id', albumId);
+  }
+  await prefs.setString('album_name', settings.albumName);
+  await prefs.setString('mqtt_host', settings.mqttHost);
+  await prefs.setInt('mqtt_port', settings.mqttPort);
+  await prefs.setString('mqtt_user', settings.mqttUser);
+  await prefs.setString('device_name', settings.deviceName);
+  await prefs.setString('dashboard_url', settings.dashboardUrl);
+  await prefs.setInt('slide_seconds', settings.slideSeconds);
+  await prefs.setBool('is_shuffled', settings.isShuffled);
+  await prefs.setString('start_mode', settings.startMode.name);
+  if (settings.languageCode case final code?) {
+    await prefs.setString('language_code', code);
+  } else {
+    await prefs.remove('language_code');
+  }
+  await _secureStorage.write(
+    key: _kSynologyPassword,
+    value: settings.synologyPassword,
+  );
+  await _secureStorage.write(key: _kMqttPassword, value: settings.mqttPassword);
+  await _secureStorage.write(key: _kPin, value: settings.pin);
+}
+
+/// Loaded once in `main()` (Notifier.build() can't be async) and injected
+/// via `overrideWith`.
+class SettingsNotifier extends Notifier<Settings> {
+  SettingsNotifier([this._initial = const Settings()]);
+
+  final Settings _initial;
+
+  @override
+  Settings build() => _initial;
+
+  Future<void> save(Settings settings) async {
+    await saveSettings(settings);
+    state = settings;
+  }
+}
+
+final settingsProvider = NotifierProvider<SettingsNotifier, Settings>(
+  SettingsNotifier.new,
+);
