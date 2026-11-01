@@ -469,6 +469,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.'**
   String get synologyTwoFactor;
+
+  /// No description provided for @scanQr.
+  ///
+  /// In de, this message translates to:
+  /// **'QR-Code scannen'**
+  String get scanQr;
+
+  /// No description provided for @scanQrHint.
+  ///
+  /// In de, this message translates to:
+  /// **'QR-Code vor die Kamera halten'**
+  String get scanQrHint;
+
+  /// No description provided for @switchCamera.
+  ///
+  /// In de, this message translates to:
+  /// **'Kamera wechseln'**
+  String get switchCamera;
 }
 
 class _AppLocalizationsDelegate

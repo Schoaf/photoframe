@@ -1,6 +1,7 @@
 package at.schoaf.ha_display
 
 import android.app.Activity
+import android.Manifest
 import android.app.ActivityManager
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
@@ -56,6 +57,14 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
             }
             dpm.setKeyguardDisabled(admin, true)
             dpm.setStatusBarDisabled(admin, true)
+            // The permission dialog can't open in lock task mode - grant
+            // the camera (QR scanner) directly.
+            dpm.setPermissionGrantState(
+                admin,
+                activity.packageName,
+                Manifest.permission.CAMERA,
+                DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED,
+            )
             setAsHome()
         }
         if (activityManager.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE) return

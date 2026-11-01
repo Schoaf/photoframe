@@ -222,4 +222,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get synologyTwoFactor =>
       'The user requires 2-factor sign-in. Use a user without 2-factor.';
+
+  @override
+  String get scanQr => 'Scan QR code';
+
+  @override
+  String get scanQrHint => 'Hold the QR code in front of the camera';
+
+  @override
+  String get switchCamera => 'Switch camera';
 }

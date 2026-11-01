@@ -120,5 +120,8 @@
   "haInfoHint": "Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).",
   "synologyWrongPassword": "Benutzer oder Passwort falsch.",
   "synologyNoPermission": "Keine Berechtigung (Fehler 402). Der Benutzer braucht Zugriff auf Synology Photos.",
-  "synologyTwoFactor": "Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden."
+  "synologyTwoFactor": "Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.",
+  "scanQr": "QR-Code scannen",
+  "scanQrHint": "QR-Code vor die Kamera halten",
+  "switchCamera": "Kamera wechseln"
 }

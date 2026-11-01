@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/photo_item.dart';
 import '../services/synology_photos_client.dart';
 import '../state/settings.dart';
+import 'qr_scan_screen.dart';
 
 /// Preselected when found (or when there is just one album).
 const _defaultAlbumNames = {'fotoframe', 'fotorahmen', 'photo frame'};
@@ -112,6 +113,12 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
     albumPassphrase: album.passphrase,
   );
 
+  Future<void> _scanInto(String key) async {
+    final value = await Navigator.of(context)
+        .push<String>(MaterialPageRoute(builder: (_) => const QrScanScreen()));
+    if (value != null && mounted) setState(() => _text[key]!.text = value);
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final settings = _settings.copyWith(
@@ -153,6 +160,7 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       String? hint,
       TextInputType? keyboardType,
       String? Function(String?)? validator,
+      Widget? suffix,
     }) => Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
@@ -160,7 +168,11 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
         obscureText: isSecret,
         keyboardType: keyboardType,
         validator: validator,
-        decoration: InputDecoration(labelText: label, hintText: hint),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          suffixIcon: suffix,
+        ),
       ),
     );
     // Two fields side by side - the SM-T585's 1280 dp width has room.
@@ -348,7 +360,18 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             ],
           ),
           section(l10n.sectionHaInfo),
-          field('haToken', l10n.haToken, isSecret: true),
+          field(
+            'haToken',
+            l10n.haToken,
+            isSecret: true,
+            // Far too long to type on the tablet - HA shows it as QR code.
+            suffix: IconButton(
+              iconSize: 32,
+              tooltip: l10n.scanQr,
+              icon: const Icon(Icons.qr_code_scanner),
+              onPressed: () => _scanInto('haToken'),
+            ),
+          ),
           field(
             'weatherEntityId',
             l10n.weatherEntity,

@@ -223,4 +223,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get synologyTwoFactor =>
       'Der Benutzer verlangt eine 2-Faktor-Anmeldung. Einen Benutzer ohne 2-Faktor verwenden.';
+
+  @override
+  String get scanQr => 'QR-Code scannen';
+
+  @override
+  String get scanQrHint => 'QR-Code vor die Kamera halten';
+
+  @override
+  String get switchCamera => 'Kamera wechseln';
 }
