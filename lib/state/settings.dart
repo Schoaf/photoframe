@@ -22,6 +22,7 @@ class Settings {
     this.dashboardUrl = '',
     this.haToken = '',
     this.weatherEntityId = 'weather.forecast_home',
+    this.calendarEntityIds = const [],
     this.idleSeconds = 120,
     this.updateRepo = 'Schoaf/ha-display',
     this.githubToken = '',
@@ -55,6 +56,9 @@ class Settings {
   /// weather and warnings overlay.
   final String haToken;
   final String weatherEntityId;
+
+  /// HA calendars shown as today/tomorrow agenda.
+  final List<String> calendarEntityIds;
 
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
@@ -97,6 +101,7 @@ class Settings {
     String? dashboardUrl,
     String? haToken,
     String? weatherEntityId,
+    List<String>? calendarEntityIds,
     int? idleSeconds,
     String? updateRepo,
     String? githubToken,
@@ -120,6 +125,7 @@ class Settings {
     dashboardUrl: dashboardUrl ?? this.dashboardUrl,
     haToken: haToken ?? this.haToken,
     weatherEntityId: weatherEntityId ?? this.weatherEntityId,
+    calendarEntityIds: calendarEntityIds ?? this.calendarEntityIds,
     idleSeconds: idleSeconds ?? this.idleSeconds,
     updateRepo: updateRepo ?? this.updateRepo,
     githubToken: githubToken ?? this.githubToken,
@@ -158,6 +164,7 @@ Future<Settings> loadSettings() async {
     haToken: secrets[_kHaToken] ?? '',
     weatherEntityId:
         prefs.getString('weather_entity_id') ?? 'weather.forecast_home',
+    calendarEntityIds: prefs.getStringList('calendar_entity_ids') ?? const [],
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
     updateRepo: prefs.getString('update_repo') ?? 'Schoaf/ha-display',
     githubToken: secrets[_kGithubToken] ?? '',
@@ -186,6 +193,7 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setString('device_name', settings.deviceName);
   await prefs.setString('dashboard_url', settings.dashboardUrl);
   await prefs.setString('weather_entity_id', settings.weatherEntityId);
+  await prefs.setStringList('calendar_entity_ids', settings.calendarEntityIds);
   await prefs.setInt('idle_seconds', settings.idleSeconds);
   await prefs.setString('update_repo', settings.updateRepo);
   await prefs.setInt('slide_seconds', settings.slideSeconds);

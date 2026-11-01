@@ -274,4 +274,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String remainingHours(String time) {
     return '$time h left';
   }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get allDay => 'all day';
+
+  @override
+  String get calendars => 'Calendars';
+
+  @override
+  String get loadCalendars => 'Load calendars';
+
+  @override
+  String get noCalendars =>
+      'No calendars found. Calendars are set up in HA under Devices & services.';
 }

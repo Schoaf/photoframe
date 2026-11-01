@@ -275,4 +275,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String remainingHours(String time) {
     return 'noch $time h';
   }
+
+  @override
+  String get today => 'Heute';
+
+  @override
+  String get allDay => 'ganztägig';
+
+  @override
+  String get calendars => 'Kalender';
+
+  @override
+  String get loadCalendars => 'Kalender laden';
+
+  @override
+  String get noCalendars =>
+      'Keine Kalender gefunden. Kalender werden in HA unter Geräte & Dienste eingerichtet.';
 }

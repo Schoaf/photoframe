@@ -11,6 +11,7 @@ class AppSizes {
   static const captionFontSize = 20.0;
   static const clockFontSize = 72.0;
   static const runningTileWidth = 340.0;
+  static const agendaWidth = 460.0;
   static const galleryColumns = 6;
   static const menuPaneWidth = 340.0;
   static const keypadButton = 80.0;

@@ -553,6 +553,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'noch {time} h'**
   String remainingHours(String time);
+
+  /// No description provided for @today.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute'**
+  String get today;
+
+  /// No description provided for @allDay.
+  ///
+  /// In de, this message translates to:
+  /// **'ganztägig'**
+  String get allDay;
+
+  /// No description provided for @calendars.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalender'**
+  String get calendars;
+
+  /// No description provided for @loadCalendars.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalender laden'**
+  String get loadCalendars;
+
+  /// No description provided for @noCalendars.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Kalender gefunden. Kalender werden in HA unter Geräte & Dienste eingerichtet.'**
+  String get noCalendars;
 }
 
 class _AppLocalizationsDelegate

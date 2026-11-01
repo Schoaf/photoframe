@@ -75,5 +75,10 @@
   "updateRepo": "GitHub repository",
   "githubToken": "GitHub token (private repository only)",
   "remainingMinutes": "{minutes} min left",
-  "remainingHours": "{time} h left"
+  "remainingHours": "{time} h left",
+  "today": "Today",
+  "allDay": "all day",
+  "calendars": "Calendars",
+  "loadCalendars": "Load calendars",
+  "noCalendars": "No calendars found. Calendars are set up in HA under Devices & services."
 }

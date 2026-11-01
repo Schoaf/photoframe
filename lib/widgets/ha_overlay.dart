@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
+import '../services/ha_calendar.dart';
 import '../services/ha_client.dart';
+import '../state/calendar.dart';
 import '../state/ha_info.dart';
 import '../theme/app_theme.dart';
 import '../utils/ha_icons.dart';
@@ -67,8 +69,18 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
   Widget build(BuildContext context) {
     final info = ref.watch(haInfoProvider);
     final warnings = _dismissed.visible(info.warnings);
+    final agenda = buildAgenda(ref.watch(calendarProvider), _now);
     return Stack(
       children: [
+        if (agenda.isNotEmpty)
+          Positioned(
+            top: 24,
+            left: 32,
+            child: GestureDetector(
+              onTap: widget.onOpenDashboard,
+              child: _AgendaPanel(days: agenda),
+            ),
+          ),
         Positioned(
           top: 24,
           right: 32,
@@ -180,6 +192,70 @@ class _InfoPanel extends StatelessWidget {
           _RunningTile(device: device, now: now),
         ],
       ],
+    );
+  }
+}
+
+/// Heute / Morgen with time and title per event.
+class _AgendaPanel extends StatelessWidget {
+  const _AgendaPanel({required this.days});
+
+  final List<AgendaDay> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    const style = TextStyle(
+      color: Colors.white,
+      fontSize: AppSizes.captionFontSize,
+      shadows: _textShadows,
+    );
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: AppSizes.agendaWidth),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final day in days) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Text(
+                day.isToday ? l10n.today : l10n.tomorrow,
+                style: style.copyWith(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            for (final event in day.events)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        event.isAllDay
+                            ? l10n.allDay
+                            : DateFormat.Hm(locale).format(event.start),
+                        style: style.copyWith(color: Colors.white70),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        event.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: style,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }

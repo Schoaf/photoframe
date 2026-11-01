@@ -162,5 +162,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "today": "Heute",
+  "allDay": "ganztägig",
+  "calendars": "Kalender",
+  "loadCalendars": "Kalender laden",
+  "noCalendars": "Keine Kalender gefunden. Kalender werden in HA unter Geräte & Dienste eingerichtet."
 }

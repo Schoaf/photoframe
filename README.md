@@ -189,6 +189,12 @@ The entity names in these examples depend on your devices.
 - **Pressing and holding** hides it until the next time it turns on.
 - At most three notices show at once.
 
+## Calendar
+
+- **Where it shows:** Today's and tomorrow's events appear in the top left. All-day events come first, today's past events drop off, and at most 6 entries show.
+- **Which calendars:** Set them up in HA (Settings → Devices & services: Google Calendar, CalDAV for iCloud/Nextcloud/Synology, Remote Calendar for an ICS address, Local Calendar). Then pick them in the app's settings under "Kalender laden".
+- **How it reads them:** The app uses HA's calendar API with the Tablet user's token and re-reads every 5 minutes.
+
 ## Slideshow
 
 - Each photo stays for the configured time (default 15 s), and the slides advance by themselves.

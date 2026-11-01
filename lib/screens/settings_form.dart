@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/photo_item.dart';
+import '../services/ha_calendar.dart';
 import '../services/synology_photos_client.dart';
 import '../state/settings.dart';
 import 'qr_scan_screen.dart';
@@ -26,6 +27,9 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
   late Settings _settings;
   late final Map<String, TextEditingController> _text;
   List<PhotoAlbum>? _albums;
+  List<HaCalendar>? _calendars;
+  String? _calendarError;
+  bool _isLoadingCalendars = false;
   String? _albumError;
   bool _isLoadingAlbums = false;
 
@@ -108,6 +112,35 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       if (mounted) setState(() => _isLoadingAlbums = false);
     }
   }
+
+  Future<void> _loadCalendars() async {
+    setState(() {
+      _isLoadingCalendars = true;
+      _calendarError = null;
+    });
+    final l10n = AppLocalizations.of(context);
+    try {
+      final calendars = await HaCalendarClient(
+        baseUrl: _value('dashboardUrl'),
+        token: _value('haToken'),
+      ).listCalendars();
+      if (!mounted) return;
+      setState(() {
+        _calendars = calendars;
+        if (calendars.isEmpty) _calendarError = l10n.noCalendars;
+      });
+    } on Exception catch (e) {
+      setState(() => _calendarError = l10n.connectionFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _isLoadingCalendars = false);
+    }
+  }
+
+  void _toggleCalendar(String entityId, bool isSelected) => setState(() {
+    final ids = [..._settings.calendarEntityIds]..remove(entityId);
+    if (isSelected) ids.add(entityId);
+    _settings = _settings.copyWith(calendarEntityIds: ids);
+  });
 
   void _selectAlbum(PhotoAlbum album) => _settings = _settings.copyWith(
     albumId: album.id,
@@ -381,6 +414,41 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             l10n.weatherEntity,
             hint: 'weather.forecast_home',
           ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: _isLoadingCalendars ? null : _loadCalendars,
+                icon: const Icon(Icons.calendar_month),
+                label: Text(l10n.loadCalendars),
+              ),
+              for (final calendar
+                  in _calendars ??
+                      [
+                        for (final id in _settings.calendarEntityIds)
+                          HaCalendar(entityId: id, name: id),
+                      ])
+                FilterChip(
+                  label: Text(calendar.name),
+                  selected: _settings.calendarEntityIds.contains(
+                    calendar.entityId,
+                  ),
+                  onSelected: (isSelected) =>
+                      _toggleCalendar(calendar.entityId, isSelected),
+                ),
+            ],
+          ),
+          if (_calendarError case final error?)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                error,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+          const SizedBox(height: 16),
           Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
           section(l10n.sectionMqtt),
           pair(
