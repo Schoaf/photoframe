@@ -190,4 +190,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get save => 'Save';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String idleSeconds(int seconds) {
+    return 'Back to the photos after: $seconds s';
+  }
+
+  @override
+  String get sectionHaInfo => 'Weather and notices from Home Assistant';
+
+  @override
+  String get haToken => 'Token of the tablet user';
+
+  @override
+  String get weatherEntity => 'Weather entity';
+
+  @override
+  String get haInfoHint =>
+      'Create a separate HA user \"Tablet\" without admin rights, create a long-lived token under Profile → Security, and sign in to the dashboard with this user too. Notices come from the sensor sensor.tablet_warnungen (see README).';
 }

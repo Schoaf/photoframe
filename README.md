@@ -1,9 +1,10 @@
 # HA Display
 
-Kiosk app for a wall tablet. It has two modes:
+Kiosk app for a wall tablet. It combines a photo frame with a Home Assistant dashboard:
 
-- **Photo frame:** a full-screen slideshow of a Synology Photos album. You can swipe between photos, and a gallery lets you pick one. Videos play muted, and a sound button appears when you touch the screen.
-- **Home Assistant dashboard:** shown full screen, with no header or sidebar.
+- **Photo frame (resting state):** a full-screen slideshow of a Synology Photos album. You can swipe between photos, and a gallery lets you pick one. Videos play muted, and a sound button appears when you touch the screen.
+- **Overlay from Home Assistant:** clock and weather (now and tomorrow) sit in the top right. Notices that anyone in the family can deal with, such as "Waschmaschine ist fertig", appear at the bottom.
+- **Dashboard on tap:** tapping the weather or a notice brings the dashboard up, full screen with no header or sidebar. After a while untouched (default 2 min) the photos come back.
 
 Home Assistant controls the tablet over MQTT: screen on/off, mode, brightness, next photo and reload.
 
@@ -45,16 +46,27 @@ The settings screen opens on first start:
   - A user, ideally a dedicated one with **no 2-factor sign-in** and read access to the album.
   - Tap "Alben laden" and pick the album. An album named `FotoFrame` is preselected.
 - **Dashboard:** the full URL, e.g. `http://homeassistant.local:8123/lovelace/0`.
+- **Weather and notices:** token of the "Tablet" user (see below) and the weather entity.
 - **MQTT:** broker host, port, user and password.
 
 **Menu:** tap the top-left corner **5 times quickly**, then enter the PIN. The menu offers:
 
 - switch between photos and dashboard
-- settings
+- settings, including the Tablet user's token, the weather entity and the time until the photos come back
 - "Kiosk beenden" (the next app start locks again)
 - "Device Owner entfernen" (needed before uninstalling)
 
-### 3. Dashboard without header/sidebar
+### 3. Home Assistant user for the tablet
+
+Create a **separate HA user** for the tablet, not your own:
+
+1. Settings → People → Users → add user "Tablet". **No** administrator rights.
+2. Sign in as "Tablet" and create a token under Profile → Security → Long-lived access tokens. Put it into the app's settings.
+3. Sign in to the dashboard on the tablet as "Tablet" too.
+
+The tablet then only has a restricted account. Note that a normal HA user can still read all states and switch devices; that's a limit of HA.
+
+### 4. Dashboard without header/sidebar
 
 1. Install [kiosk-mode](https://github.com/NemesisRE/kiosk-mode) via HACS. The app adds `?kiosk` to the dashboard URL by itself.
 2. Switch to the dashboard once and sign in there with "Angemeldet bleiben". The login stays saved in the app.
@@ -101,6 +113,57 @@ automation:
         data:
           option: dashboard
 ```
+
+## Weather and notices
+
+- **Weather:** the app reads the weather entity from the settings (default `weather.forecast_home`), including its daily forecast for tomorrow.
+- **Notices:** you choose in HA which ones appear. The tablet only reads one template sensor, so labels are evaluated in HA and the tablet's token needs no admin rights.
+
+**1. Template sensor** (in `configuration.yaml`):
+
+```yaml
+template:
+  - sensor:
+      - name: Tablet Warnungen
+        unique_id: tablet_warnungen
+        state: >
+          {{ label_entities('tablet_warnung') | select('is_state', 'on') | list | count }}
+        attributes:
+          warnungen: >
+            {% set ns = namespace(items=[]) %}
+            {% for id in label_entities('tablet_warnung') | select('is_state', 'on') %}
+              {% set ns.items = ns.items + [{'id': id, 'name': state_attr(id, 'friendly_name'), 'icon': state_attr(id, 'icon')}] %}
+            {% endfor %}
+            {{ ns.items }}
+```
+
+**2. Mark notices:**
+
+- Give the entity the label `tablet_warnung` (Settings → Entities → entity → Labels).
+- It shows while it is `on`.
+- The text is its display name, so name it the way the family should read it.
+- Technical things like "Gerät nicht erreichbar" never appear unless you label them.
+
+**3. When the state isn't `on`**, a small template binary sensor helps:
+
+```yaml
+template:
+  - binary_sensor:
+      - name: Waschmaschine ist fertig
+        icon: mdi:washing-machine
+        state: "{{ is_state('sensor.waschmaschine_status', 'finished') }}"
+      - name: "Roborock: Wasser wechseln"
+        icon: mdi:water
+        state: "{{ is_state('binary_sensor.roborock_water_shortage', 'on') }}"
+```
+
+The entity names in these examples depend on your devices.
+
+**On the tablet:**
+
+- Tapping a notice opens the dashboard.
+- **Pressing and holding** hides it until the next time it turns on.
+- At most three notices show at once.
 
 ## Slideshow
 

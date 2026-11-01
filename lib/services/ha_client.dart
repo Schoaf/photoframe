@@ -1,0 +1,253 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+/// The template sensor (set up in Home Assistant, see README) that lists
+/// the active warnings - so labels are evaluated in HA, and the tablet's
+/// token needs no admin rights.
+const warningsEntityId = 'sensor.tablet_warnungen';
+
+const _reconnectDelay = Duration(seconds: 30);
+const _entitiesRequestId = 1;
+const _forecastRequestId = 2;
+
+class HaEntity {
+  const HaEntity(this.state, this.attributes);
+
+  final String state;
+  final Map<String, dynamic> attributes;
+}
+
+/// Keeps the entities of a `subscribe_entities` subscription up to date.
+/// Its events are compressed: `a` added, `c` changed (`+` new values,
+/// `-` removed attributes), `r` removed; `s` state, `a` attributes.
+class EntityStore {
+  final entities = <String, HaEntity>{};
+
+  void apply(Map<String, dynamic> event) {
+    final added = event['a'] as Map<String, dynamic>? ?? const {};
+    for (final MapEntry(:key, :value) in added.entries) {
+      final entity = value as Map<String, dynamic>;
+      entities[key] = HaEntity(
+        '${entity['s']}',
+        Map.of(entity['a'] as Map<String, dynamic>? ?? const {}),
+      );
+    }
+    final changed = event['c'] as Map<String, dynamic>? ?? const {};
+    for (final MapEntry(:key, :value) in changed.entries) {
+      final current = entities[key];
+      if (current == null) continue;
+      final diff = value as Map<String, dynamic>;
+      final plus = diff['+'] as Map<String, dynamic>? ?? const {};
+      final minus = diff['-'] as Map<String, dynamic>? ?? const {};
+      final attributes = Map.of(current.attributes)
+        ..addAll(plus['a'] as Map<String, dynamic>? ?? const {});
+      for (final removed in minus['a'] as List? ?? const []) {
+        attributes.remove(removed);
+      }
+      entities[key] = HaEntity(
+        plus['s'] == null ? current.state : '${plus['s']}',
+        attributes,
+      );
+    }
+    for (final removed in event['r'] as List? ?? const []) {
+      entities.remove(removed);
+    }
+  }
+}
+
+class WeatherNow {
+  const WeatherNow({required this.condition, this.temperature, this.unit});
+
+  /// HA condition, e.g. `sunny`, `partlycloudy`, `rainy`.
+  final String condition;
+  final num? temperature;
+  final String? unit;
+}
+
+class WeatherDay {
+  const WeatherDay({required this.condition, this.high, this.low});
+
+  final String condition;
+  final num? high;
+  final num? low;
+}
+
+class HaWarning {
+  const HaWarning({required this.id, required this.name, this.icon});
+
+  final String id;
+  final String name;
+
+  /// e.g. `mdi:washing-machine`, if one is set in HA.
+  final String? icon;
+}
+
+/// What the overlay shows.
+class HaSnapshot {
+  const HaSnapshot({
+    this.weather,
+    this.tomorrow,
+    this.warnings = const [],
+    this.isTokenInvalid = false,
+  });
+
+  final WeatherNow? weather;
+  final WeatherDay? tomorrow;
+  final List<HaWarning> warnings;
+  final bool isTokenInvalid;
+}
+
+WeatherNow? parseWeather(HaEntity? entity) {
+  if (entity == null || entity.state == 'unavailable') return null;
+  return WeatherNow(
+    condition: entity.state,
+    temperature: entity.attributes['temperature'] as num?,
+    unit: entity.attributes['temperature_unit'] as String?,
+  );
+}
+
+/// The daily forecast entry for the day after [now].
+WeatherDay? parseTomorrow(List<dynamic>? forecast, DateTime now) {
+  if (forecast == null) return null;
+  final tomorrow = DateTime(now.year, now.month, now.day + 1);
+  for (final entry in forecast.cast<Map<String, dynamic>>()) {
+    final date = DateTime.tryParse('${entry['datetime']}')?.toLocal();
+    if (date == null ||
+        date.year != tomorrow.year ||
+        date.month != tomorrow.month ||
+        date.day != tomorrow.day) {
+      continue;
+    }
+    return WeatherDay(
+      condition: '${entry['condition']}',
+      high: entry['temperature'] as num?,
+      low: entry['templow'] as num?,
+    );
+  }
+  return null;
+}
+
+/// Reads the `warnungen` attribute of [warningsEntityId].
+List<HaWarning> parseWarnings(HaEntity? entity) {
+  final list = entity?.attributes['warnungen'];
+  if (list is! List) return const [];
+  return [
+    for (final entry in list.whereType<Map<String, dynamic>>())
+      if (entry['id'] is String)
+        HaWarning(
+          id: entry['id'] as String,
+          name: '${entry['name'] ?? entry['id']}',
+          icon: entry['icon'] as String?,
+        ),
+  ];
+}
+
+/// Websocket connection to Home Assistant (token of a non-admin user):
+/// follows the weather entity, its daily forecast and the warnings sensor.
+/// Reconnects on its own, e.g. while HA restarts.
+class HaClient {
+  HaClient({
+    required String baseUrl,
+    required this.token,
+    required this.weatherEntityId,
+    required this.onUpdate,
+  }) : _uri = websocketUri(baseUrl);
+
+  final String token;
+  final String weatherEntityId;
+  final ValueChanged<HaSnapshot> onUpdate;
+  final Uri _uri;
+  WebSocket? _socket;
+  bool _isRunning = false;
+  final _store = EntityStore();
+  List<dynamic>? _forecast;
+
+  /// `http://ha:8123/lovelace/0` → `ws://ha:8123/api/websocket`.
+  static Uri websocketUri(String baseUrl) {
+    final uri = Uri.parse(baseUrl.trim());
+    return Uri(
+      scheme: uri.scheme == 'https' ? 'wss' : 'ws',
+      host: uri.host,
+      port: uri.hasPort ? uri.port : null,
+      path: '/api/websocket',
+    );
+  }
+
+  void start() {
+    _isRunning = true;
+    _run();
+  }
+
+  void stop() {
+    _isRunning = false;
+    _socket?.close();
+  }
+
+  Future<void> _run() async {
+    while (_isRunning) {
+      try {
+        final socket = await WebSocket.connect(_uri.toString());
+        socket.pingInterval = const Duration(seconds: 30);
+        _socket = socket;
+        if (!_isRunning) await socket.close();
+        await for (final message in socket) {
+          if (!_handle(jsonDecode(message as String) as Map<String, dynamic>)) {
+            await socket.close();
+            return;
+          }
+        }
+      } on Exception {
+        // HA unreachable - try again below.
+      }
+      if (_isRunning) await Future<void>.delayed(_reconnectDelay);
+    }
+  }
+
+  /// false when the token was rejected (no point in reconnecting).
+  bool _handle(Map<String, dynamic> message) {
+    switch (message['type']) {
+      case 'auth_required':
+        _send({'type': 'auth', 'access_token': token});
+      case 'auth_invalid':
+        onUpdate(const HaSnapshot(isTokenInvalid: true));
+        return false;
+      case 'auth_ok':
+        _store.entities.clear();
+        _send({
+          'id': _entitiesRequestId,
+          'type': 'subscribe_entities',
+          'entity_ids': [
+            if (weatherEntityId.isNotEmpty) weatherEntityId,
+            warningsEntityId,
+          ],
+        });
+        if (weatherEntityId.isEmpty) break;
+        _send({
+          'id': _forecastRequestId,
+          'type': 'weather/subscribe_forecast',
+          'entity_id': weatherEntityId,
+          'forecast_type': 'daily',
+        });
+      case 'event':
+        final event = message['event'] as Map<String, dynamic>;
+        if (message['id'] == _entitiesRequestId) {
+          _store.apply(event);
+        } else if (message['id'] == _forecastRequestId) {
+          _forecast = event['forecast'] as List<dynamic>?;
+        }
+        onUpdate(_snapshot());
+    }
+    return true;
+  }
+
+  HaSnapshot _snapshot() => HaSnapshot(
+    weather: parseWeather(_store.entities[weatherEntityId]),
+    tomorrow: parseTomorrow(_forecast, DateTime.now()),
+    warnings: parseWarnings(_store.entities[warningsEntityId]),
+  );
+
+  void _send(Map<String, Object> message) => _socket?.add(jsonEncode(message));
+}
+
+typedef ValueChanged<T> = void Function(T value);

@@ -9,6 +9,7 @@ class AppSizes {
   static const overlayButton = 64.0;
   static const overlayIcon = 36.0;
   static const captionFontSize = 20.0;
+  static const clockFontSize = 72.0;
   static const galleryColumns = 6;
   static const menuPaneWidth = 340.0;
   static const keypadButton = 80.0;

@@ -9,7 +9,13 @@
   "gallery": "Galerie",
   "backToSlideshow": "Zurück zur Diashow",
   "galleryTitle": "{count, plural, =1{1 Bild} other{{count} Bilder}}",
-  "@galleryTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@galleryTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pinEnter": "PIN eingeben",
   "pinWrong": "Falsche PIN",
   "removeDeviceOwner": "Device Owner entfernen",
@@ -24,11 +30,29 @@
   "deviceOwnerMissing": "Kein Device Owner – eingeschränkter Kiosk",
   "deviceOwnerActive": "Kiosk-Modus aktiv",
   "synologyLoginFailed": "Anmeldung fehlgeschlagen (Fehler {code}). Benutzer ohne 2-Faktor-Anmeldung verwenden.",
-  "@synologyLoginFailed": {"placeholders": {"code": {"type": "int"}}},
+  "@synologyLoginFailed": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "synologyError": "Synology-Fehler {code}",
-  "@synologyError": {"placeholders": {"code": {"type": "int"}}},
+  "@synologyError": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "connectionFailed": "Verbindung fehlgeschlagen: {message}",
-  "@connectionFailed": {"placeholders": {"message": {"type": "String"}}},
+  "@connectionFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSaved": "Einstellungen gespeichert",
   "sectionGeneral": "Allgemein",
   "language": "Sprache",
@@ -45,11 +69,32 @@
   "loadAlbums": "Alben laden",
   "album": "Album",
   "albumEntry": "{name} ({count})",
-  "@albumEntry": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
+  "@albumEntry": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "currentAlbum": "Album: {name}",
-  "@currentAlbum": {"placeholders": {"name": {"type": "String"}}},
+  "@currentAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "slideSeconds": "Anzeigedauer: {seconds} s",
-  "@slideSeconds": {"placeholders": {"seconds": {"type": "int"}}},
+  "@slideSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "shuffle": "Zufällige Reihenfolge",
   "sectionDashboard": "Home Assistant Dashboard",
   "dashboardUrl": "Dashboard-Adresse",
@@ -59,5 +104,18 @@
   "mqttPort": "Port",
   "deviceName": "Gerätename in Home Assistant",
   "mqttHint": "Das Tablet erscheint in Home Assistant als Gerät mit Bildschirm-Schalter, Modus-Auswahl, Helligkeit und Tasten für „Nächstes Foto“ und „Neu laden“.",
-  "save": "Speichern"
+  "save": "Speichern",
+  "tomorrow": "Morgen",
+  "idleSeconds": "Zurück zu den Fotos nach: {seconds} s",
+  "@idleSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "sectionHaInfo": "Wetter und Hinweise aus Home Assistant",
+  "haToken": "Token des Tablet-Benutzers",
+  "weatherEntity": "Wetter-Entität",
+  "haInfoHint": "Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README)."
 }

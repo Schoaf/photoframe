@@ -38,6 +38,8 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
         text: _settings.synologyPassword,
       ),
       'dashboardUrl': TextEditingController(text: _settings.dashboardUrl),
+      'haToken': TextEditingController(text: _settings.haToken),
+      'weatherEntityId': TextEditingController(text: _settings.weatherEntityId),
       'mqttHost': TextEditingController(text: _settings.mqttHost),
       'mqttPort': TextEditingController(text: '${_settings.mqttPort}'),
       'mqttUser': TextEditingController(text: _settings.mqttUser),
@@ -106,6 +108,8 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       synologyUser: _value('synologyUser'),
       synologyPassword: _text['synologyPassword']!.text,
       dashboardUrl: _value('dashboardUrl'),
+      haToken: _value('haToken'),
+      weatherEntityId: _value('weatherEntityId'),
       mqttHost: _value('mqttHost'),
       mqttPort: int.tryParse(_value('mqttPort')) ?? 1883,
       mqttUser: _value('mqttUser'),
@@ -200,8 +204,9 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
                 ],
                 selected: {_settings.startMode},
                 onSelectionChanged: (selection) => setState(
-                  () =>
-                      _settings = _settings.copyWith(startMode: selection.first),
+                  () => _settings = _settings.copyWith(
+                    startMode: selection.first,
+                  ),
                 ),
               ),
             ],
@@ -302,8 +307,9 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.shuffle),
             value: _settings.isShuffled,
-            onChanged: (value) =>
-                setState(() => _settings = _settings.copyWith(isShuffled: value)),
+            onChanged: (value) => setState(
+              () => _settings = _settings.copyWith(isShuffled: value),
+            ),
           ),
           section(l10n.sectionDashboard),
           field(
@@ -313,6 +319,34 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             keyboardType: TextInputType.url,
           ),
           Text(l10n.dashboardHint, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text(l10n.idleSeconds(_settings.idleSeconds)),
+              Expanded(
+                child: Slider(
+                  min: 30,
+                  max: 600,
+                  divisions: 19,
+                  value: _settings.idleSeconds.toDouble().clamp(30, 600),
+                  label: '${_settings.idleSeconds} s',
+                  onChanged: (value) => setState(
+                    () => _settings = _settings.copyWith(
+                      idleSeconds: value.round(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          section(l10n.sectionHaInfo),
+          field('haToken', l10n.haToken, isSecret: true),
+          field(
+            'weatherEntityId',
+            l10n.weatherEntity,
+            hint: 'weather.forecast_home',
+          ),
+          Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
           section(l10n.sectionMqtt),
           pair(
             field('mqttHost', l10n.mqttHost, hint: 'homeassistant.local'),

@@ -415,6 +415,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Speichern'**
   String get save;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In de, this message translates to:
+  /// **'Morgen'**
+  String get tomorrow;
+
+  /// No description provided for @idleSeconds.
+  ///
+  /// In de, this message translates to:
+  /// **'Zurück zu den Fotos nach: {seconds} s'**
+  String idleSeconds(int seconds);
+
+  /// No description provided for @sectionHaInfo.
+  ///
+  /// In de, this message translates to:
+  /// **'Wetter und Hinweise aus Home Assistant'**
+  String get sectionHaInfo;
+
+  /// No description provided for @haToken.
+  ///
+  /// In de, this message translates to:
+  /// **'Token des Tablet-Benutzers'**
+  String get haToken;
+
+  /// No description provided for @weatherEntity.
+  ///
+  /// In de, this message translates to:
+  /// **'Wetter-Entität'**
+  String get weatherEntity;
+
+  /// No description provided for @haInfoHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).'**
+  String get haInfoHint;
 }
 
 class _AppLocalizationsDelegate

@@ -19,6 +19,9 @@ class Settings {
     this.mqttPassword = '',
     this.deviceName = 'HA Display',
     this.dashboardUrl = '',
+    this.haToken = '',
+    this.weatherEntityId = 'weather.forecast_home',
+    this.idleSeconds = 120,
     this.slideSeconds = 15,
     this.isShuffled = true,
     this.startMode = DisplayMode.photos,
@@ -41,6 +44,14 @@ class Settings {
 
   /// Full dashboard URL, e.g. `http://homeassistant.local:8123/lovelace/0`.
   final String dashboardUrl;
+
+  /// Long-lived token of a dedicated non-admin "Tablet" user - for the
+  /// weather and warnings overlay.
+  final String haToken;
+  final String weatherEntityId;
+
+  /// Back from the dashboard to the photos after this long untouched.
+  final int idleSeconds;
   final int slideSeconds;
   final bool isShuffled;
   final DisplayMode startMode;
@@ -54,6 +65,9 @@ class Settings {
   bool get hasPhotos => synologyUrl.isNotEmpty && albumId != null;
   bool get hasDashboard => dashboardUrl.isNotEmpty;
   bool get hasMqtt => mqttHost.isNotEmpty;
+
+  /// Home Assistant is reached at the dashboard URL's host.
+  bool get hasHaInfo => hasDashboard && haToken.isNotEmpty;
   bool get isConfigured => (hasPhotos || hasDashboard) && pin.isNotEmpty;
 
   Settings copyWith({
@@ -68,6 +82,9 @@ class Settings {
     String? mqttPassword,
     String? deviceName,
     String? dashboardUrl,
+    String? haToken,
+    String? weatherEntityId,
+    int? idleSeconds,
     int? slideSeconds,
     bool? isShuffled,
     DisplayMode? startMode,
@@ -85,6 +102,9 @@ class Settings {
     mqttPassword: mqttPassword ?? this.mqttPassword,
     deviceName: deviceName ?? this.deviceName,
     dashboardUrl: dashboardUrl ?? this.dashboardUrl,
+    haToken: haToken ?? this.haToken,
+    weatherEntityId: weatherEntityId ?? this.weatherEntityId,
+    idleSeconds: idleSeconds ?? this.idleSeconds,
     slideSeconds: slideSeconds ?? this.slideSeconds,
     isShuffled: isShuffled ?? this.isShuffled,
     startMode: startMode ?? this.startMode,
@@ -98,6 +118,7 @@ const _secureStorage = FlutterSecureStorage();
 const _kSynologyPassword = 'synology_password';
 const _kMqttPassword = 'mqtt_password';
 const _kPin = 'pin';
+const _kHaToken = 'ha_token';
 
 Future<Settings> loadSettings() async {
   final prefs = await SharedPreferences.getInstance();
@@ -114,9 +135,14 @@ Future<Settings> loadSettings() async {
     mqttPassword: secrets[_kMqttPassword] ?? '',
     deviceName: prefs.getString('device_name') ?? 'HA Display',
     dashboardUrl: prefs.getString('dashboard_url') ?? '',
+    haToken: secrets[_kHaToken] ?? '',
+    weatherEntityId:
+        prefs.getString('weather_entity_id') ?? 'weather.forecast_home',
+    idleSeconds: prefs.getInt('idle_seconds') ?? 120,
     slideSeconds: prefs.getInt('slide_seconds') ?? 15,
     isShuffled: prefs.getBool('is_shuffled') ?? true,
-    startMode: DisplayMode.values.asNameMap()[prefs.getString('start_mode')] ??
+    startMode:
+        DisplayMode.values.asNameMap()[prefs.getString('start_mode')] ??
         DisplayMode.photos,
     pin: secrets[_kPin] ?? '',
     languageCode: prefs.getString('language_code'),
@@ -136,6 +162,8 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setString('mqtt_user', settings.mqttUser);
   await prefs.setString('device_name', settings.deviceName);
   await prefs.setString('dashboard_url', settings.dashboardUrl);
+  await prefs.setString('weather_entity_id', settings.weatherEntityId);
+  await prefs.setInt('idle_seconds', settings.idleSeconds);
   await prefs.setInt('slide_seconds', settings.slideSeconds);
   await prefs.setBool('is_shuffled', settings.isShuffled);
   await prefs.setString('start_mode', settings.startMode.name);
@@ -150,6 +178,7 @@ Future<void> saveSettings(Settings settings) async {
   );
   await _secureStorage.write(key: _kMqttPassword, value: settings.mqttPassword);
   await _secureStorage.write(key: _kPin, value: settings.pin);
+  await _secureStorage.write(key: _kHaToken, value: settings.haToken);
 }
 
 /// Loaded once in `main()` (Notifier.build() can't be async) and injected

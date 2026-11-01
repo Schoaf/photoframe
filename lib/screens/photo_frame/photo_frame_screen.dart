@@ -13,6 +13,7 @@ import '../../state/photos.dart';
 import '../../state/settings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/slide_duration.dart';
+import '../../widgets/ha_overlay.dart';
 import 'gallery_screen.dart';
 import 'video_slide.dart';
 
@@ -53,6 +54,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
 
   void _scheduleNext(Duration after) {
     _slideTimer?.cancel();
+    if (ref.read(displayProvider).mode != DisplayMode.photos) return;
     _slideTimer = Timer(after, _next);
   }
 
@@ -114,6 +116,25 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
     if (page == _page) _next();
   }
 
+  void _openDashboard() {
+    ref.read(displayProvider.notifier).setMode(DisplayMode.dashboard);
+  }
+
+  /// The dashboard covers the photos: no slideshow, no video meanwhile.
+  void _onShownChanged(bool isShown) {
+    if (!isShown) {
+      _slideTimer?.cancel();
+      setState(() => _isOverlayVisible = false);
+      return;
+    }
+    final items = ref.read(albumItemsProvider).value;
+    if (items != null &&
+        items.isNotEmpty &&
+        !items[_page % items.length].isVideo) {
+      _scheduleNext(_interval);
+    }
+  }
+
   Future<void> _openGallery(List<PhotoItem> items) async {
     _slideTimer?.cancel();
     // Pauses a playing video; it restarts (and reschedules) on return.
@@ -141,17 +162,37 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
       displayProvider.select((display) => display.nextPhotoRequests),
       (_, _) => _next(),
     );
+    final isShown = ref.watch(
+      displayProvider.select((display) => display.mode == DisplayMode.photos),
+    );
+    ref.listen(
+      displayProvider.select((display) => display.mode == DisplayMode.photos),
+      (_, isShown) => _onShownChanged(isShown),
+    );
+    final hasDashboard = ref.watch(
+      settingsProvider.select((settings) => settings.hasDashboard),
+    );
+    final haOverlay = HaOverlay(
+      onOpenDashboard: hasDashboard ? _openDashboard : null,
+      isLifted: _isOverlayVisible,
+    );
     final items = ref.watch(albumItemsProvider);
     // A refresh keeps showing the previous list instead of a spinner.
     final list = items.value;
     if (list == null || list.isEmpty) {
-      return Center(
-        child: items.isLoading
-            ? const CircularProgressIndicator()
-            : Text(
-                items.hasError ? l10n.photosLoadError : l10n.photosEmpty,
-                style: const TextStyle(fontSize: AppSizes.captionFontSize),
-              ),
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(
+            child: items.isLoading
+                ? const CircularProgressIndicator()
+                : Text(
+                    items.hasError ? l10n.photosLoadError : l10n.photosEmpty,
+                    style: const TextStyle(fontSize: AppSizes.captionFontSize),
+                  ),
+          ),
+          haOverlay,
+        ],
       );
     }
     if (!_hasStarted) {
@@ -177,7 +218,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
                   key: ValueKey('video_$page'),
                   item: item,
                   poster: _imageProvider(item, ThumbnailSize.xl),
-                  isActive: page == _page && !_isGalleryOpen,
+                  isActive: page == _page && !_isGalleryOpen && isShown,
                   isSoundOn: page == _page && _isSoundOn,
                   interval: _interval,
                   onLengthKnown: (length) => _onVideoLength(page, length),
@@ -192,6 +233,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
               );
             },
           ),
+          haOverlay,
           IgnorePointer(
             ignoring: !_isOverlayVisible,
             child: AnimatedOpacity(
@@ -205,6 +247,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
                   _showOverlay();
                 },
                 onOpenGallery: () => _openGallery(list),
+                onOpenDashboard: hasDashboard ? _openDashboard : null,
               ),
             ),
           ),
@@ -220,12 +263,14 @@ class _Overlay extends StatelessWidget {
     required this.isSoundOn,
     required this.onToggleSound,
     required this.onOpenGallery,
+    required this.onOpenDashboard,
   });
 
   final PhotoItem item;
   final bool isSoundOn;
   final VoidCallback onToggleSound;
   final VoidCallback onOpenGallery;
+  final VoidCallback? onOpenDashboard;
 
   @override
   Widget build(BuildContext context) {
@@ -272,6 +317,14 @@ class _Overlay extends StatelessWidget {
               tooltip: l10n.gallery,
               onPressed: onOpenGallery,
             ),
+            if (onOpenDashboard case final onOpenDashboard?) ...[
+              const SizedBox(width: 16),
+              _OverlayButton(
+                icon: Icons.dashboard,
+                tooltip: l10n.showDashboard,
+                onPressed: onOpenDashboard,
+              ),
+            ],
           ],
         ),
       ),

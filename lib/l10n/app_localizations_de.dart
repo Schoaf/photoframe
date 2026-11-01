@@ -191,4 +191,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get save => 'Speichern';
+
+  @override
+  String get tomorrow => 'Morgen';
+
+  @override
+  String idleSeconds(int seconds) {
+    return 'Zurück zu den Fotos nach: $seconds s';
+  }
+
+  @override
+  String get sectionHaInfo => 'Wetter und Hinweise aus Home Assistant';
+
+  @override
+  String get haToken => 'Token des Tablet-Benutzers';
+
+  @override
+  String get weatherEntity => 'Wetter-Entität';
+
+  @override
+  String get haInfoHint =>
+      'Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).';
 }
