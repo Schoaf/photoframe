@@ -75,7 +75,10 @@ class _PinDialogState extends State<_PinDialog> {
                 spacing: 12,
                 children: row == null
                     ? [
-                        key('✕', onPressed: () => Navigator.of(context).pop(false)),
+                        key(
+                          '✕',
+                          onPressed: () => Navigator.of(context).pop(false),
+                        ),
                         key('0'),
                         key(
                           '⌫',

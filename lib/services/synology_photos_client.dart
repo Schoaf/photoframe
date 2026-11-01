@@ -55,10 +55,11 @@ class SynologyPhotosClient {
 
   Future<List<PhotoAlbum>> listAlbums() async {
     final albums = <PhotoAlbum>[];
-    await _paginate(
-      {'api': 'SYNO.Foto.Browse.Album', 'version': '2', 'method': 'list'},
-      (json) => albums.add(PhotoAlbum.fromJson(json)),
-    );
+    await _paginate({
+      'api': 'SYNO.Foto.Browse.Album',
+      'version': '2',
+      'method': 'list',
+    }, (json) => albums.add(PhotoAlbum.fromJson(json)));
     return albums;
   }
 
@@ -83,17 +84,16 @@ class SynologyPhotosClient {
 
   /// `sm` (~240 px) for the gallery, `xl` (~1280 px) for full screen -
   /// already rendered by the NAS, so the tablet never decodes originals.
-  String thumbnailUrl(PhotoItem item, {required ThumbnailSize size}) =>
-      _url({
-        'api': 'SYNO.Foto.Thumbnail',
-        'version': '2',
-        'method': 'get',
-        'mode': 'download',
-        'id': '${item.unitId}',
-        'type': 'unit',
-        'size': size.name,
-        'cache_key': item.cacheKey,
-      });
+  String thumbnailUrl(PhotoItem item, {required ThumbnailSize size}) => _url({
+    'api': 'SYNO.Foto.Thumbnail',
+    'version': '2',
+    'method': 'get',
+    'mode': 'download',
+    'id': '${item.unitId}',
+    'type': 'unit',
+    'size': size.name,
+    'cache_key': item.cacheKey,
+  });
 
   /// Synology's H.264 transcode of the video.
   String convertedVideoUrl(PhotoItem item) => _url({
@@ -112,9 +112,10 @@ class SynologyPhotosClient {
     'unit_id': '[${item.id}]',
   });
 
-  String _url(Map<String, String> params) => Uri.parse(
-    _endpoint,
-  ).replace(queryParameters: {...params, '_sid': ?_sid}).toString();
+  String _url(Map<String, String> params) =>
+      Uri.parse(_endpoint)
+          .replace(queryParameters: {...params, '_sid': ?_sid})
+          .toString();
 
   Future<void> _paginate(
     Map<String, String> params,

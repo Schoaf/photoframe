@@ -1,7 +1,10 @@
 /// The hidden unlock gesture: [requiredTaps] taps, each within [window] of
 /// the first one.
 class TapSequence {
-  TapSequence({this.requiredTaps = 5, this.window = const Duration(seconds: 3)});
+  TapSequence({
+    this.requiredTaps = 5,
+    this.window = const Duration(seconds: 3),
+  });
 
   final int requiredTaps;
   final Duration window;

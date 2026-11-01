@@ -98,10 +98,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: client.thumbnailUrl(
-                      item,
-                      size: ThumbnailSize.sm,
-                    ),
+                    imageUrl: client.thumbnailUrl(item, size: ThumbnailSize.sm),
                     cacheKey: '${item.unitId}_${item.cacheKey}_sm',
                     fit: BoxFit.cover,
                     fadeInDuration: const Duration(milliseconds: 150),

@@ -23,5 +23,6 @@ class Kiosk {
   Future<bool> isDeviceOwner() async =>
       await _channel.invokeMethod<bool>('isDeviceOwner') ?? false;
 
-  Future<void> removeDeviceOwner() => _channel.invokeMethod('removeDeviceOwner');
+  Future<void> removeDeviceOwner() =>
+      _channel.invokeMethod('removeDeviceOwner');
 }

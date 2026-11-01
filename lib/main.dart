@@ -58,7 +58,9 @@ class HaDisplayApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: settings.isConfigured ? const DisplayScreen() : const _SetupScreen(),
+      home: settings.isConfigured
+          ? const DisplayScreen()
+          : const _SetupScreen(),
     );
   }
 }

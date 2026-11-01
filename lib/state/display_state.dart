@@ -57,8 +57,9 @@ class DisplayNotifier extends Notifier<DisplayState> {
     return DisplayState(mode: _availableMode(settings, settings.startMode));
   }
 
-  void setMode(DisplayMode mode) =>
-      state = state.copyWith(mode: _availableMode(ref.read(settingsProvider), mode));
+  void setMode(DisplayMode mode) => state = state.copyWith(
+    mode: _availableMode(ref.read(settingsProvider), mode),
+  );
 
   Future<void> setScreenOn(bool isOn) async {
     if (isOn == state.isScreenOn) return;
@@ -100,8 +101,8 @@ class DisplayNotifier extends Notifier<DisplayState> {
       switch (wanted) {
         DisplayMode.photos when !settings.hasPhotos && settings.hasDashboard =>
           DisplayMode.dashboard,
-        DisplayMode.dashboard when !settings.hasDashboard &&
-            settings.hasPhotos =>
+        DisplayMode.dashboard
+            when !settings.hasDashboard && settings.hasPhotos =>
           DisplayMode.photos,
         _ => wanted,
       };
