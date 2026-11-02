@@ -130,7 +130,6 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           bottom: bottom,
           child: _RunningRow(
             devices: info.running,
-            now: _now,
             onOpen: (device) => opener(device.view ?? settings.devicesView),
           ),
         ),
@@ -284,14 +283,9 @@ class _AgendaPanel extends StatelessWidget {
 /// Running appliances along the bottom edge, right-aligned: one that starts
 /// comes in at the far right and pushes the others to the left.
 class _RunningRow extends StatefulWidget {
-  const _RunningRow({
-    required this.devices,
-    required this.now,
-    required this.onOpen,
-  });
+  const _RunningRow({required this.devices, required this.onOpen});
 
   final List<RunningDevice> devices;
-  final DateTime now;
   final VoidCallback? Function(RunningDevice device) onOpen;
 
   @override
@@ -319,7 +313,7 @@ class _RunningRowState extends State<_RunningRow> {
               padding: const EdgeInsets.only(left: 16),
               child: GestureDetector(
                 onTap: widget.onOpen(byName[name]!),
-                child: _RunningTile(device: byName[name]!, now: widget.now),
+                child: _RunningTile(device: byName[name]!),
               ),
             ),
           ),
@@ -372,38 +366,93 @@ class _SlideInState extends State<_SlideIn>
   );
 }
 
-/// Big appliance icon, "noch 42 min" and a bar filling up to 100 %.
-class _RunningTile extends StatelessWidget {
-  const _RunningTile({required this.device, required this.now});
+/// From here on an appliance's tile turns orange ...
+const _almostDone = Duration(minutes: 3);
+
+/// ... and from here on its icon pulses.
+const _nearlyDone = Duration(minutes: 1);
+
+/// Big appliance icon, "noch 42 min" and a bar filling up to 100 %. Turns
+/// orange shortly before the end, and its icon pulses in the last minute.
+class _RunningTile extends StatefulWidget {
+  const _RunningTile({required this.device});
 
   final RunningDevice device;
-  final DateTime now;
+
+  @override
+  State<_RunningTile> createState() => _RunningTileState();
+}
+
+class _RunningTileState extends State<_RunningTile>
+    with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+    lowerBound: 0.15,
+  );
+  Timer? _nextStep;
+
+  @override
+  void dispose() {
+    _nextStep?.cancel();
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  /// Redraws right when the next highlight starts - the overlay itself only
+  /// redraws once a minute.
+  void _scheduleNextStep(Duration? remaining) {
+    _nextStep?.cancel();
+    if (remaining == null) return;
+    final next = [
+      remaining - _almostDone,
+      remaining - _nearlyDone,
+    ].where((left) => left > Duration.zero).firstOrNull;
+    if (next != null) {
+      _nextStep = Timer(next, () => mounted ? setState(() {}) : null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final device = widget.device;
     final remaining = device.remaining(now);
     final fraction = device.fraction(now);
     final minutes = remaining == null
         ? null
         : (remaining.inSeconds / 60).ceil();
-    return Container(
+    final isAlmostDone = remaining != null && remaining <= _almostDone;
+    final isNearlyDone = remaining != null && remaining <= _nearlyDone;
+    _scheduleNextStep(remaining);
+    if (isNearlyDone && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!isNearlyDone && _pulse.isAnimating) {
+      _pulse.value = 1;
+    }
+    final foreground = isAlmostDone ? Colors.black87 : Colors.white;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 600),
       // Wider when the text needs it.
       constraints: const BoxConstraints(minWidth: AppSizes.deviceTileMinWidth),
       height: AppSizes.deviceTileHeight,
       padding: const EdgeInsets.fromLTRB(8, 8, 20, 8),
       decoration: BoxDecoration(
-        color: const Color(0x99000000),
+        color: isAlmostDone ? const Color(0xE6FB8C00) : const Color(0x99000000),
         borderRadius: BorderRadius.circular(16),
       ),
       child: IntrinsicWidth(
         child: Row(
           spacing: 12,
           children: [
-            Icon(
-              warningIcon(device.icon),
-              size: AppSizes.deviceTileHeight - 16,
-              color: Colors.white,
+            FadeTransition(
+              opacity: isNearlyDone ? _pulse : kAlwaysCompleteAnimation,
+              child: Icon(
+                warningIcon(device.icon),
+                size: AppSizes.deviceTileHeight - 16,
+                color: foreground,
+              ),
             ),
             Expanded(
               child: Column(
@@ -421,8 +470,8 @@ class _RunningTile extends StatelessWidget {
                             : l10n.remainingHours(
                                 '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
                               ),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: foreground,
                           fontSize: 22,
                           fontWeight: FontWeight.w500,
                         ),
@@ -434,7 +483,10 @@ class _RunningTile extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: fraction,
                         minHeight: 8,
-                        backgroundColor: const Color(0x33FFFFFF),
+                        color: isAlmostDone ? Colors.black87 : null,
+                        backgroundColor: isAlmostDone
+                            ? const Color(0x33000000)
+                            : const Color(0x33FFFFFF),
                       ),
                     ),
                 ],
