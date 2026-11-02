@@ -195,6 +195,13 @@ The entity names in these examples depend on your devices.
 - **Which calendars:** Set them up in HA (Settings → Devices & services: Google Calendar, CalDAV for iCloud/Nextcloud/Synology, Remote Calendar for an ICS address, Local Calendar). Then pick them in the app's settings under "Kalender laden".
 - **How it reads them:** The app uses HA's calendar API with the Tablet user's token and re-reads every 5 minutes.
 
+## Music
+
+- **Which players:** Pick them in the app's settings under "Player laden", e.g. the Music Assistant players. Pick only one entity per speaker, since Music Assistant adds its own player next to the speaker's.
+- **Where it shows:** While a chosen player plays, a tile below the weather shows cover, title, artist and the time left. A paused player stays for 15 minutes.
+- **Controls:** Tapping the tile shows previous, play/pause and next for a few seconds.
+- **Phone:** HA only sees what plays on players it knows, e.g. Spotify (via the Spotify integration), Cast, Sonos or Music Assistant.
+
 ## Slideshow
 
 - Each photo stays for the configured time (default 15 s), and the slides advance by themselves.

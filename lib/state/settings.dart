@@ -23,6 +23,7 @@ class Settings {
     this.haToken = '',
     this.weatherEntityId = 'weather.forecast_home',
     this.calendarEntityIds = const [],
+    this.mediaPlayerEntityIds = const [],
     this.idleSeconds = 120,
     this.updateRepo = 'Schoaf/ha-display',
     this.githubToken = '',
@@ -59,6 +60,9 @@ class Settings {
 
   /// HA calendars shown as today/tomorrow agenda.
   final List<String> calendarEntityIds;
+
+  /// HA media players whose music shows on the photos.
+  final List<String> mediaPlayerEntityIds;
 
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
@@ -102,6 +106,7 @@ class Settings {
     String? haToken,
     String? weatherEntityId,
     List<String>? calendarEntityIds,
+    List<String>? mediaPlayerEntityIds,
     int? idleSeconds,
     String? updateRepo,
     String? githubToken,
@@ -126,6 +131,7 @@ class Settings {
     haToken: haToken ?? this.haToken,
     weatherEntityId: weatherEntityId ?? this.weatherEntityId,
     calendarEntityIds: calendarEntityIds ?? this.calendarEntityIds,
+    mediaPlayerEntityIds: mediaPlayerEntityIds ?? this.mediaPlayerEntityIds,
     idleSeconds: idleSeconds ?? this.idleSeconds,
     updateRepo: updateRepo ?? this.updateRepo,
     githubToken: githubToken ?? this.githubToken,
@@ -165,6 +171,8 @@ Future<Settings> loadSettings() async {
     weatherEntityId:
         prefs.getString('weather_entity_id') ?? 'weather.forecast_home',
     calendarEntityIds: prefs.getStringList('calendar_entity_ids') ?? const [],
+    mediaPlayerEntityIds:
+        prefs.getStringList('media_player_entity_ids') ?? const [],
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
     updateRepo: prefs.getString('update_repo') ?? 'Schoaf/ha-display',
     githubToken: secrets[_kGithubToken] ?? '',
@@ -194,6 +202,10 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setString('dashboard_url', settings.dashboardUrl);
   await prefs.setString('weather_entity_id', settings.weatherEntityId);
   await prefs.setStringList('calendar_entity_ids', settings.calendarEntityIds);
+  await prefs.setStringList(
+    'media_player_entity_ids',
+    settings.mediaPlayerEntityIds,
+  );
   await prefs.setInt('idle_seconds', settings.idleSeconds);
   await prefs.setString('update_repo', settings.updateRepo);
   await prefs.setInt('slide_seconds', settings.slideSeconds);

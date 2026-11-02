@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ha_client.dart';
 import 'settings.dart';
 
-/// Weather and warnings from Home Assistant, live while the app runs.
+/// Weather, warnings and music from Home Assistant, live while the app
+/// runs.
 class HaInfoNotifier extends Notifier<HaSnapshot> {
+  HaClient? _client;
+
   @override
   HaSnapshot build() {
     final settings = ref.watch(settingsProvider);
@@ -13,11 +16,17 @@ class HaInfoNotifier extends Notifier<HaSnapshot> {
       baseUrl: settings.dashboardUrl,
       token: settings.haToken,
       weatherEntityId: settings.weatherEntityId.trim(),
+      playerEntityIds: settings.mediaPlayerEntityIds,
       onUpdate: (snapshot) => state = snapshot,
     )..start();
+    _client = client;
     ref.onDispose(client.stop);
     return const HaSnapshot();
   }
+
+  /// `media_previous_track`, `media_play_pause` or `media_next_track`.
+  void mediaCommand(String entityId, String service) =>
+      _client?.callService('media_player', service, entityId);
 }
 
 final haInfoProvider = NotifierProvider<HaInfoNotifier, HaSnapshot>(

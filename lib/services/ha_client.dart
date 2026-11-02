@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'ha_media.dart';
+
 /// The template sensor (set up in Home Assistant, see README) that lists
 /// the active warnings - so labels are evaluated in HA, and the tablet's
 /// token needs no admin rights.
@@ -10,6 +12,7 @@ const warningsEntityId = 'sensor.tablet_warnungen';
 const _reconnectDelay = Duration(seconds: 30);
 const _entitiesRequestId = 1;
 const _forecastRequestId = 2;
+const _firstCommandId = 3;
 
 class HaEntity {
   const HaEntity(this.state, this.attributes);
@@ -134,6 +137,7 @@ class HaSnapshot {
     this.tomorrow,
     this.warnings = const [],
     this.running = const [],
+    this.nowPlaying,
     this.isTokenInvalid = false,
   });
 
@@ -141,6 +145,7 @@ class HaSnapshot {
   final WeatherDay? tomorrow;
   final List<HaWarning> warnings;
   final List<RunningDevice> running;
+  final NowPlaying? nowPlaying;
   final bool isTokenInvalid;
 }
 
@@ -214,24 +219,27 @@ List<HaWarning> parseWarnings(HaEntity? entity) {
 }
 
 /// Websocket connection to Home Assistant (token of a non-admin user):
-/// follows the weather entity, its daily forecast and the warnings sensor.
-/// Reconnects on its own, e.g. while HA restarts.
+/// follows the weather entity, its daily forecast, the warnings sensor and
+/// the chosen media players, and sends player commands. Reconnects on its own, e.g. while HA restarts.
 class HaClient {
   HaClient({
     required String baseUrl,
     required this.token,
     required this.weatherEntityId,
+    this.playerEntityIds = const [],
     required this.onUpdate,
   }) : _uri = websocketUri(baseUrl);
 
   final String token;
   final String weatherEntityId;
+  final List<String> playerEntityIds;
   final ValueChanged<HaSnapshot> onUpdate;
   final Uri _uri;
   WebSocket? _socket;
   bool _isRunning = false;
   final _store = EntityStore();
   List<dynamic>? _forecast;
+  var _nextId = _firstCommandId;
 
   /// `http://ha:8123/lovelace/0` → `ws://ha:8123/api/websocket`.
   static Uri websocketUri(String baseUrl) {
@@ -290,6 +298,7 @@ class HaClient {
           'entity_ids': [
             if (weatherEntityId.isNotEmpty) weatherEntityId,
             warningsEntityId,
+            ...playerEntityIds,
           ],
         });
         if (weatherEntityId.isEmpty) break;
@@ -316,7 +325,17 @@ class HaClient {
     tomorrow: parseTomorrow(_forecast, DateTime.now()),
     warnings: parseWarnings(_store.entities[warningsEntityId]),
     running: parseRunning(_store.entities[warningsEntityId]),
+    nowPlaying: parseNowPlaying(_store.entities, playerEntityIds),
   );
+
+  /// e.g. `media_play_pause` on a media player.
+  void callService(String domain, String service, String entityId) => _send({
+    'id': _nextId++,
+    'type': 'call_service',
+    'domain': domain,
+    'service': service,
+    'target': {'entity_id': entityId},
+  });
 
   void _send(Map<String, Object> message) => _socket?.add(jsonEncode(message));
 }

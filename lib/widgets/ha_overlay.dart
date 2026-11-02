@@ -7,8 +7,10 @@ import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../services/ha_calendar.dart';
 import '../services/ha_client.dart';
+import '../services/ha_media.dart';
 import '../state/calendar.dart';
 import '../state/ha_info.dart';
+import '../state/settings.dart';
 import '../theme/app_theme.dart';
 import '../utils/ha_icons.dart';
 
@@ -191,6 +193,10 @@ class _InfoPanel extends StatelessWidget {
           const SizedBox(height: 12),
           _RunningTile(device: device, now: now),
         ],
+        if (info.nowPlaying case final music? when !music.isStale(now)) ...[
+          const SizedBox(height: 12),
+          _NowPlayingTile(music: music),
+        ],
       ],
     );
   }
@@ -322,6 +328,178 @@ class _RunningTile extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Cover, title, artist and a bar with the time left. A tap shows
+/// previous / play-pause / next for a few seconds.
+class _NowPlayingTile extends ConsumerStatefulWidget {
+  const _NowPlayingTile({required this.music});
+
+  final NowPlaying music;
+
+  @override
+  ConsumerState<_NowPlayingTile> createState() => _NowPlayingTileState();
+}
+
+class _NowPlayingTileState extends ConsumerState<_NowPlayingTile> {
+  static const _controlsTimeout = Duration(seconds: 8);
+
+  late final Timer _ticker;
+  Timer? _hideControls;
+  bool _isShowingControls = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // The position moves on between HA updates.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (widget.music.isPlaying) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker.cancel();
+    _hideControls?.cancel();
+    super.dispose();
+  }
+
+  void _showControls() {
+    _hideControls?.cancel();
+    setState(() => _isShowingControls = true);
+    _hideControls = Timer(
+      _controlsTimeout,
+      () => mounted ? setState(() => _isShowingControls = false) : null,
+    );
+  }
+
+  void _command(String service) {
+    ref
+        .read(haInfoProvider.notifier)
+        .mediaCommand(widget.music.entityId, service);
+    _showControls();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final music = widget.music;
+    final now = DateTime.now();
+    final remaining = music.remaining(now);
+    final fraction = music.fraction(now);
+    final picture = music.pictureUrl;
+    final baseUrl = ref.watch(settingsProvider.select((s) => s.dashboardUrl));
+    const icon = Icon(Icons.music_note, size: 36, color: Colors.white70);
+    Widget button(IconData iconData, String tooltip, String service) =>
+        IconButton(
+          iconSize: 44,
+          tooltip: tooltip,
+          color: Colors.white,
+          icon: Icon(iconData),
+          onPressed: () => _command(service),
+        );
+    return GestureDetector(
+      onTap: _showControls,
+      child: Container(
+        width: AppSizes.runningTileWidth,
+        padding: const EdgeInsets.fromLTRB(12, 12, 16, 14),
+        decoration: BoxDecoration(
+          color: const Color(0x99000000),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 10,
+          children: [
+            Row(
+              spacing: 12,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox.square(
+                    dimension: 56,
+                    child: picture == null
+                        ? icon
+                        : Image.network(
+                            Uri.parse(baseUrl.trim())
+                                .resolve(picture)
+                                .toString(),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => icon,
+                          ),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        music.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (music.artist case final artist?)
+                        Text(
+                          artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (!music.isPlaying)
+                  const Icon(Icons.pause, size: 28, color: Colors.white70)
+                else if (remaining != null)
+                  Text(
+                    '-${remaining.inMinutes}:${'${remaining.inSeconds % 60}'.padLeft(2, '0')}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+              ],
+            ),
+            if (fraction != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: fraction,
+                  minHeight: 6,
+                  backgroundColor: const Color(0x33FFFFFF),
+                ),
+              ),
+            if (_isShowingControls)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  button(
+                    Icons.skip_previous,
+                    l10n.previousTrack,
+                    'media_previous_track',
+                  ),
+                  button(
+                    music.isPlaying ? Icons.pause : Icons.play_arrow,
+                    l10n.playPause,
+                    'media_play_pause',
+                  ),
+                  button(Icons.skip_next, l10n.nextTrack, 'media_next_track'),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

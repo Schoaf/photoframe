@@ -583,6 +583,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Keine Kalender gefunden. Kalender werden in HA unter Geräte & Dienste eingerichtet.'**
   String get noCalendars;
+
+  /// No description provided for @loadPlayers.
+  ///
+  /// In de, this message translates to:
+  /// **'Player laden'**
+  String get loadPlayers;
+
+  /// No description provided for @noPlayers.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Media-Player gefunden.'**
+  String get noPlayers;
+
+  /// No description provided for @previousTrack.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorheriges Lied'**
+  String get previousTrack;
+
+  /// No description provided for @playPause.
+  ///
+  /// In de, this message translates to:
+  /// **'Wiedergabe/Pause'**
+  String get playPause;
+
+  /// No description provided for @nextTrack.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächstes Lied'**
+  String get nextTrack;
 }
 
 class _AppLocalizationsDelegate

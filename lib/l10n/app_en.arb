@@ -80,5 +80,10 @@
   "allDay": "all day",
   "calendars": "Calendars",
   "loadCalendars": "Load calendars",
-  "noCalendars": "No calendars found. Calendars are set up in HA under Devices & services."
+  "noCalendars": "No calendars found. Calendars are set up in HA under Devices & services.",
+  "loadPlayers": "Load players",
+  "noPlayers": "No media players found.",
+  "previousTrack": "Previous track",
+  "playPause": "Play/pause",
+  "nextTrack": "Next track"
 }

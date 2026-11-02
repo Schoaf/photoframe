@@ -290,4 +290,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noCalendars =>
       'No calendars found. Calendars are set up in HA under Devices & services.';
+
+  @override
+  String get loadPlayers => 'Load players';
+
+  @override
+  String get noPlayers => 'No media players found.';
+
+  @override
+  String get previousTrack => 'Previous track';
+
+  @override
+  String get playPause => 'Play/pause';
+
+  @override
+  String get nextTrack => 'Next track';
 }

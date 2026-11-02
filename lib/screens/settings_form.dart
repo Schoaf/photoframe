@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/photo_item.dart';
 import '../services/ha_calendar.dart';
+import '../services/ha_media.dart';
 import '../services/synology_photos_client.dart';
 import '../state/settings.dart';
 import 'qr_scan_screen.dart';
@@ -30,6 +31,9 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
   List<HaCalendar>? _calendars;
   String? _calendarError;
   bool _isLoadingCalendars = false;
+  List<HaMediaPlayer>? _players;
+  String? _playerError;
+  bool _isLoadingPlayers = false;
   String? _albumError;
   bool _isLoadingAlbums = false;
 
@@ -135,6 +139,35 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       if (mounted) setState(() => _isLoadingCalendars = false);
     }
   }
+
+  Future<void> _loadPlayers() async {
+    setState(() {
+      _isLoadingPlayers = true;
+      _playerError = null;
+    });
+    final l10n = AppLocalizations.of(context);
+    try {
+      final players = await listMediaPlayers(
+        baseUrl: _value('dashboardUrl'),
+        token: _value('haToken'),
+      );
+      if (!mounted) return;
+      setState(() {
+        _players = players;
+        if (players.isEmpty) _playerError = l10n.noPlayers;
+      });
+    } on Exception catch (e) {
+      setState(() => _playerError = l10n.connectionFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _isLoadingPlayers = false);
+    }
+  }
+
+  void _togglePlayer(String entityId, bool isSelected) => setState(() {
+    final ids = [..._settings.mediaPlayerEntityIds]..remove(entityId);
+    if (isSelected) ids.add(entityId);
+    _settings = _settings.copyWith(mediaPlayerEntityIds: ids);
+  });
 
   void _toggleCalendar(String entityId, bool isSelected) => setState(() {
     final ids = [..._settings.calendarEntityIds]..remove(entityId);
@@ -441,6 +474,41 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             ],
           ),
           if (_calendarError case final error?)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                error,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: _isLoadingPlayers ? null : _loadPlayers,
+                icon: const Icon(Icons.music_note),
+                label: Text(l10n.loadPlayers),
+              ),
+              for (final player
+                  in _players ??
+                      [
+                        for (final id in _settings.mediaPlayerEntityIds)
+                          HaMediaPlayer(entityId: id, name: id),
+                      ])
+                FilterChip(
+                  label: Text(player.name),
+                  selected: _settings.mediaPlayerEntityIds.contains(
+                    player.entityId,
+                  ),
+                  onSelected: (isSelected) =>
+                      _togglePlayer(player.entityId, isSelected),
+                ),
+            ],
+          ),
+          if (_playerError case final error?)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
