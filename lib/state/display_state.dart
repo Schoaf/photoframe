@@ -13,6 +13,8 @@ class DisplayState {
     this.brightness,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
+    this.dashboardView,
+    this.viewRequests = 0,
   });
 
   final DisplayMode mode;
@@ -29,6 +31,11 @@ class DisplayState {
   final int nextPhotoRequests;
   final int reloadRequests;
 
+  /// Dashboard view to show (e.g. `wetter`), null for the main view; the
+  /// dashboard switches to it whenever [viewRequests] changes.
+  final String? dashboardView;
+  final int viewRequests;
+
   DisplayState copyWith({
     DisplayMode? mode,
     bool? isScreenOn,
@@ -36,6 +43,8 @@ class DisplayState {
     int? brightness,
     int? nextPhotoRequests,
     int? reloadRequests,
+    String? Function()? dashboardView,
+    int? viewRequests,
   }) => DisplayState(
     mode: mode ?? this.mode,
     isScreenOn: isScreenOn ?? this.isScreenOn,
@@ -43,6 +52,8 @@ class DisplayState {
     brightness: brightness ?? this.brightness,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
+    dashboardView: dashboardView != null ? dashboardView() : this.dashboardView,
+    viewRequests: viewRequests ?? this.viewRequests,
   );
 }
 
@@ -59,6 +70,14 @@ class DisplayNotifier extends Notifier<DisplayState> {
 
   void setMode(DisplayMode mode) => state = state.copyWith(
     mode: _availableMode(ref.read(settingsProvider), mode),
+  );
+
+  /// Shows the dashboard at [view] (a view path like `wetter`), or at its
+  /// main view.
+  void openDashboard([String? view]) => state = state.copyWith(
+    mode: _availableMode(ref.read(settingsProvider), DisplayMode.dashboard),
+    dashboardView: () => view == null || view.isEmpty ? null : view,
+    viewRequests: state.viewRequests + 1,
   );
 
   Future<void> setScreenOn(bool isOn) async {

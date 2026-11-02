@@ -85,5 +85,10 @@
   "noPlayers": "No media players found.",
   "previousTrack": "Previous track",
   "playPause": "Play/pause",
-  "nextTrack": "Next track"
+  "nextTrack": "Next track",
+  "weatherView": "Weather view",
+  "calendarView": "Calendar view",
+  "warningsView": "Warnings view",
+  "devicesView": "Appliances view",
+  "dashboardViewsHint": "This dashboard view (the view's URL path in HA) opens when you tap the weather, the agenda, a warning or a running appliance. Empty = main view. An appliance can name its own view in the template with \"ansicht\"."
 }

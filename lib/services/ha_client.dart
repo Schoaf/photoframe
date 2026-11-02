@@ -95,6 +95,7 @@ class RunningDevice {
     this.end,
     this.start,
     this.progress,
+    this.view,
   });
 
   final String name;
@@ -104,6 +105,9 @@ class RunningDevice {
 
   /// 0..100 as the device reports it.
   final double? progress;
+
+  /// Dashboard view for this appliance, if the template names one.
+  final String? view;
 
   /// From [end], or estimated from [start] and [progress] - e.g. the
   /// Roborock only reports how far it is.
@@ -169,6 +173,7 @@ List<RunningDevice> parseRunning(HaEntity? entity) {
           end: time(entry['ende']),
           start: time(entry['start']),
           progress: number(entry['fortschritt']),
+          view: entry['ansicht'] as String?,
         ),
   ];
 }

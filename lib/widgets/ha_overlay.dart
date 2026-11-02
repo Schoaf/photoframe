@@ -21,7 +21,8 @@ const _textShadows = [
 ];
 
 /// Agenda (top left), clock + weather (top right), warnings (bottom
-/// centre) and running appliances (bottom right) over the photos. A tap on either opens the dashboard via [onOpenDashboard].
+/// centre) and running appliances (bottom right) over the photos. A tap
+/// opens the matching dashboard view via [onOpenDashboard]. A tap on either opens the dashboard via [onOpenDashboard].
 class HaOverlay extends ConsumerStatefulWidget {
   const HaOverlay({
     super.key,
@@ -29,8 +30,9 @@ class HaOverlay extends ConsumerStatefulWidget {
     required this.isLifted,
   });
 
-  /// null when no dashboard is configured.
-  final VoidCallback? onOpenDashboard;
+  /// Gets the view path (null: main view); null when no dashboard is
+  /// configured.
+  final void Function(String? view)? onOpenDashboard;
 
   /// The photo controls are visible - the warnings move up above them.
   final bool isLifted;
@@ -73,6 +75,9 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
     final warnings = _dismissed.visible(info.warnings);
     final agenda = buildAgenda(ref.watch(calendarProvider), _now);
     final bottom = widget.isLifted ? 112.0 : 32.0;
+    final settings = ref.watch(settingsProvider);
+    final open = widget.onOpenDashboard;
+    VoidCallback? opener(String view) => open == null ? null : () => open(view);
     return Stack(
       children: [
         if (agenda.isNotEmpty)
@@ -80,7 +85,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
             top: 24,
             left: 32,
             child: GestureDetector(
-              onTap: widget.onOpenDashboard,
+              onTap: opener(settings.calendarView),
               child: _AgendaPanel(days: agenda),
             ),
           ),
@@ -88,7 +93,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           top: 24,
           right: 32,
           child: GestureDetector(
-            onTap: widget.onOpenDashboard,
+            onTap: opener(settings.weatherView),
             child: _InfoPanel(now: _now, info: info),
           ),
         ),
@@ -110,7 +115,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
                   for (final warning in warnings.take(3))
                     _WarningBanner(
                       warning: warning,
-                      onTap: widget.onOpenDashboard,
+                      onTap: opener(settings.warningsView),
                       onDismiss: () =>
                           setState(() => _dismissed.dismiss(warning.id)),
                     ),
@@ -123,7 +128,11 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           duration: const Duration(milliseconds: 250),
           right: 32,
           bottom: bottom,
-          child: _RunningRow(devices: info.running, now: _now),
+          child: _RunningRow(
+            devices: info.running,
+            now: _now,
+            onOpen: (device) => opener(device.view ?? settings.devicesView),
+          ),
         ),
       ],
     );
@@ -275,10 +284,15 @@ class _AgendaPanel extends StatelessWidget {
 /// Running appliances along the bottom edge, right-aligned: one that starts
 /// comes in at the far right and pushes the others to the left.
 class _RunningRow extends StatefulWidget {
-  const _RunningRow({required this.devices, required this.now});
+  const _RunningRow({
+    required this.devices,
+    required this.now,
+    required this.onOpen,
+  });
 
   final List<RunningDevice> devices;
   final DateTime now;
+  final VoidCallback? Function(RunningDevice device) onOpen;
 
   @override
   State<_RunningRow> createState() => _RunningRowState();
@@ -303,7 +317,10 @@ class _RunningRowState extends State<_RunningRow> {
             key: ValueKey(name),
             child: Padding(
               padding: const EdgeInsets.only(left: 16),
-              child: _RunningTile(device: byName[name]!, now: widget.now),
+              child: GestureDetector(
+                onTap: widget.onOpen(byName[name]!),
+                child: _RunningTile(device: byName[name]!, now: widget.now),
+              ),
             ),
           ),
       ],

@@ -50,6 +50,10 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       'dashboardUrl': TextEditingController(text: _settings.dashboardUrl),
       'haToken': TextEditingController(text: _settings.haToken),
       'weatherEntityId': TextEditingController(text: _settings.weatherEntityId),
+      'weatherView': TextEditingController(text: _settings.weatherView),
+      'calendarView': TextEditingController(text: _settings.calendarView),
+      'warningsView': TextEditingController(text: _settings.warningsView),
+      'devicesView': TextEditingController(text: _settings.devicesView),
       'mqttHost': TextEditingController(text: _settings.mqttHost),
       'updateRepo': TextEditingController(text: _settings.updateRepo),
       'githubToken': TextEditingController(text: _settings.githubToken),
@@ -196,6 +200,10 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       dashboardUrl: _value('dashboardUrl'),
       haToken: _value('haToken'),
       weatherEntityId: _value('weatherEntityId'),
+      weatherView: _value('weatherView'),
+      calendarView: _value('calendarView'),
+      warningsView: _value('warningsView'),
+      devicesView: _value('devicesView'),
       mqttHost: _value('mqttHost'),
       updateRepo: _value('updateRepo'),
       githubToken: _value('githubToken'),
@@ -409,6 +417,16 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             keyboardType: TextInputType.url,
           ),
           Text(l10n.dashboardHint, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 16),
+          pair(
+            field('weatherView', l10n.weatherView),
+            field('calendarView', l10n.calendarView),
+          ),
+          pair(
+            field('warningsView', l10n.warningsView),
+            field('devicesView', l10n.devicesView),
+          ),
+          Text(l10n.dashboardViewsHint, style: theme.textTheme.bodyMedium),
           const SizedBox(height: 16),
           Row(
             children: [

@@ -189,6 +189,22 @@ The entity names in these examples depend on your devices.
 - **Pressing and holding** hides it until the next time it turns on.
 - At most three notices show at once.
 
+## Detail views
+
+A tap on the overlay opens a view of the dashboard:
+
+| Tap on | View (default) |
+|---|---|
+| Clock / weather | `wetter` |
+| Agenda | `kalender` |
+| Warning | `warnungen` |
+| Running appliance | `geraete`, or the appliance's own `ansicht` |
+
+- **Set up in HA:** Add these views to the tablet's dashboard (Edit dashboard → Add view → URL path), e.g. a weather forecast card with hourly and daily forecast, a calendar card with initial view "List (7 days)", an entities card per appliance.
+- **Other paths:** Change them in the app's settings under Dashboard. Empty opens the main view.
+- **Own view per appliance:** Add `'ansicht': 'geschirrspueler'` to its entry in `laufend`.
+- The dashboard button and the idle timeout work as before: the button opens the main view.
+
 ## Calendar
 
 - **Where it shows:** Today's and tomorrow's events appear in the top left. All-day events come first, today's past events drop off, and at most 6 entries show.

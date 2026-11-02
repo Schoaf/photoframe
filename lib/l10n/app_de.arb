@@ -172,5 +172,10 @@
   "noPlayers": "Keine Media-Player gefunden.",
   "previousTrack": "Vorheriges Lied",
   "playPause": "Wiedergabe/Pause",
-  "nextTrack": "Nächstes Lied"
+  "nextTrack": "Nächstes Lied",
+  "weatherView": "Ansicht Wetter",
+  "calendarView": "Ansicht Kalender",
+  "warningsView": "Ansicht Warnungen",
+  "devicesView": "Ansicht Geräte",
+  "dashboardViewsHint": "Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben."
 }

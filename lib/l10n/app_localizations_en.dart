@@ -305,4 +305,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextTrack => 'Next track';
+
+  @override
+  String get weatherView => 'Weather view';
+
+  @override
+  String get calendarView => 'Calendar view';
+
+  @override
+  String get warningsView => 'Warnings view';
+
+  @override
+  String get devicesView => 'Appliances view';
+
+  @override
+  String get dashboardViewsHint =>
+      'This dashboard view (the view\'s URL path in HA) opens when you tap the weather, the agenda, a warning or a running appliance. Empty = main view. An appliance can name its own view in the template with \"ansicht\".';
 }

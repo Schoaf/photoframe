@@ -116,8 +116,8 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
     if (page == _page) _next();
   }
 
-  void _openDashboard() {
-    ref.read(displayProvider.notifier).setMode(DisplayMode.dashboard);
+  void _openDashboard([String? view]) {
+    ref.read(displayProvider.notifier).openDashboard(view);
   }
 
   /// The dashboard covers the photos: no slideshow, no video meanwhile.

@@ -63,4 +63,35 @@ void main() {
       );
     });
   });
+
+  group('dashboardViewUrl', () {
+    test("replaces the dashboard's view", () {
+      expect(
+        dashboardViewUrl('http://ha:8123/lovelace/0', 'wetter'),
+        'http://ha:8123/lovelace/wetter',
+      );
+      expect(
+        dashboardViewUrl('http://ha:8123/tablet/home?kiosk', 'kalender'),
+        'http://ha:8123/tablet/kalender?kiosk',
+      );
+    });
+
+    test('appends the view to a dashboard without one', () {
+      expect(
+        dashboardViewUrl('http://ha:8123/tablet', 'wetter'),
+        'http://ha:8123/tablet/wetter',
+      );
+    });
+
+    test('keeps the main view without a view', () {
+      expect(
+        dashboardViewUrl('http://ha:8123/lovelace/0', null),
+        'http://ha:8123/lovelace/0',
+      );
+      expect(
+        dashboardViewUrl('http://ha:8123/lovelace/0', ''),
+        'http://ha:8123/lovelace/0',
+      );
+    });
+  });
 }

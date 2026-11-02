@@ -129,6 +129,7 @@ void main() {
                   .toUtc()
                   .toIso8601String(),
               'fortschritt': '58',
+              'ansicht': 'waschmaschine',
             },
             {'name': 'Roborock', 'start': null, 'fortschritt': 40},
             {'ende': 'ohne Namen'},
@@ -141,6 +142,8 @@ void main() {
       ]);
       expect(running.first.remaining(now), const Duration(minutes: 42));
       expect(running.first.fraction(now), closeTo(0.58, 0.001));
+      expect(running.first.view, 'waschmaschine');
+      expect(running.last.view, isNull);
       expect(parseRunning(null), isEmpty);
     });
 

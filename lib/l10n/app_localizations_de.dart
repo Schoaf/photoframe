@@ -306,4 +306,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nextTrack => 'Nächstes Lied';
+
+  @override
+  String get weatherView => 'Ansicht Wetter';
+
+  @override
+  String get calendarView => 'Ansicht Kalender';
+
+  @override
+  String get warningsView => 'Ansicht Warnungen';
+
+  @override
+  String get devicesView => 'Ansicht Geräte';
+
+  @override
+  String get dashboardViewsHint =>
+      'Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben.';
 }

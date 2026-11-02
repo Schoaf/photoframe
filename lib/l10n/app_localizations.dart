@@ -613,6 +613,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nächstes Lied'**
   String get nextTrack;
+
+  /// No description provided for @weatherView.
+  ///
+  /// In de, this message translates to:
+  /// **'Ansicht Wetter'**
+  String get weatherView;
+
+  /// No description provided for @calendarView.
+  ///
+  /// In de, this message translates to:
+  /// **'Ansicht Kalender'**
+  String get calendarView;
+
+  /// No description provided for @warningsView.
+  ///
+  /// In de, this message translates to:
+  /// **'Ansicht Warnungen'**
+  String get warningsView;
+
+  /// No description provided for @devicesView.
+  ///
+  /// In de, this message translates to:
+  /// **'Ansicht Geräte'**
+  String get devicesView;
+
+  /// No description provided for @dashboardViewsHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben.'**
+  String get dashboardViewsHint;
 }
 
 class _AppLocalizationsDelegate

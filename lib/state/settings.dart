@@ -25,6 +25,10 @@ class Settings {
     this.calendarEntityIds = const [],
     this.mediaPlayerEntityIds = const [],
     this.idleSeconds = 120,
+    this.weatherView = 'wetter',
+    this.calendarView = 'kalender',
+    this.warningsView = 'warnungen',
+    this.devicesView = 'geraete',
     this.updateRepo = 'Schoaf/ha-display',
     this.githubToken = '',
     this.slideSeconds = 15,
@@ -67,6 +71,14 @@ class Settings {
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
 
+  /// Dashboard views (paths) a tap on the weather, the agenda, a warning or
+  /// an appliance opens; empty for the main view. An appliance can name
+  /// its own view in the template (`ansicht`).
+  final String weatherView;
+  final String calendarView;
+  final String warningsView;
+  final String devicesView;
+
   /// GitHub repo (`owner/name`) whose releases carry app updates.
   final String updateRepo;
 
@@ -108,6 +120,10 @@ class Settings {
     List<String>? calendarEntityIds,
     List<String>? mediaPlayerEntityIds,
     int? idleSeconds,
+    String? weatherView,
+    String? calendarView,
+    String? warningsView,
+    String? devicesView,
     String? updateRepo,
     String? githubToken,
     int? slideSeconds,
@@ -133,6 +149,10 @@ class Settings {
     calendarEntityIds: calendarEntityIds ?? this.calendarEntityIds,
     mediaPlayerEntityIds: mediaPlayerEntityIds ?? this.mediaPlayerEntityIds,
     idleSeconds: idleSeconds ?? this.idleSeconds,
+    weatherView: weatherView ?? this.weatherView,
+    calendarView: calendarView ?? this.calendarView,
+    warningsView: warningsView ?? this.warningsView,
+    devicesView: devicesView ?? this.devicesView,
     updateRepo: updateRepo ?? this.updateRepo,
     githubToken: githubToken ?? this.githubToken,
     slideSeconds: slideSeconds ?? this.slideSeconds,
@@ -174,6 +194,10 @@ Future<Settings> loadSettings() async {
     mediaPlayerEntityIds:
         prefs.getStringList('media_player_entity_ids') ?? const [],
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
+    weatherView: prefs.getString('weather_view') ?? 'wetter',
+    calendarView: prefs.getString('calendar_view') ?? 'kalender',
+    warningsView: prefs.getString('warnings_view') ?? 'warnungen',
+    devicesView: prefs.getString('devices_view') ?? 'geraete',
     updateRepo: prefs.getString('update_repo') ?? 'Schoaf/ha-display',
     githubToken: secrets[_kGithubToken] ?? '',
     slideSeconds: prefs.getInt('slide_seconds') ?? 15,
@@ -207,6 +231,10 @@ Future<void> saveSettings(Settings settings) async {
     settings.mediaPlayerEntityIds,
   );
   await prefs.setInt('idle_seconds', settings.idleSeconds);
+  await prefs.setString('weather_view', settings.weatherView);
+  await prefs.setString('calendar_view', settings.calendarView);
+  await prefs.setString('warnings_view', settings.warningsView);
+  await prefs.setString('devices_view', settings.devicesView);
   await prefs.setString('update_repo', settings.updateRepo);
   await prefs.setInt('slide_seconds', settings.slideSeconds);
   await prefs.setBool('is_shuffled', settings.isShuffled);
