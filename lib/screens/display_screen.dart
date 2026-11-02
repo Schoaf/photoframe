@@ -19,8 +19,9 @@ import 'photo_frame/photo_frame_screen.dart';
 const _unlockCornerSize = 96.0;
 
 /// The kiosk's root: the photos are the resting state, the dashboard lies
-/// on top (kept loaded, so it appears at once) and gives way to the photos
-/// again when nobody touches it. Plus the hidden way into the menu. Back
+/// below them and keeps rendering (so it appears at once - the tablet is
+/// slow to redraw a hidden one) and gives way to the photos again when
+/// nobody touches it. Plus the hidden way into the menu. Back
 /// does nothing here.
 class DisplayScreen extends ConsumerStatefulWidget {
   const DisplayScreen({super.key});
@@ -102,11 +103,19 @@ class _DisplayScreenState extends ConsumerState<DisplayScreen>
           body: Stack(
             fit: StackFit.expand,
             children: [
-              if (settings.hasPhotos) const PhotoFrameScreen(),
               if (settings.hasDashboard)
-                Offstage(
-                  offstage: !isDashboardShown,
+                IgnorePointer(
+                  ignoring: !isDashboardShown,
                   child: const DashboardScreen(),
+                ),
+              if (settings.hasPhotos)
+                Offstage(
+                  offstage: isDashboardShown,
+                  // Opaque, so the dashboard doesn't show around the photos.
+                  child: const ColoredBox(
+                    color: Colors.black,
+                    child: PhotoFrameScreen(),
+                  ),
                 ),
               if (isDashboardShown && settings.hasPhotos)
                 Positioned(
