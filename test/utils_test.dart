@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ha_display/screens/dashboard/dashboard_screen.dart';
+import 'package:ha_display/utils/ha_icons.dart';
 import 'package:ha_display/utils/slide_duration.dart';
 import 'package:ha_display/utils/tap_sequence.dart';
 
@@ -92,6 +94,41 @@ void main() {
         dashboardViewUrl('http://ha:8123/lovelace/0', ''),
         'http://ha:8123/lovelace/0',
       );
+    });
+  });
+
+  group('HA icons', () {
+    test('uses the mdi icon set in HA', () {
+      expect(warningIcon('mdi:dishwasher').codePoint, 0xF0AAC);
+      expect(warningIcon('mdi:dishwasher').fontFamily, 'MaterialDesignIcons');
+      expect(warningIcon('mdi:no-such-icon'), Icons.notifications_active);
+      expect(warningIcon(null), Icons.notifications_active);
+    });
+
+    test('maps every weather condition', () {
+      for (final condition in [
+        'clear-night',
+        'cloudy',
+        'exceptional',
+        'fog',
+        'hail',
+        'lightning',
+        'lightning-rainy',
+        'partlycloudy',
+        'pouring',
+        'rainy',
+        'snowy',
+        'snowy-rainy',
+        'sunny',
+        'windy',
+        'windy-variant',
+      ]) {
+        expect(
+          weatherIcon(condition),
+          isNot(weatherIcon('unknown')),
+          reason: condition,
+        );
+      }
     });
   });
 }

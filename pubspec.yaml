@@ -46,7 +46,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   mobile_scanner: ^7.4.3
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -70,6 +69,12 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   generate: true
+
+  # Material Design Icons 7.4.47 (Apache 2.0) - the icons HA shows.
+  fonts:
+    - family: MaterialDesignIcons
+      fonts:
+        - asset: assets/fonts/materialdesignicons.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
