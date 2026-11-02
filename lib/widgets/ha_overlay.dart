@@ -388,53 +388,60 @@ class _RunningTile extends StatelessWidget {
         ? null
         : (remaining.inSeconds / 60).ceil();
     return Container(
-      width: AppSizes.deviceTileWidth,
+      // Wider when the text needs it.
+      constraints: const BoxConstraints(minWidth: AppSizes.deviceTileMinWidth),
       height: AppSizes.deviceTileHeight,
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(8, 8, 20, 8),
       decoration: BoxDecoration(
         color: const Color(0x99000000),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        spacing: 12,
-        children: [
-          Icon(
-            warningIcon(device.icon),
-            size: AppSizes.deviceTileHeight - 16,
-            color: Colors.white,
-          ),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 10,
-              children: [
-                if (minutes != null)
-                  Text(
-                    minutes < 60
-                        ? l10n.remainingMinutes(minutes)
-                        : l10n.remainingHours(
-                            '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
-                          ),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                if (fraction != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: fraction,
-                      minHeight: 8,
-                      backgroundColor: const Color(0x33FFFFFF),
-                    ),
-                  ),
-              ],
+      child: IntrinsicWidth(
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(
+              warningIcon(device.icon),
+              size: AppSizes.deviceTileHeight - 16,
+              color: Colors.white,
             ),
-          ),
-        ],
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 10,
+                children: [
+                  if (minutes != null)
+                    // Away from the icon; the bar below still starts there.
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Text(
+                        minutes < 60
+                            ? l10n.remainingMinutes(minutes)
+                            : l10n.remainingHours(
+                                '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
+                              ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  if (fraction != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: fraction,
+                        minHeight: 8,
+                        backgroundColor: const Color(0x33FFFFFF),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
