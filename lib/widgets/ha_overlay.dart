@@ -20,8 +20,8 @@ const _textShadows = [
   Shadow(blurRadius: 2, color: Color(0x99000000)),
 ];
 
-/// Clock + weather (top right) and warnings (bottom centre) over the
-/// photos. A tap on either opens the dashboard via [onOpenDashboard].
+/// Agenda (top left), clock + weather (top right), warnings (bottom
+/// centre) and running appliances (bottom right) over the photos. A tap on either opens the dashboard via [onOpenDashboard].
 class HaOverlay extends ConsumerStatefulWidget {
   const HaOverlay({
     super.key,
@@ -72,6 +72,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
     final info = ref.watch(haInfoProvider);
     final warnings = _dismissed.visible(info.warnings);
     final agenda = buildAgenda(ref.watch(calendarProvider), _now);
+    final bottom = widget.isLifted ? 112.0 : 32.0;
     return Stack(
       children: [
         if (agenda.isNotEmpty)
@@ -95,7 +96,10 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           duration: const Duration(milliseconds: 250),
           left: 0,
           right: 0,
-          bottom: widget.isLifted ? 112 : 32,
+          // Above the appliance tiles, which may reach the middle.
+          bottom: info.running.isEmpty
+              ? bottom
+              : bottom + AppSizes.deviceTileHeight + 16,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 640),
@@ -114,6 +118,12 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
               ),
             ),
           ),
+        ),
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 250),
+          right: 32,
+          bottom: bottom,
+          child: _RunningRow(devices: info.running, now: _now),
         ),
       ],
     );
@@ -189,10 +199,6 @@ class _InfoPanel extends StatelessWidget {
               ),
             ],
           ),
-        for (final device in info.running) ...[
-          const SizedBox(height: 12),
-          _RunningTile(device: device, now: now),
-        ],
         if (info.nowPlaying case final music? when !music.isStale(now)) ...[
           const SizedBox(height: 12),
           _NowPlayingTile(music: music),
@@ -266,7 +272,90 @@ class _AgendaPanel extends StatelessWidget {
   }
 }
 
-/// "Waschmaschine · noch 42 min" with a bar filling up to 100 %.
+/// Running appliances along the bottom edge, right-aligned: one that starts
+/// comes in at the far right and pushes the others to the left.
+class _RunningRow extends StatefulWidget {
+  const _RunningRow({required this.devices, required this.now});
+
+  final List<RunningDevice> devices;
+  final DateTime now;
+
+  @override
+  State<_RunningRow> createState() => _RunningRowState();
+}
+
+class _RunningRowState extends State<_RunningRow> {
+  /// Names in the order they started - the template lists them in a
+  /// fixed order.
+  final _order = <String>[];
+
+  @override
+  Widget build(BuildContext context) {
+    final byName = {for (final device in widget.devices) device.name: device};
+    _order
+      ..retainWhere(byName.containsKey)
+      ..addAll(byName.keys.where((name) => !_order.contains(name)));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final name in _order)
+          _SlideIn(
+            key: ValueKey(name),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: _RunningTile(device: byName[name]!, now: widget.now),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Grows from nothing while sliding in from the bottom right, so the tiles
+/// to its left move over smoothly.
+class _SlideIn extends StatefulWidget {
+  const _SlideIn({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<_SlideIn> createState() => _SlideInState();
+}
+
+class _SlideInState extends State<_SlideIn>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  )..forward();
+  late final _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
+  void dispose() {
+    _curve.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizeTransition(
+    sizeFactor: _curve,
+    axis: Axis.horizontal,
+    alignment: Alignment.centerLeft,
+    child: SlideTransition(
+      position: Tween(
+        begin: const Offset(1, 1),
+        end: Offset.zero,
+      ).animate(_curve),
+      child: FadeTransition(opacity: _curve, child: widget.child),
+    ),
+  );
+}
+
+/// Big appliance icon, "noch 42 min" and a bar filling up to 100 %.
 class _RunningTile extends StatelessWidget {
   const _RunningTile({required this.device, required this.now});
 
@@ -282,51 +371,52 @@ class _RunningTile extends StatelessWidget {
         ? null
         : (remaining.inSeconds / 60).ceil();
     return Container(
-      width: AppSizes.runningTileWidth,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      width: AppSizes.deviceTileWidth,
+      height: AppSizes.deviceTileHeight,
+      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
       decoration: BoxDecoration(
         color: const Color(0x99000000),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 10,
+      child: Row(
+        spacing: 12,
         children: [
-          Row(
-            spacing: 12,
-            children: [
-              Icon(warningIcon(device.icon), size: 28, color: Colors.white),
-              Expanded(
-                child: Text(
-                  device.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              ),
-              if (minutes != null)
-                Text(
-                  minutes < 60
-                      ? l10n.remainingMinutes(minutes)
-                      : l10n.remainingHours(
-                          '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
-                        ),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
+          Icon(
+            warningIcon(device.icon),
+            size: AppSizes.deviceTileHeight - 16,
+            color: Colors.white,
           ),
-          if (fraction != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: fraction,
-                minHeight: 8,
-                backgroundColor: const Color(0x33FFFFFF),
-              ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 10,
+              children: [
+                if (minutes != null)
+                  Text(
+                    minutes < 60
+                        ? l10n.remainingMinutes(minutes)
+                        : l10n.remainingHours(
+                            '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
+                          ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                if (fraction != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: fraction,
+                      minHeight: 8,
+                      backgroundColor: const Color(0x33FFFFFF),
+                    ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );

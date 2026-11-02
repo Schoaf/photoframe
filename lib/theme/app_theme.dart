@@ -11,6 +11,10 @@ class AppSizes {
   static const captionFontSize = 20.0;
   static const clockFontSize = 72.0;
   static const runningTileWidth = 340.0;
+
+  /// Appliance tiles along the bottom edge.
+  static const deviceTileWidth = 250.0;
+  static const deviceTileHeight = 88.0;
   static const agendaWidth = 460.0;
   static const galleryColumns = 6;
   static const menuPaneWidth = 340.0;
