@@ -133,9 +133,10 @@ class _DisplayScreenState extends ConsumerState<DisplayScreen>
                 top: 0,
                 width: _unlockCornerSize,
                 height: _unlockCornerSize,
-                child: GestureDetector(
+                // Only counts touches - the agenda below still gets its tap.
+                child: Listener(
                   behavior: HitTestBehavior.translucent,
-                  onTap: _onCornerTap,
+                  onPointerDown: (_) => _onCornerTap(),
                 ),
               ),
             ],

@@ -123,13 +123,14 @@ class SynologyPhotosClient {
     'cache_key': item.cacheKey,
   });
 
-  /// Synology's H.264 transcode of the video.
+  /// Synology's H.264 transcode of the video - only in the quality it
+  /// made (404 otherwise).
   String convertedVideoUrl(PhotoItem item) => _url({
     'api': 'SYNO.Foto.Streaming',
     'version': '1',
     'method': 'streaming',
     'id': '${item.id}',
-    'quality': 'medium',
+    'quality': item.convertedQuality ?? 'medium',
   });
 
   String originalVideoUrl(PhotoItem item) => _url({

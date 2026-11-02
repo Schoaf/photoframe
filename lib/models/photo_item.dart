@@ -8,7 +8,7 @@ class PhotoItem {
     required this.isVideo,
     this.takenAt,
     this.place,
-    this.hasConvertedVideo = false,
+    this.convertedQuality,
   });
 
   /// Item id (download/streaming).
@@ -24,9 +24,12 @@ class PhotoItem {
   /// "Wien, Österreich" from Synology's reverse geocoding, if any.
   final String? place;
 
-  /// Synology transcoded the video into a smaller H.264 version, which the
-  /// tablet decodes far better than e.g. 4K/HEVC originals.
-  final bool hasConvertedVideo;
+  /// Quality (`medium`, `high`) of Synology's H.264 transcode of the
+  /// video, which the tablet decodes far better than e.g. 4K/HEVC or
+  /// Dolby Vision originals; null when there is none.
+  final String? convertedQuality;
+
+  bool get hasConvertedVideo => convertedQuality != null;
 
   /// Reads one entry of `SYNO.Foto.Browse.Item list`.
   factory PhotoItem.fromJson(Map<String, dynamic> json) {
@@ -34,7 +37,11 @@ class PhotoItem {
     final thumbnail =
         additional['thumbnail'] as Map<String, dynamic>? ?? const {};
     final address = additional['address'] as Map<String, dynamic>? ?? const {};
-    final converted = additional['video_convert'];
+    final qualities = [
+      for (final entry
+          in additional['video_convert'] as List? ?? const <Object?>[])
+        if (entry case {'quality': final String quality}) quality,
+    ];
     final time = json['time'];
     final placeParts = [
       address['city'] ?? address['town'] ?? address['village'],
@@ -50,7 +57,10 @@ class PhotoItem {
           ? DateTime.fromMillisecondsSinceEpoch(time * 1000, isUtc: true)
           : null,
       place: placeParts.isEmpty ? null : placeParts.join(', '),
-      hasConvertedVideo: converted is List && converted.isNotEmpty,
+      // The smaller one if Synology made both.
+      convertedQuality: qualities.contains('medium')
+          ? 'medium'
+          : qualities.firstOrNull,
     );
   }
 }

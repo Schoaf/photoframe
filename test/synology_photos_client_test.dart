@@ -70,7 +70,7 @@ void main() {
               'additional': {
                 'thumbnail': {'unit_id': 80, 'cache_key': '80_1'},
                 'video_convert': [
-                  {'quality': 'medium'},
+                  {'quality': 'high'},
                 ],
               },
             },
@@ -92,7 +92,12 @@ void main() {
     expect(items[0].takenAt, isNotNull);
     expect(items[0].isVideo, isFalse);
     expect(items[1].isVideo, isTrue);
-    expect(items[1].hasConvertedVideo, isTrue);
+    expect(items[1].convertedQuality, 'high');
+    expect(
+      Uri.parse(client.convertedVideoUrl(items[1])).queryParameters,
+      containsPair('quality', 'high'),
+    );
+    expect(items[0].hasConvertedVideo, isFalse);
   });
 
   test('logs in again when the session expired', () async {

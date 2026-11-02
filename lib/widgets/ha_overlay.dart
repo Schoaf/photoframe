@@ -82,17 +82,17 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
       children: [
         if (agenda.isNotEmpty)
           Positioned(
-            top: 24,
-            left: 32,
-            child: GestureDetector(
+            top: 24 - _tapMargin,
+            left: 32 - _tapMargin,
+            child: _TapArea(
               onTap: opener(settings.calendarView),
               child: _AgendaPanel(days: agenda),
             ),
           ),
         Positioned(
-          top: 24,
-          right: 32,
-          child: GestureDetector(
+          top: 24 - _tapMargin,
+          right: 32 - _tapMargin,
+          child: _TapArea(
             onTap: opener(settings.weatherView),
             child: _InfoPanel(now: _now, info: info),
           ),
@@ -136,6 +136,26 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
       ],
     );
   }
+}
+
+/// Extra room around the agenda and the weather that still counts as a
+/// tap on them.
+const _tapMargin = 16.0;
+
+/// The whole box around [child] takes the tap, not only its text - the
+/// gaps would otherwise reach the photo below.
+class _TapArea extends StatelessWidget {
+  const _TapArea({required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: Padding(padding: const EdgeInsets.all(_tapMargin), child: child),
+  );
 }
 
 class _InfoPanel extends StatelessWidget {
@@ -312,6 +332,7 @@ class _RunningRowState extends State<_RunningRow> {
             child: Padding(
               padding: const EdgeInsets.only(left: 16),
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: widget.onOpen(byName[name]!),
                 child: _RunningTile(device: byName[name]!),
               ),

@@ -282,52 +282,60 @@ class _Overlay extends StatelessWidget {
         DateFormat.yMMMMd(locale).format(takenAt),
       ?item.place,
     ].join(' · ');
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0.6, 1],
-          colors: [Colors.transparent, Color(0xB3000000)],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Only shades the photo - taps go through to the weather and agenda.
+        const IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.6, 1],
+                colors: [Colors.transparent, Color(0xB3000000)],
+              ),
+            ),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(32, 24, 24, 24),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text(
-                caption,
-                style: const TextStyle(
-                  fontSize: AppSizes.captionFontSize,
-                  color: Colors.white,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(32, 24, 24, 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  caption,
+                  style: const TextStyle(
+                    fontSize: AppSizes.captionFontSize,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            if (item.isVideo)
-              _OverlayButton(
-                icon: isSoundOn ? Icons.volume_up : Icons.volume_off,
-                tooltip: isSoundOn ? l10n.soundOff : l10n.soundOn,
-                onPressed: onToggleSound,
-              ),
-            const SizedBox(width: 16),
-            _OverlayButton(
-              icon: Icons.grid_view,
-              tooltip: l10n.gallery,
-              onPressed: onOpenGallery,
-            ),
-            if (onOpenDashboard case final onOpenDashboard?) ...[
+              if (item.isVideo)
+                _OverlayButton(
+                  icon: isSoundOn ? Icons.volume_up : Icons.volume_off,
+                  tooltip: isSoundOn ? l10n.soundOff : l10n.soundOn,
+                  onPressed: onToggleSound,
+                ),
               const SizedBox(width: 16),
               _OverlayButton(
-                icon: Icons.dashboard,
-                tooltip: l10n.showDashboard,
-                onPressed: onOpenDashboard,
+                icon: Icons.grid_view,
+                tooltip: l10n.gallery,
+                onPressed: onOpenGallery,
               ),
+              if (onOpenDashboard case final onOpenDashboard?) ...[
+                const SizedBox(width: 16),
+                _OverlayButton(
+                  icon: Icons.dashboard,
+                  tooltip: l10n.showDashboard,
+                  onPressed: onOpenDashboard,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
