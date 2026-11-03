@@ -202,6 +202,9 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
       });
     }
     final current = list[_page % list.length];
+    final isChildLocked = ref.watch(
+      displayProvider.select((display) => display.isChildLocked),
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _showOverlay,
@@ -210,10 +213,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
         children: [
           PageView.builder(
             controller: _controller,
-            physics:
-                ref.watch(
-                  displayProvider.select((display) => display.isChildLocked),
-                )
+            physics: isChildLocked
                 ? const NeverScrollableScrollPhysics()
                 : null,
             onPageChanged: (page) => _onPageChanged(page, list),
@@ -254,6 +254,25 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
                 },
                 onOpenGallery: () => _openGallery(list),
                 onOpenDashboard: hasDashboard ? _openDashboard : null,
+              ),
+            ),
+          ),
+          // A tap shows why swiping does nothing.
+          IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: _isOverlayVisible && isChildLocked ? 1 : 0,
+              duration: const Duration(milliseconds: 250),
+              child: const Center(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Icon(Icons.lock, size: 96, color: Colors.white),
+                  ),
+                ),
               ),
             ),
           ),
