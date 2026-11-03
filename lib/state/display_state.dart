@@ -10,6 +10,7 @@ class DisplayState {
     required this.mode,
     this.isScreenOn = true,
     this.isBlackedOut = false,
+    this.isChildLocked = false,
     this.brightness,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
@@ -23,6 +24,10 @@ class DisplayState {
   /// Screen "off" without device owner: a black overlay at minimum
   /// brightness instead of the panel really switching off.
   final bool isBlackedOut;
+
+  /// The power and volume keys do nothing and the photos can't be swiped -
+  /// only Home Assistant switches the screen.
+  final bool isChildLocked;
 
   /// 0..255, null for the system brightness.
   final int? brightness;
@@ -40,6 +45,7 @@ class DisplayState {
     DisplayMode? mode,
     bool? isScreenOn,
     bool? isBlackedOut,
+    bool? isChildLocked,
     int? brightness,
     int? nextPhotoRequests,
     int? reloadRequests,
@@ -49,6 +55,7 @@ class DisplayState {
     mode: mode ?? this.mode,
     isScreenOn: isScreenOn ?? this.isScreenOn,
     isBlackedOut: isBlackedOut ?? this.isBlackedOut,
+    isChildLocked: isChildLocked ?? this.isChildLocked,
     brightness: brightness ?? this.brightness,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
@@ -65,6 +72,10 @@ class DisplayNotifier extends Notifier<DisplayState> {
   @override
   DisplayState build() {
     final settings = ref.read(settingsProvider);
+    // Kept natively, so a reboot doesn't lift it.
+    _kiosk.isChildLocked().then((isLocked) {
+      if (isLocked) state = state.copyWith(isChildLocked: true);
+    });
     return DisplayState(mode: _availableMode(settings, settings.startMode));
   }
 
@@ -93,10 +104,17 @@ class DisplayNotifier extends Notifier<DisplayState> {
     }
   }
 
-  /// The power button switched the panel on/off by hand.
+  /// The power button switched the panel on/off by hand - under child lock
+  /// the kiosk switches it right back.
   void reportScreenOn(bool isOn) {
     if (isOn == state.isScreenOn || state.isBlackedOut) return;
+    if (state.isChildLocked) return;
     state = state.copyWith(isScreenOn: isOn);
+  }
+
+  Future<void> setChildLock(bool isLocked) async {
+    state = state.copyWith(isChildLocked: isLocked);
+    await _kiosk.setChildLock(isLocked);
   }
 
   Future<void> setBrightness(int brightness) async {

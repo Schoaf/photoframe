@@ -20,6 +20,8 @@ void main() {
     when(() => kiosk.screenOff()).thenAnswer((_) async => true);
     when(() => kiosk.screenOn()).thenAnswer((_) async {});
     when(() => kiosk.setBrightness(any())).thenAnswer((_) async {});
+    when(() => kiosk.isChildLocked()).thenAnswer((_) async => false);
+    when(() => kiosk.setChildLock(any())).thenAnswer((_) async {});
     container = ProviderContainer(
       overrides: [
         kioskProvider.overrideWithValue(kiosk),
@@ -47,6 +49,7 @@ void main() {
       configs.keys,
       containsAll([
         'homeassistant/switch/ha_display_abc123/screen/config',
+        'homeassistant/switch/ha_display_abc123/child_lock/config',
         'homeassistant/select/ha_display_abc123/mode/config',
         'homeassistant/number/ha_display_abc123/brightness/config',
         'homeassistant/button/ha_display_abc123/next_photo/config',
@@ -99,9 +102,24 @@ void main() {
     expect(state.nextPhotoRequests, 1);
     expect(topics.states(state), {
       'ha_display/abc123/screen/state': 'ON',
+      'ha_display/abc123/child_lock/state': 'OFF',
       'ha_display/abc123/mode/state': 'dashboard',
       'ha_display/abc123/brightness/state': '128',
     });
+  });
+
+  test('child lock keeps the screen as Home Assistant set it', () async {
+    applyMqttCommand(topics, topics.command('child_lock'), 'ON', display());
+    applyMqttCommand(topics, topics.command('screen'), 'OFF', display());
+    await pumpEventQueue();
+    verify(() => kiosk.setChildLock(true)).called(1);
+
+    // The power button switched it on - the kiosk turns it off again.
+    display().reportScreenOn(true);
+    final state = container.read(displayProvider);
+    expect(state.isChildLocked, isTrue);
+    expect(state.isScreenOn, isFalse);
+    expect(topics.states(state)['ha_display/abc123/child_lock/state'], 'ON');
   });
 
   test('ignores unknown payloads and topics', () {

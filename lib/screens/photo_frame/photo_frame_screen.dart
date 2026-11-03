@@ -210,6 +210,12 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
         children: [
           PageView.builder(
             controller: _controller,
+            physics:
+                ref.watch(
+                  displayProvider.select((display) => display.isChildLocked),
+                )
+                ? const NeverScrollableScrollPhysics()
+                : null,
             onPageChanged: (page) => _onPageChanged(page, list),
             itemBuilder: (context, page) {
               final item = list[page % list.length];

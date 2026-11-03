@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.PowerManager
+import android.view.KeyEvent
 import android.view.WindowManager
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -30,12 +31,23 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
         get() = prefs.getBoolean("enabled", true)
         private set(value) = prefs.edit().putBoolean("enabled", value).apply()
 
+    // Child lock: the hardware keys do nothing, only Home Assistant switches
+    // the screen. Survives restarts, so a reboot doesn't lift it.
+    var isChildLocked
+        get() = prefs.getBoolean("child_locked", false)
+        private set(value) = prefs.edit().putBoolean("child_locked", value).apply()
+
+    // What Home Assistant asked for last - the power button may disagree.
+    private var isScreenWanted = true
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "startLock" -> { isEnabled = true; enterLock(); result.success(null) }
             "stopLock" -> { isEnabled = false; leaveLock(); result.success(null) }
             "screenOff" -> result.success(screenOff())
             "screenOn" -> { screenOn(); result.success(null) }
+            "setChildLock" -> { isChildLocked = call.argument<Boolean>("value") == true; result.success(null) }
+            "isChildLocked" -> result.success(isChildLocked)
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
             "isDeviceOwner" -> result.success(isDeviceOwner)
             "versionCode" -> result.success(AppUpdater.versionCode(activity))
@@ -106,6 +118,7 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
     // Returns false when the screen can't really be turned off (not device
     // owner) - Flutter then shows a black overlay instead.
     private fun screenOff(): Boolean {
+        isScreenWanted = false
         if (!isDeviceOwner) return false
         dpm.lockNow()
         return true
@@ -113,6 +126,7 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
 
     @Suppress("DEPRECATION")
     private fun screenOn() {
+        isScreenWanted = true
         // FULL_WAKE_LOCK + ACQUIRE_CAUSES_WAKEUP is deprecated but still the
         // only way to switch the panel on from the background; the keyguard
         // is disabled, so it lands right back in the app.
@@ -125,6 +139,21 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
             Intent(activity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
         )
     }
+
+    // The power button switched the panel off: under child lock straight
+    // back on, unless Home Assistant wants it off.
+    fun onScreenOff() {
+        if (isChildLocked && isScreenWanted) screenOn()
+    }
+
+    // The power button switched the panel on: under child lock straight
+    // back off when Home Assistant wants it off.
+    fun onScreenOn() {
+        if (isChildLocked && !isScreenWanted && isDeviceOwner) dpm.lockNow()
+    }
+
+    // Volume keys etc. do nothing under child lock.
+    fun blocksKey(keyCode: Int) = isChildLocked && keyCode in BLOCKED_KEYS
 
     // value in 0..1, or null for the system brightness.
     private fun setBrightness(value: Double?) {
@@ -140,5 +169,13 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
         leaveLock()
         isEnabled = false
         if (isDeviceOwner) dpm.clearDeviceOwnerApp(activity.packageName)
+    }
+
+    private companion object {
+        val BLOCKED_KEYS = setOf(
+            KeyEvent.KEYCODE_VOLUME_UP,
+            KeyEvent.KEYCODE_VOLUME_DOWN,
+            KeyEvent.KEYCODE_VOLUME_MUTE,
+        )
     }
 }

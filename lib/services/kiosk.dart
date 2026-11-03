@@ -16,6 +16,13 @@ class Kiosk {
 
   Future<void> screenOn() => _channel.invokeMethod('screenOn');
 
+  /// Hardware keys do nothing, only Home Assistant switches the screen.
+  Future<void> setChildLock(bool isLocked) =>
+      _channel.invokeMethod('setChildLock', {'value': isLocked});
+
+  Future<bool> isChildLocked() async =>
+      await _channel.invokeMethod<bool>('isChildLocked') ?? false;
+
   /// [value] in 0..1, null for the system brightness.
   Future<void> setBrightness(double? value) =>
       _channel.invokeMethod('setBrightness', {'value': value});
