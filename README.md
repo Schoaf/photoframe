@@ -117,7 +117,7 @@ automation:
 ## Weather and notices
 
 - **Weather:** the app reads the weather entity from the settings (default `weather.forecast_home`), including its daily forecast for tomorrow.
-- **Notices:** you choose in HA which ones appear. The tablet only reads one template sensor, so labels are evaluated in HA and the tablet's token needs no admin rights.
+- **Notices:** the same ones HA counts under "Wartung", plus your own. The tablet only reads one template sensor, so everything is evaluated in HA and the tablet's token needs no admin rights.
 
 **1. Template sensor** (in `configuration.yaml`). It provides the notices (`warnungen`) and the running appliances (`laufend`). Adjust the entity names to your appliances:
 
@@ -126,12 +126,22 @@ template:
   - sensor:
       - name: Tablet Warnungen
         unique_id: tablet_warnungen
-        state: >
-          {{ label_entities('tablet_warnung') | select('is_state', 'on') | list | count }}
+        state: "{{ this.attributes.get('warnungen', []) | count }}"
         attributes:
           warnungen: >
             {% set ns = namespace(items=[]) %}
-            {% for id in label_entities('tablet_warnung') | select('is_state', 'on') %}
+            {% set issues = state_attr('sensor.maintenance_issues', 'issues') or [] %}
+            {% for id in issues %}
+              {% set name = state_attr(id, 'friendly_name') or id %}
+              {% if is_state(id, 'unavailable') %}
+                {% set ns.items = ns.items + [{'id': id, 'name': name ~ ': nicht erreichbar', 'icon': 'mdi:battery-unknown'}] %}
+              {% elif id.startswith('sensor.') %}
+                {% set ns.items = ns.items + [{'id': id, 'name': name ~ ': ' ~ states(id) ~ ' %', 'icon': 'mdi:battery-alert'}] %}
+              {% else %}
+                {% set ns.items = ns.items + [{'id': id, 'name': name, 'icon': state_attr(id, 'icon') or 'mdi:alert-circle-outline'}] %}
+              {% endif %}
+            {% endfor %}
+            {% for id in label_entities('tablet_warnung') | select('is_state', 'on') | reject('in', issues) %}
               {% set ns.items = ns.items + [{'id': id, 'name': state_attr(id, 'friendly_name'), 'icon': state_attr(id, 'icon')}] %}
             {% endfor %}
             {{ ns.items }}
@@ -161,12 +171,58 @@ template:
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
 
-**2. Mark notices:**
+**2. Notices from "Wartung"** come from `sensor.maintenance_issues`, a trigger template sensor that applies the rules of HA's counter (its `issues` attribute lists the entity ids):
+
+```yaml
+template:
+  - triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: event
+        event_type: event_template_reloaded
+      - trigger: time_pattern
+        minutes: /1
+    sensor:
+      - name: Wartung offene Punkte
+        unique_id: maintenance_issues
+        default_entity_id: sensor.maintenance_issues
+        icon: mdi:wrench
+        state: "{{ this.attributes.get('issues', []) | count }}"
+        attributes:
+          issues: >
+            {% set excluded = [] %}
+            {% set ns = namespace(l=[]) %}
+            {% for s in states.sensor | selectattr('attributes.device_class', 'defined')
+                  | selectattr('attributes.device_class', 'eq', 'battery') %}
+              {% if s.state == 'unavailable' %}
+                {% set ns.l = ns.l + [s.entity_id] %}
+              {% elif s.state | is_number and s.state | float <= 20 %}
+                {% set d = device_id(s.entity_id) %}
+                {% set ch = (device_entities(d) if d else [])
+                      | select('is_state_attr', 'device_class', 'battery_charging') | first | default('') %}
+                {% if not is_state(ch, 'on') %}
+                  {% set ns.l = ns.l + [s.entity_id] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% for s in states.binary_sensor | selectattr('attributes.device_class', 'defined')
+                  | selectattr('attributes.device_class', 'in', ['battery', 'problem']) %}
+              {% if s.state in ['on', 'unavailable'] %}
+                {% set ns.l = ns.l + [s.entity_id] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.l | reject('in', excluded) | list }}
+```
+
+- It counts a battery at 20 % or less (unless its device is charging), a battery or `problem` binary sensor that is `on`, and an unavailable battery or problem entity.
+- Put entities that shouldn't warn into `excluded`.
+- It re-checks once a minute.
+
+**Own notices:**
 
 - Give the entity the label `tablet_warnung` (Settings → Entities → entity → Labels).
 - It shows while it is `on`.
 - The text is its display name, so name it the way the family should read it.
-- Technical things like "Gerät nicht erreichbar" never appear unless you label them.
 
 **3. When the state isn't `on`**, a small template binary sensor helps:
 
