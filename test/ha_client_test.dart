@@ -82,6 +82,11 @@ void main() {
             'icon': 'mdi:washing-machine',
           },
           {'id': 'binary_sensor.roborock_wasser', 'name': null},
+          {
+            'id': 'lock.tuer,sensor.tuer_battery',
+            'name': 'Türschloss',
+            'details': ['Batterie nicht erreichbar', '', 3, 'Problem'],
+          },
           {'name': 'ohne id'},
         ],
       }),
@@ -89,7 +94,10 @@ void main() {
     expect(warnings.map((warning) => warning.name), [
       'Waschmaschine ist fertig',
       'binary_sensor.roborock_wasser',
+      'Türschloss',
     ]);
+    expect(warnings.first.details, isEmpty);
+    expect(warnings.last.details, ['Batterie nicht erreichbar', 'Problem']);
     expect(parseWarnings(null), isEmpty);
   });
 

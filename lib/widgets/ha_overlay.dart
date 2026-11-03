@@ -721,13 +721,29 @@ class _WarningBanner extends StatelessWidget {
           children: [
             Icon(warningIcon(warning.icon), size: 32, color: Colors.black87),
             Flexible(
-              child: Text(
-                warning.name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    warning.name,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: warning.details.isEmpty
+                          ? FontWeight.w500
+                          : FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  for (final detail in warning.details)
+                    Text(
+                      detail,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black87,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

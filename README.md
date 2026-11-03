@@ -136,28 +136,25 @@ template:
               {% set dev = device_id(id) %}
               {% set geraet = (device_attr(dev, 'name_by_user') or device_attr(dev, 'name')) if dev else none %}
               {% set name = state_attr(id, 'friendly_name') or id %}
-              {% set kurz = name[geraet | length:] | trim if geraet and name.startswith(geraet) else name %}
-              {% if id in labelled %}
-                {% set text = kurz or name %}
-                {% set icon = state_attr(id, 'icon') %}
-              {% elif is_state(id, 'unavailable') %}
-                {% set text = 'nicht erreichbar' %}
+              {% set kurz = (name[geraet | length:] | trim if name.startswith(geraet) else name) if geraet else '' %}
+              {% if is_state(id, 'unavailable') %}
+                {% set text = (kurz ~ ' nicht erreichbar') | trim %}
                 {% set icon = 'mdi:battery-unknown' %}
-              {% elif id.startswith('sensor.') %}
-                {% set text = 'Batterie ' ~ states(id) ~ ' %' %}
+              {% elif id.startswith('sensor.') and id not in labelled %}
+                {% set text = (kurz or 'Batterie') ~ ' ' ~ states(id) ~ ' %' %}
                 {% set icon = 'mdi:battery-alert' %}
               {% else %}
-                {% set text = kurz or name %}
+                {% set text = kurz %}
                 {% set icon = state_attr(id, 'icon') or 'mdi:alert-circle-outline' %}
               {% endif %}
               {% set ns.items = ns.items + [{'key': dev or id, 'id': id, 'title': geraet or name, 'text': text, 'icon': icon}] %}
             {% endfor %}
             {% for key in ns.items | map(attribute='key') | unique %}
               {% set group = ns.items | selectattr('key', 'eq', key) | list %}
-              {% set texts = group | map(attribute='text') | reject('eq', group[0].title) | unique | list %}
               {% set ns.groups = ns.groups + [{
                 'id': group | map(attribute='id') | sort | join(','),
-                'name': group[0].title ~ (': ' ~ texts | join(', ') if texts else ''),
+                'name': group[0].title,
+                'details': group | map(attribute='text') | select | unique | list,
                 'icon': group[0].icon}] %}
             {% endfor %}
             {{ ns.groups }}
@@ -232,7 +229,7 @@ template:
 
 - It counts a battery at 20 % or less (unless its device is charging), a battery or `problem` binary sensor that is `on`, and an unavailable battery or problem entity.
 - Put entities that shouldn't warn into `excluded`.
-- Notices of the same device show as one, e.g. "Türschloss: nicht erreichbar, Batterie 12 %". This includes labelled ones.
+- Notices of the same device show as one: the device name in bold, below it one line per issue (e.g. "Batterie nicht erreichbar"). This includes labelled ones.
 - It re-checks once a minute.
 
 **Own notices:**

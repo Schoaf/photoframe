@@ -77,10 +77,18 @@ class WeatherDay {
 }
 
 class HaWarning {
-  const HaWarning({required this.id, required this.name, this.icon});
+  const HaWarning({
+    required this.id,
+    required this.name,
+    this.details = const [],
+    this.icon,
+  });
 
   final String id;
   final String name;
+
+  /// The issues of the device [name], one line each.
+  final List<String> details;
 
   /// e.g. `mdi:washing-machine`, if one is set in HA.
   final String? icon;
@@ -218,6 +226,11 @@ List<HaWarning> parseWarnings(HaEntity? entity) {
         HaWarning(
           id: entry['id'] as String,
           name: '${entry['name'] ?? entry['id']}',
+          details: [
+            if (entry['details'] case final List<dynamic> details)
+              for (final detail in details)
+                if (detail is String && detail.isNotEmpty) detail,
+          ],
           icon: entry['icon'] as String?,
         ),
   ];
