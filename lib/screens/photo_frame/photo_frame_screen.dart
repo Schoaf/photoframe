@@ -240,10 +240,11 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
             },
           ),
           haOverlay,
+          // No gallery or controls for children - they get the lock below.
           IgnorePointer(
-            ignoring: !_isOverlayVisible,
+            ignoring: !_isOverlayVisible || isChildLocked,
             child: AnimatedOpacity(
-              opacity: _isOverlayVisible ? 1 : 0,
+              opacity: _isOverlayVisible && !isChildLocked ? 1 : 0,
               duration: const Duration(milliseconds: 250),
               child: _Overlay(
                 item: current,
