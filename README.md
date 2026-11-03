@@ -256,7 +256,7 @@ The entity names in these examples depend on your devices.
 **On the tablet:**
 
 - Tapping a notice opens the dashboard.
-- **Pressing and holding** hides it until the next time it turns on.
+- **Swiping it away** hides it for the rest of the day; it shows again from midnight. A new issue of the same device shows at once.
 - At most three notices show at once.
 
 ## Detail views

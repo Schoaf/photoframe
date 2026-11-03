@@ -112,14 +112,21 @@ void main() {
     );
   });
 
-  test('a dismissed warning returns after it was gone', () {
+  test('a dismissed warning returns at midnight', () {
     const washer = HaWarning(id: 'washer', name: 'Waschmaschine');
     const robot = HaWarning(id: 'robot', name: 'Roborock');
-    final dismissed = DismissedWarnings()..dismiss('washer');
+    final evening = DateTime(2026, 11, 3, 22);
+    final dismissed = DismissedWarnings()..dismiss('washer', evening);
 
-    expect(dismissed.visible([washer, robot]), [robot]);
-    expect(dismissed.visible([robot]), [robot]);
-    expect(dismissed.visible([washer, robot]), [washer, robot]);
+    expect(dismissed.visible([washer, robot], evening), [robot]);
+    expect(dismissed.visible([robot], evening), [robot]);
+    expect(dismissed.visible([washer, robot], DateTime(2026, 11, 3, 23, 59)), [
+      robot,
+    ]);
+    expect(dismissed.visible([washer, robot], DateTime(2026, 11, 4)), [
+      washer,
+      robot,
+    ]);
   });
 
   group('running devices', () {

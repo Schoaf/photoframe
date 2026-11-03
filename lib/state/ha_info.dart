@@ -33,18 +33,20 @@ final haInfoProvider = NotifierProvider<HaInfoNotifier, HaSnapshot>(
   HaInfoNotifier.new,
 );
 
-/// Warnings hidden by a long press stay hidden until they're gone from HA -
-/// the next time they turn on, they show again.
+/// Warnings swiped away stay hidden for the rest of the day and show again
+/// from midnight.
 class DismissedWarnings {
-  final _ids = <String>{};
+  /// Warning id → the midnight it shows again.
+  final _until = <String, DateTime>{};
 
-  void dismiss(String id) => _ids.add(id);
+  void dismiss(String id, DateTime now) =>
+      _until[id] = DateTime(now.year, now.month, now.day + 1);
 
-  List<HaWarning> visible(List<HaWarning> active) {
-    _ids.retainWhere((id) => active.any((warning) => warning.id == id));
+  List<HaWarning> visible(List<HaWarning> active, DateTime now) {
+    _until.removeWhere((_, until) => !now.isBefore(until));
     return [
       for (final warning in active)
-        if (!_ids.contains(warning.id)) warning,
+        if (!_until.containsKey(warning.id)) warning,
     ];
   }
 }

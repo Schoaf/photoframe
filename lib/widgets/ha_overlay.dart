@@ -72,7 +72,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
   @override
   Widget build(BuildContext context) {
     final info = ref.watch(haInfoProvider);
-    final warnings = _dismissed.visible(info.warnings);
+    final warnings = _dismissed.visible(info.warnings, _now);
     final agenda = buildAgenda(ref.watch(calendarProvider), _now);
     final bottom = widget.isLifted ? 112.0 : 32.0;
     final settings = ref.watch(settingsProvider);
@@ -113,11 +113,16 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
                 spacing: 8,
                 children: [
                   for (final warning in warnings.take(3))
-                    _WarningBanner(
-                      warning: warning,
-                      onTap: opener(settings.warningsView),
-                      onDismiss: () =>
-                          setState(() => _dismissed.dismiss(warning.id)),
+                    // Seen it - swiped away until midnight.
+                    Dismissible(
+                      key: ValueKey(warning.id),
+                      onDismissed: (_) => setState(
+                        () => _dismissed.dismiss(warning.id, DateTime.now()),
+                      ),
+                      child: _WarningBanner(
+                        warning: warning,
+                        onTap: opener(settings.warningsView),
+                      ),
                     ),
                 ],
               ),
@@ -693,15 +698,10 @@ class _NowPlayingTileState extends ConsumerState<_NowPlayingTile> {
 }
 
 class _WarningBanner extends StatelessWidget {
-  const _WarningBanner({
-    required this.warning,
-    required this.onTap,
-    required this.onDismiss,
-  });
+  const _WarningBanner({required this.warning, required this.onTap});
 
   final HaWarning warning;
   final VoidCallback? onTap;
-  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -711,8 +711,6 @@ class _WarningBanner extends StatelessWidget {
     child: InkWell(
       borderRadius: BorderRadius.circular(32),
       onTap: onTap,
-      // Seen it - hide until it comes back.
-      onLongPress: onDismiss,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         child: Row(
