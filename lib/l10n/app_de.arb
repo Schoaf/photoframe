@@ -177,5 +177,15 @@
   "calendarView": "Ansicht Kalender",
   "warningsView": "Ansicht Warnungen",
   "devicesView": "Ansicht Geräte",
-  "dashboardViewsHint": "Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben."
+  "dashboardViewsHint": "Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben.",
+  "motionScreenOff": "Bildschirm aus ohne Bewegung nach: {minutes} min",
+  "@motionScreenOff": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "motionScreenOffNever": "Bildschirm aus ohne Bewegung: nie",
+  "motionHint": "Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Im dunklen Raum zählt keine Bewegung."
 }

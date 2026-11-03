@@ -326,6 +326,33 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
                   : l10n.pinInvalid,
             ),
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                _settings.motionScreenOffMinutes == 0
+                    ? l10n.motionScreenOffNever
+                    : l10n.motionScreenOff(_settings.motionScreenOffMinutes),
+              ),
+              Expanded(
+                child: Slider(
+                  max: 60,
+                  divisions: 60,
+                  value: _settings.motionScreenOffMinutes.toDouble().clamp(
+                    0,
+                    60,
+                  ),
+                  label: '${_settings.motionScreenOffMinutes} min',
+                  onChanged: (value) => setState(
+                    () => _settings = _settings.copyWith(
+                      motionScreenOffMinutes: value.round(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(l10n.motionHint, style: theme.textTheme.bodyMedium),
           section(l10n.sectionPhotos),
           field(
             'synologyUrl',

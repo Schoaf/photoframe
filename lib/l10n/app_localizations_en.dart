@@ -321,4 +321,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboardViewsHint =>
       'This dashboard view (the view\'s URL path in HA) opens when you tap the weather, the agenda, a warning or a running appliance. Empty = main view. An appliance can name its own view in the template with \"ansicht\".';
+
+  @override
+  String motionScreenOff(int minutes) {
+    return 'Screen off without motion after: $minutes min';
+  }
+
+  @override
+  String get motionScreenOffNever => 'Screen off without motion: never';
+
+  @override
+  String get motionHint =>
+      'The front camera detects motion – evaluated on the tablet only, nothing is stored or sent. Motion switches the screen back on, unless Home Assistant switched it off. In a dark room no motion counts.';
 }

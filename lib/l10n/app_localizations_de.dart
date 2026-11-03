@@ -322,4 +322,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get dashboardViewsHint =>
       'Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben.';
+
+  @override
+  String motionScreenOff(int minutes) {
+    return 'Bildschirm aus ohne Bewegung nach: $minutes min';
+  }
+
+  @override
+  String get motionScreenOffNever => 'Bildschirm aus ohne Bewegung: nie';
+
+  @override
+  String get motionHint =>
+      'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Im dunklen Raum zählt keine Bewegung.';
 }

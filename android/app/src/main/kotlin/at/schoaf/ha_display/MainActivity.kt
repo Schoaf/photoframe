@@ -41,14 +41,15 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         unregisterReceiver(screenReceiver)
+        kiosk.dispose()
         super.onDestroy()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        kiosk = Kiosk(this)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "ha_display/kiosk")
-            .setMethodCallHandler(kiosk)
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "ha_display/kiosk")
+        kiosk = Kiosk(this, channel)
+        channel.setMethodCallHandler(kiosk)
     }
 
     override fun onResume() {

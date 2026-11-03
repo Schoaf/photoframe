@@ -643,6 +643,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Diese Dashboard-Ansicht (URL-Pfad der Ansicht in HA) öffnet sich beim Antippen von Wetter, Kalender, Warnung bzw. laufendem Gerät. Leer = Hauptansicht. Ein Gerät kann im Template mit „ansicht“ eine eigene Ansicht haben.'**
   String get dashboardViewsHint;
+
+  /// No description provided for @motionScreenOff.
+  ///
+  /// In de, this message translates to:
+  /// **'Bildschirm aus ohne Bewegung nach: {minutes} min'**
+  String motionScreenOff(int minutes);
+
+  /// No description provided for @motionScreenOffNever.
+  ///
+  /// In de, this message translates to:
+  /// **'Bildschirm aus ohne Bewegung: nie'**
+  String get motionScreenOffNever;
+
+  /// No description provided for @motionHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Im dunklen Raum zählt keine Bewegung.'**
+  String get motionHint;
 }
 
 class _AppLocalizationsDelegate

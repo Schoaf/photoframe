@@ -16,7 +16,10 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 // Native side of the `ha_display/kiosk` channel (lib/services/kiosk.dart).
-class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
+class Kiosk(
+    private val activity: Activity,
+    private val channel: MethodChannel,
+) : MethodChannel.MethodCallHandler {
     private val dpm = activity.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
     private val activityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     private val power = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -37,6 +40,8 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
         get() = prefs.getBoolean("child_locked", false)
         private set(value) = prefs.edit().putBoolean("child_locked", value).apply()
 
+    private val motion = MotionDetector(activity) { channel.invokeMethod("motion", null) }
+
     // What Home Assistant asked for last - the power button may disagree.
     private var isScreenWanted = true
 
@@ -48,6 +53,8 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
             "screenOn" -> { screenOn(); result.success(null) }
             "setChildLock" -> { isChildLocked = call.argument<Boolean>("value") == true; result.success(null) }
             "isChildLocked" -> result.success(isChildLocked)
+            "startMotion" -> { motion.start(); result.success(null) }
+            "stopMotion" -> { motion.stop(); result.success(null) }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
             "isDeviceOwner" -> result.success(isDeviceOwner)
             "versionCode" -> result.success(AppUpdater.versionCode(activity))
@@ -119,6 +126,7 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
     // owner) - Flutter then shows a black overlay instead.
     private fun screenOff(): Boolean {
         isScreenWanted = false
+        motion.ignoreForAWhile()
         if (!isDeviceOwner) return false
         dpm.lockNow()
         return true
@@ -127,6 +135,7 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
     @Suppress("DEPRECATION")
     private fun screenOn() {
         isScreenWanted = true
+        motion.ignoreForAWhile()
         // FULL_WAKE_LOCK + ACQUIRE_CAUSES_WAKEUP is deprecated but still the
         // only way to switch the panel on from the background; the keyguard
         // is disabled, so it lands right back in the app.
@@ -143,12 +152,14 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
     // The power button switched the panel off: under child lock straight
     // back on, unless Home Assistant wants it off.
     fun onScreenOff() {
+        motion.ignoreForAWhile()
         if (isChildLocked && isScreenWanted) screenOn()
     }
 
     // The power button switched the panel on: under child lock straight
     // back off when Home Assistant wants it off.
     fun onScreenOn() {
+        motion.ignoreForAWhile()
         if (isChildLocked && !isScreenWanted && isDeviceOwner) dpm.lockNow()
     }
 
@@ -163,6 +174,8 @@ class Kiosk(private val activity: Activity) : MethodChannel.MethodCallHandler {
             ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         window.attributes = params
     }
+
+    fun dispose() = motion.stop()
 
     @Suppress("DEPRECATION")
     private fun removeDeviceOwner() {

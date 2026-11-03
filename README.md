@@ -115,6 +115,14 @@ automation:
           option: dashboard
 ```
 
+## Screen off without motion
+
+- **Setting:** "Bildschirm aus ohne Bewegung" (general settings), 1–60 minutes; 0 leaves the camera off.
+- **How:** the front camera watches the room at two frames per second, evaluated on the tablet only, nothing is stored or sent.
+- **Off and on:** after that long without motion the screen goes off; the next motion switches it on again. An "off" from Home Assistant or the power button stays off.
+- **Dark room:** no motion counts, so the screen goes off. Switching the light on counts as motion.
+- The QR scanner in the settings borrows the camera; motion detection resumes about a minute later.
+
 ## Weather and notices
 
 - **Weather:** the app reads the weather entity from the settings (default `weather.forecast_home`), including its daily forecast for tomorrow.

@@ -25,6 +25,7 @@ class Settings {
     this.calendarEntityIds = const [],
     this.mediaPlayerEntityIds = const [],
     this.idleSeconds = 120,
+    this.motionScreenOffMinutes = 0,
     this.weatherView = 'wetter',
     this.calendarView = 'kalender',
     this.warningsView = 'warnungen',
@@ -70,6 +71,10 @@ class Settings {
 
   /// Back from the dashboard to the photos after this long untouched.
   final int idleSeconds;
+
+  /// Screen off after this long without motion in front of the camera; 0
+  /// leaves the camera off.
+  final int motionScreenOffMinutes;
 
   /// Dashboard views (paths) a tap on the weather, the agenda, a warning or
   /// an appliance opens; empty for the main view. An appliance can name
@@ -120,6 +125,7 @@ class Settings {
     List<String>? calendarEntityIds,
     List<String>? mediaPlayerEntityIds,
     int? idleSeconds,
+    int? motionScreenOffMinutes,
     String? weatherView,
     String? calendarView,
     String? warningsView,
@@ -149,6 +155,8 @@ class Settings {
     calendarEntityIds: calendarEntityIds ?? this.calendarEntityIds,
     mediaPlayerEntityIds: mediaPlayerEntityIds ?? this.mediaPlayerEntityIds,
     idleSeconds: idleSeconds ?? this.idleSeconds,
+    motionScreenOffMinutes:
+        motionScreenOffMinutes ?? this.motionScreenOffMinutes,
     weatherView: weatherView ?? this.weatherView,
     calendarView: calendarView ?? this.calendarView,
     warningsView: warningsView ?? this.warningsView,
@@ -194,6 +202,7 @@ Future<Settings> loadSettings() async {
     mediaPlayerEntityIds:
         prefs.getStringList('media_player_entity_ids') ?? const [],
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
+    motionScreenOffMinutes: prefs.getInt('motion_screen_off_minutes') ?? 0,
     weatherView: prefs.getString('weather_view') ?? 'wetter',
     calendarView: prefs.getString('calendar_view') ?? 'kalender',
     warningsView: prefs.getString('warnings_view') ?? 'warnungen',
@@ -231,6 +240,10 @@ Future<void> saveSettings(Settings settings) async {
     settings.mediaPlayerEntityIds,
   );
   await prefs.setInt('idle_seconds', settings.idleSeconds);
+  await prefs.setInt(
+    'motion_screen_off_minutes',
+    settings.motionScreenOffMinutes,
+  );
   await prefs.setString('weather_view', settings.weatherView);
   await prefs.setString('calendar_view', settings.calendarView);
   await prefs.setString('warnings_view', settings.warningsView);
