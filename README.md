@@ -142,7 +142,9 @@ template:
             {% set ns = namespace(items=[], groups=[]) %}
             {% set issues = state_attr('sensor.maintenance_issues', 'issues') or [] %}
             {% set labelled = label_entities('tablet_warnung') | select('is_state', 'on') | reject('in', issues) | list %}
-            {% for id in issues + labelled %}
+            {% set hidden = label_entities('tablet_hide_entity') %}
+            {% set hidden_devices = label_devices('tablet_hide_entity') %}
+            {% for id in issues + labelled if id not in hidden and device_id(id) not in hidden_devices %}
               {% set dev = device_id(id) %}
               {% set geraet = (device_attr(dev, 'name_by_user') or device_attr(dev, 'name')) if dev else none %}
               {% set name = state_attr(id, 'friendly_name') or id %}
@@ -267,6 +269,7 @@ The entity names in these examples depend on your devices.
 
 - Tapping a notice opens the dashboard.
 - **Swiping it away** hides it for the rest of the day; it shows again from midnight. A new issue of the same device shows at once.
+- **Never on the tablet:** Give a device or entity the label `tablet_hide_entity`. It still counts under "Wartung" in HA.
 - At most three notices show at once.
 
 ## Detail views
