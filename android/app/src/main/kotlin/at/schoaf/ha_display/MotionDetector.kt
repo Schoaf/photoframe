@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.util.Range
 import kotlin.math.abs
 
@@ -33,6 +34,7 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
     private var wasDark = true
     private var lastFrameMs = 0L
     private var lastMotionMs = 0L
+    private var lastLogMs = 0L
 
     // Frames right after the screen switched are skipped - its light and
     // the camera's exposure settle first.
@@ -73,6 +75,7 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
         try {
             cameras.openCamera(id, object : CameraDevice.StateCallback() {
                 override fun onOpened(device: CameraDevice) {
+                    Log.i(TAG, "camera opened")
                     camera = device
                     startCapture(id, device)
                 }
@@ -167,6 +170,10 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
         this.previous = blocks
         val wasDark = this.wasDark
         this.wasDark = isDark
+        if (isDark && now - lastLogMs >= LOG_INTERVAL_MS) {
+            lastLogMs = now
+            Log.d(TAG, "dark, mean ${mean.toInt()}")
+        }
         if (isDark || now < ignoreUntilMs || previous == null) return
         // The light was switched on.
         if (wasDark) return report(now)
@@ -177,16 +184,22 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
             val absolute = abs(blocks[i] - previous[i])
             if (relative > RELATIVE_CHANGE && absolute > ABSOLUTE_CHANGE) changed++
         }
+        if (now - lastLogMs >= LOG_INTERVAL_MS) {
+            lastLogMs = now
+            Log.d(TAG, "mean ${mean.toInt()}, changed blocks $changed")
+        }
         if (changed >= MIN_CHANGED_BLOCKS) report(now)
     }
 
     private fun report(now: Long) {
         if (now - lastMotionMs < REPORT_INTERVAL_MS) return
         lastMotionMs = now
+        Log.i(TAG, "motion")
         mainHandler.post(onMotion)
     }
 
     private fun retryLater() {
+        Log.w(TAG, "camera lost, retrying")
         close()
         if (!isRunning) return
         mainHandler.postDelayed({ if (isRunning) handler?.post { open() } }, RETRY_MS)
@@ -207,6 +220,8 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
     }
 
     private companion object {
+        const val TAG = "Motion"
+        const val LOG_INTERVAL_MS = 10_000L
         const val GRID_X = 16
         const val GRID_Y = 12
         const val SAMPLE_STEP = 4
