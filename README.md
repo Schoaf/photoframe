@@ -1,14 +1,18 @@
 # HA Display
 
-Kiosk app for a wall tablet. It combines a photo frame with a Home Assistant dashboard:
+Kiosk app for a wall tablet: a photo frame with a Home Assistant overlay and dashboard. Built for the Samsung Galaxy Tab A 10.1 (2016, SM-T585, Android 8.1) in landscape; needs Android 8.0 or newer.
 
-- **Photo frame (resting state):** a full-screen slideshow of a Synology Photos album. You can swipe between photos, and a gallery lets you pick one. Videos play muted, and a sound button appears when you touch the screen.
-- **Overlay from Home Assistant:** clock, weather (now and tomorrow) and running appliances with remaining time and a progress bar sit in the top right. Notices that anyone in the family can deal with, such as "Waschmaschine ist fertig", appear at the bottom.
-- **Dashboard on tap:** tapping the weather or a notice brings the dashboard up, full screen with no header or sidebar. After a while untouched (default 2 min) the photos come back.
+## Features
 
-Home Assistant controls the tablet over MQTT: screen on/off, mode, brightness, next photo and reload.
-
-Built for the Samsung Galaxy Tab A 10.1 (2016, SM-T585, Android 8.1) in landscape. It needs Android 8.0 or newer.
+- **Photo frame:** a slideshow of a Synology Photos album, with swiping, shuffle and a gallery. Videos play muted, with a sound button on touch.
+- **Overlay:** clock, weather now and tomorrow, today's and tomorrow's calendar events, running appliances with remaining time, and music with controls.
+- **Notices:** the warnings HA counts under "Wartung", one notice per device. Swipe one away for the rest of the day. Devices labelled `tablet_hide_entity` never show.
+- **Dashboard:** a tap on the weather, calendar, a notice or an appliance opens its dashboard view full screen. The photos come back after a while untouched.
+- **Control from HA (MQTT):** screen on/off, mode, brightness, next photo, reload, child lock and private mode.
+- **Child lock:** hardware keys, swiping and taps do nothing, and only HA switches the screen. A lock icon shows on touch.
+- **Private mode:** hides the calendar.
+- **Screen off without motion:** the front camera turns the screen off after a set time without motion and on again at motion. The brightness below which the room counts as dark is set in the app.
+- **Kiosk:** device owner, boots into the app, and the menu is behind a PIN. The settings are split into sections, and the app updates itself from GitHub releases.
 
 ## Set up the tablet
 
