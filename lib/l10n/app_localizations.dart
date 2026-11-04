@@ -650,6 +650,12 @@ abstract class AppLocalizations {
   /// **'Bildschirm aus ohne Bewegung nach: {minutes} min'**
   String motionScreenOff(int minutes);
 
+  /// No description provided for @motionDarkLevel.
+  ///
+  /// In de, this message translates to:
+  /// **'Dunkel unter Helligkeit: {level}'**
+  String motionDarkLevel(int level);
+
   /// No description provided for @motionScreenOffNever.
   ///
   /// In de, this message translates to:
@@ -659,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @motionHint.
   ///
   /// In de, this message translates to:
-  /// **'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Im dunklen Raum zählt keine Bewegung.'**
+  /// **'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Ist der Raum dunkler als die eingestellte Helligkeit (0–255), zählt keine Bewegung – kleiner = empfindlicher bei wenig Licht.'**
   String get motionHint;
 }
 

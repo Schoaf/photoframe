@@ -26,6 +26,7 @@ class Settings {
     this.mediaPlayerEntityIds = const [],
     this.idleSeconds = 120,
     this.motionScreenOffMinutes = 0,
+    this.motionDarkLevel = 12,
     this.weatherView = 'wetter',
     this.calendarView = 'kalender',
     this.warningsView = 'warnungen',
@@ -75,6 +76,10 @@ class Settings {
   /// Screen off after this long without motion in front of the camera; 0
   /// leaves the camera off.
   final int motionScreenOffMinutes;
+
+  /// Mean camera brightness (0-255) below which the room counts as dark
+  /// and no motion counts.
+  final int motionDarkLevel;
 
   /// Dashboard views (paths) a tap on the weather, the agenda, a warning or
   /// an appliance opens; empty for the main view. An appliance can name
@@ -126,6 +131,7 @@ class Settings {
     List<String>? mediaPlayerEntityIds,
     int? idleSeconds,
     int? motionScreenOffMinutes,
+    int? motionDarkLevel,
     String? weatherView,
     String? calendarView,
     String? warningsView,
@@ -157,6 +163,7 @@ class Settings {
     idleSeconds: idleSeconds ?? this.idleSeconds,
     motionScreenOffMinutes:
         motionScreenOffMinutes ?? this.motionScreenOffMinutes,
+    motionDarkLevel: motionDarkLevel ?? this.motionDarkLevel,
     weatherView: weatherView ?? this.weatherView,
     calendarView: calendarView ?? this.calendarView,
     warningsView: warningsView ?? this.warningsView,
@@ -203,6 +210,7 @@ Future<Settings> loadSettings() async {
         prefs.getStringList('media_player_entity_ids') ?? const [],
     idleSeconds: prefs.getInt('idle_seconds') ?? 120,
     motionScreenOffMinutes: prefs.getInt('motion_screen_off_minutes') ?? 0,
+    motionDarkLevel: prefs.getInt('motion_dark_level') ?? 12,
     weatherView: prefs.getString('weather_view') ?? 'wetter',
     calendarView: prefs.getString('calendar_view') ?? 'kalender',
     warningsView: prefs.getString('warnings_view') ?? 'warnungen',
@@ -244,6 +252,7 @@ Future<void> saveSettings(Settings settings) async {
     'motion_screen_off_minutes',
     settings.motionScreenOffMinutes,
   );
+  await prefs.setInt('motion_dark_level', settings.motionDarkLevel);
   await prefs.setString('weather_view', settings.weatherView);
   await prefs.setString('calendar_view', settings.calendarView);
   await prefs.setString('warnings_view', settings.warningsView);

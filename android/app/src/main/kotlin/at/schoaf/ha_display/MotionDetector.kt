@@ -40,6 +40,9 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
     // the camera's exposure settle first.
     @Volatile private var ignoreUntilMs = 0L
 
+    // Mean brightness (0-255) below which the room counts as dark.
+    @Volatile var darkLevel = 12f
+
     var isRunning = false
         private set
 
@@ -165,7 +168,7 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
 
     private fun process(blocks: FloatArray, now: Long) {
         val mean = blocks.average().toFloat()
-        val isDark = mean < DARK_LEVEL
+        val isDark = mean < darkLevel
         val previous = previous
         this.previous = blocks
         val wasDark = this.wasDark
@@ -229,9 +232,6 @@ class MotionDetector(context: Context, private val onMotion: () -> Unit) {
         const val REPORT_INTERVAL_MS = 2_000L
         const val SETTLE_MS = 5_000L
         const val RETRY_MS = 60_000L
-
-        // Mean brightness (0-255) below which the room counts as dark.
-        const val DARK_LEVEL = 12f
 
         // A block counts as changed when it differs by this much relative
         // to the frame's brightness, and by this many levels.

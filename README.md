@@ -121,7 +121,7 @@ automation:
 - **Setting:** "Bildschirm aus ohne Bewegung" (general settings), 1–60 minutes; 0 leaves the camera off.
 - **How:** the front camera watches the room at two frames per second, evaluated on the tablet only, nothing is stored or sent.
 - **Off and on:** after that long without motion the screen goes off; the next motion switches it on again. An "off" from Home Assistant or the power button stays off.
-- **Dark room:** no motion counts, so the screen goes off. Switching the light on counts as motion.
+- **Dark room:** below the brightness set in the app (mean camera brightness 0–255, default 12) no motion counts, so the screen goes off. Switching the light on counts as motion. Lower it if dim light should still count.
 - The QR scanner in the settings borrows the camera; motion detection resumes about a minute later.
 
 ## Weather and notices

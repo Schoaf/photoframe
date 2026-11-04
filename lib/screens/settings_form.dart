@@ -401,6 +401,24 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             ),
           ],
         ),
+        Row(
+          children: [
+            Text(l10n.motionDarkLevel(_settings.motionDarkLevel)),
+            Expanded(
+              child: Slider(
+                max: 60,
+                divisions: 60,
+                value: _settings.motionDarkLevel.toDouble().clamp(0, 60),
+                label: '${_settings.motionDarkLevel}',
+                onChanged: (value) => setState(
+                  () => _settings = _settings.copyWith(
+                    motionDarkLevel: value.round(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         Text(l10n.motionHint, style: theme.textTheme.bodyMedium),
       ],
       SettingsSection.photos => [

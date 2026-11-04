@@ -53,7 +53,11 @@ class Kiosk(
             "screenOn" -> { screenOn(); result.success(null) }
             "setChildLock" -> { isChildLocked = call.argument<Boolean>("value") == true; result.success(null) }
             "isChildLocked" -> result.success(isChildLocked)
-            "startMotion" -> { motion.start(); result.success(null) }
+            "startMotion" -> {
+                motion.darkLevel = call.argument<Int>("darkLevel")?.toFloat() ?: motion.darkLevel
+                motion.start()
+                result.success(null)
+            }
             "stopMotion" -> { motion.stop(); result.success(null) }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
             "isDeviceOwner" -> result.success(isDeviceOwner)

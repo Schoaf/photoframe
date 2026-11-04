@@ -50,6 +50,9 @@ final motionScreenOffProvider = Provider<void>((ref) {
     settingsProvider.select((settings) => settings.motionScreenOffMinutes),
   );
   if (minutes <= 0) return;
+  final darkLevel = ref.watch(
+    settingsProvider.select((settings) => settings.motionDarkLevel),
+  );
   final kiosk = ref.read(kioskProvider);
   final watcher = MotionScreenOff(
     timeout: Duration(minutes: minutes),
@@ -63,7 +66,10 @@ final motionScreenOffProvider = Provider<void>((ref) {
   ) {
     if (isOn) watcher.onScreenOn(DateTime.now());
   });
-  kiosk.startMotion(() => watcher.onMotion(DateTime.now()));
+  kiosk.startMotion(
+    () => watcher.onMotion(DateTime.now()),
+    darkLevel: darkLevel,
+  );
   final timer = Timer.periodic(
     const Duration(seconds: 30),
     (_) => watcher.check(DateTime.now()),

@@ -24,12 +24,13 @@ class Kiosk {
       await _channel.invokeMethod<bool>('isChildLocked') ?? false;
 
   /// Watches the room through the front camera; [onMotion] runs per motion
-  /// (at most every 2 s), also while the screen is off.
-  Future<void> startMotion(void Function() onMotion) {
+  /// (at most every 2 s), also while the screen is off. Below [darkLevel]
+  /// (mean brightness 0-255) the room counts as dark and nothing counts.
+  Future<void> startMotion(void Function() onMotion, {required int darkLevel}) {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'motion') onMotion();
     });
-    return _channel.invokeMethod('startMotion');
+    return _channel.invokeMethod('startMotion', {'darkLevel': darkLevel});
   }
 
   Future<void> stopMotion() {

@@ -329,9 +329,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String motionDarkLevel(int level) {
+    return 'Dunkel unter Helligkeit: $level';
+  }
+
+  @override
   String get motionScreenOffNever => 'Bildschirm aus ohne Bewegung: nie';
 
   @override
   String get motionHint =>
-      'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Im dunklen Raum zählt keine Bewegung.';
+      'Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Ist der Raum dunkler als die eingestellte Helligkeit (0–255), zählt keine Bewegung – kleiner = empfindlicher bei wenig Licht.';
 }

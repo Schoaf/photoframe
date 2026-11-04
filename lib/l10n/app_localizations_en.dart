@@ -328,9 +328,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String motionDarkLevel(int level) {
+    return 'Dark below brightness: $level';
+  }
+
+  @override
   String get motionScreenOffNever => 'Screen off without motion: never';
 
   @override
   String get motionHint =>
-      'The front camera detects motion – evaluated on the tablet only, nothing is stored or sent. Motion switches the screen back on, unless Home Assistant switched it off. In a dark room no motion counts.';
+      'The front camera detects motion – evaluated on the tablet only, nothing is stored or sent. Motion switches the screen back on, unless Home Assistant switched it off. When the room is darker than the set brightness (0–255), no motion counts – lower = more sensitive in little light.';
 }
