@@ -9,6 +9,7 @@ import '../services/ha_calendar.dart';
 import '../services/ha_client.dart';
 import '../services/ha_media.dart';
 import '../state/calendar.dart';
+import '../state/display_state.dart';
 import '../state/ha_info.dart';
 import '../state/settings.dart';
 import '../theme/app_theme.dart';
@@ -76,7 +77,11 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
     final agenda = buildAgenda(ref.watch(calendarProvider), _now);
     final bottom = widget.isLifted ? 112.0 : 32.0;
     final settings = ref.watch(settingsProvider);
-    final open = widget.onOpenDashboard;
+    final isChildLocked = ref.watch(
+      displayProvider.select((display) => display.isChildLocked),
+    );
+    // Under child lock taps fall through to the photo frame's lock.
+    final open = isChildLocked ? null : widget.onOpenDashboard;
     VoidCallback? opener(String view) => open == null ? null : () => open(view);
     return Stack(
       children: [
@@ -116,6 +121,9 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
                     // Seen it - swiped away until midnight.
                     Dismissible(
                       key: ValueKey(warning.id),
+                      direction: isChildLocked
+                          ? DismissDirection.none
+                          : DismissDirection.horizontal,
                       onDismissed: (_) => setState(
                         () => _dismissed.dismiss(warning.id, DateTime.now()),
                       ),
@@ -593,8 +601,11 @@ class _NowPlayingTileState extends ConsumerState<_NowPlayingTile> {
           icon: Icon(iconData),
           onPressed: () => _command(service),
         );
+    final isChildLocked = ref.watch(
+      displayProvider.select((display) => display.isChildLocked),
+    );
     return GestureDetector(
-      onTap: _showControls,
+      onTap: isChildLocked ? null : _showControls,
       child: Container(
         width: AppSizes.runningTileWidth,
         padding: const EdgeInsets.fromLTRB(12, 12, 16, 14),

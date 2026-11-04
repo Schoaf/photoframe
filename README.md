@@ -78,7 +78,7 @@ The tablet announces itself via MQTT discovery as a device (name from the settin
 | Entity | Purpose |
 |---|---|
 | `switch.<name>_screen` | Screen on/off |
-| `switch.<name>_child_lock` | Child lock: the power and volume keys do nothing, only HA switches the screen; the photos can't be swiped |
+| `switch.<name>_child_lock` | Child lock: the power and volume keys do nothing, only HA switches the screen; the photos can't be swiped, weather, agenda, notices, appliances and music don't react to taps - a tap or swipe shows a lock |
 | `select.<name>_mode` | `photos` / `dashboard` |
 | `number.<name>_brightness` | 0–255 |
 | `button.<name>_next_photo` | Next photo |

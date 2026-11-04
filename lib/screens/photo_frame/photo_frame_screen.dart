@@ -208,6 +208,8 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _showOverlay,
+      // The PageView doesn't take swipes under child lock - show the lock.
+      onPanStart: isChildLocked ? (_) => _showOverlay() : null,
       child: Stack(
         fit: StackFit.expand,
         children: [
