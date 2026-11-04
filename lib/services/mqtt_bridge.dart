@@ -48,6 +48,11 @@ class MqttTopics {
         'state_topic': state('child_lock'),
         'command_topic': command('child_lock'),
       }),
+      topic('switch', 'private'): jsonEncode({
+        ...entity('private', 'Private mode', 'mdi:eye-off-outline'),
+        'state_topic': state('private'),
+        'command_topic': command('private'),
+      }),
       topic('select', 'mode'): jsonEncode({
         ...entity('mode', 'Mode', 'mdi:view-dashboard-variant'),
         'state_topic': state('mode'),
@@ -77,6 +82,7 @@ class MqttTopics {
   Map<String, String> states(DisplayState display) => {
     state('screen'): display.isScreenOn ? 'ON' : 'OFF',
     state('child_lock'): display.isChildLocked ? 'ON' : 'OFF',
+    state('private'): display.isPrivate ? 'ON' : 'OFF',
     state('mode'): display.mode.name,
     if (display.brightness case final brightness?)
       state('brightness'): '$brightness',
@@ -97,6 +103,9 @@ bool applyMqttCommand(
   } else if (topic == topics.command('child_lock')) {
     if (payload != 'ON' && payload != 'OFF') return false;
     display.setChildLock(payload == 'ON');
+  } else if (topic == topics.command('private')) {
+    if (payload != 'ON' && payload != 'OFF') return false;
+    display.setPrivate(payload == 'ON');
   } else if (topic == topics.command('mode')) {
     final mode = DisplayMode.values.asNameMap()[payload];
     if (mode == null) return false;

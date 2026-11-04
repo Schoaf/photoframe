@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/kiosk.dart';
 import 'settings.dart';
@@ -11,6 +12,7 @@ class DisplayState {
     this.isScreenOn = true,
     this.isBlackedOut = false,
     this.isChildLocked = false,
+    this.isPrivate = false,
     this.brightness,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
@@ -29,6 +31,9 @@ class DisplayState {
   /// only Home Assistant switches the screen.
   final bool isChildLocked;
 
+  /// Private mode: the agenda isn't shown.
+  final bool isPrivate;
+
   /// 0..255, null for the system brightness.
   final int? brightness;
 
@@ -46,6 +51,7 @@ class DisplayState {
     bool? isScreenOn,
     bool? isBlackedOut,
     bool? isChildLocked,
+    bool? isPrivate,
     int? brightness,
     int? nextPhotoRequests,
     int? reloadRequests,
@@ -56,6 +62,7 @@ class DisplayState {
     isScreenOn: isScreenOn ?? this.isScreenOn,
     isBlackedOut: isBlackedOut ?? this.isBlackedOut,
     isChildLocked: isChildLocked ?? this.isChildLocked,
+    isPrivate: isPrivate ?? this.isPrivate,
     brightness: brightness ?? this.brightness,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
@@ -75,6 +82,11 @@ class DisplayNotifier extends Notifier<DisplayState> {
     // Kept natively, so a reboot doesn't lift it.
     _kiosk.isChildLocked().then((isLocked) {
       if (isLocked) state = state.copyWith(isChildLocked: true);
+    });
+    SharedPreferences.getInstance().then((prefs) {
+      if (prefs.getBool(_privateKey) ?? false) {
+        state = state.copyWith(isPrivate: true);
+      }
     });
     return DisplayState(mode: _availableMode(settings, settings.startMode));
   }
@@ -117,6 +129,12 @@ class DisplayNotifier extends Notifier<DisplayState> {
     await _kiosk.setChildLock(isLocked);
   }
 
+  Future<void> setPrivate(bool isPrivate) async {
+    state = state.copyWith(isPrivate: isPrivate);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_privateKey, isPrivate);
+  }
+
   Future<void> setBrightness(int brightness) async {
     state = state.copyWith(brightness: brightness.clamp(0, 255));
     if (state.isScreenOn) {
@@ -129,6 +147,8 @@ class DisplayNotifier extends Notifier<DisplayState> {
 
   void requestReload() =>
       state = state.copyWith(reloadRequests: state.reloadRequests + 1);
+
+  static const _privateKey = 'private_mode';
 
   static double? _brightnessValue(int? brightness) =>
       brightness == null ? null : brightness / 255;

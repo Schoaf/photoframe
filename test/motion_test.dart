@@ -5,6 +5,7 @@ import 'package:ha_display/state/display_state.dart';
 import 'package:ha_display/state/motion.dart';
 import 'package:ha_display/state/settings.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockKiosk extends Mock implements Kiosk {}
 
@@ -15,6 +16,7 @@ void main() {
   late MotionScreenOff watcher;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     kiosk = _MockKiosk();
     when(() => kiosk.screenOff()).thenAnswer((_) async => true);
     when(() => kiosk.screenOn()).thenAnswer((_) async {});

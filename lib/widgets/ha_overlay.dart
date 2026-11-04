@@ -74,7 +74,12 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
   Widget build(BuildContext context) {
     final info = ref.watch(haInfoProvider);
     final warnings = _dismissed.visible(info.warnings, _now);
-    final agenda = buildAgenda(ref.watch(calendarProvider), _now);
+    final isPrivate = ref.watch(
+      displayProvider.select((display) => display.isPrivate),
+    );
+    final agenda = isPrivate
+        ? const <AgendaDay>[]
+        : buildAgenda(ref.watch(calendarProvider), _now);
     final bottom = widget.isLifted ? 112.0 : 32.0;
     final settings = ref.watch(settingsProvider);
     final isChildLocked = ref.watch(

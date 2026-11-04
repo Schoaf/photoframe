@@ -7,6 +7,7 @@ import 'package:ha_display/services/mqtt_bridge.dart';
 import 'package:ha_display/state/display_state.dart';
 import 'package:ha_display/state/settings.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockKiosk extends Mock implements Kiosk {}
 
@@ -16,6 +17,7 @@ void main() {
   late ProviderContainer container;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     kiosk = _MockKiosk();
     when(() => kiosk.screenOff()).thenAnswer((_) async => true);
     when(() => kiosk.screenOn()).thenAnswer((_) async {});
@@ -50,6 +52,7 @@ void main() {
       containsAll([
         'homeassistant/switch/ha_display_abc123/screen/config',
         'homeassistant/switch/ha_display_abc123/child_lock/config',
+        'homeassistant/switch/ha_display_abc123/private/config',
         'homeassistant/select/ha_display_abc123/mode/config',
         'homeassistant/number/ha_display_abc123/brightness/config',
         'homeassistant/button/ha_display_abc123/next_photo/config',
@@ -103,6 +106,7 @@ void main() {
     expect(topics.states(state), {
       'ha_display/abc123/screen/state': 'ON',
       'ha_display/abc123/child_lock/state': 'OFF',
+      'ha_display/abc123/private/state': 'OFF',
       'ha_display/abc123/mode/state': 'dashboard',
       'ha_display/abc123/brightness/state': '128',
     });
@@ -120,6 +124,19 @@ void main() {
     expect(state.isChildLocked, isTrue);
     expect(state.isScreenOn, isFalse);
     expect(topics.states(state)['ha_display/abc123/child_lock/state'], 'ON');
+  });
+
+  test('private mode survives a restart', () async {
+    applyMqttCommand(topics, topics.command('private'), 'ON', display());
+    await pumpEventQueue();
+    expect(container.read(displayProvider).isPrivate, isTrue);
+
+    container.invalidate(displayProvider);
+    container.read(displayProvider);
+    await pumpEventQueue();
+    final state = container.read(displayProvider);
+    expect(state.isPrivate, isTrue);
+    expect(topics.states(state)['ha_display/abc123/private/state'], 'ON');
   });
 
   test('ignores unknown payloads and topics', () {
