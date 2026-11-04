@@ -12,11 +12,59 @@ import 'qr_scan_screen.dart';
 /// Preselected when found (or when there is just one album).
 const _defaultAlbumNames = {'fotoframe', 'fotorahmen', 'photo frame'};
 
-/// All settings on one scrolling page - used on first start and in the
-/// menu.
-class SettingsForm extends ConsumerStatefulWidget {
-  const SettingsForm({super.key, this.onSaved});
+/// The parts of the settings, picked in the menu on the left.
+enum SettingsSection {
+  general(Icons.tune),
+  photos(Icons.photo_library),
+  dashboard(Icons.dashboard),
+  haInfo(Icons.wb_sunny_outlined),
+  mqtt(Icons.hub),
+  updates(Icons.system_update_alt);
 
+  const SettingsSection(this.icon);
+
+  final IconData icon;
+
+  String title(AppLocalizations l10n) => switch (this) {
+    general => l10n.sectionGeneral,
+    photos => l10n.sectionPhotos,
+    dashboard => l10n.sectionDashboard,
+    haInfo => l10n.sectionHaInfo,
+    mqtt => l10n.sectionMqtt,
+    updates => l10n.sectionUpdates,
+  };
+}
+
+/// One menu entry per settings section.
+List<Widget> settingsSectionTiles(
+  AppLocalizations l10n, {
+  required SettingsSection selected,
+  required ValueChanged<SettingsSection> onSelect,
+}) => [
+  for (final section in SettingsSection.values)
+    ListTile(
+      leading: Icon(section.icon),
+      title: Text(section.title(l10n)),
+      selected: section == selected,
+      onTap: () => onSelect(section),
+    ),
+];
+
+/// The settings of one [section] with the save button below - used on
+/// first start and in the menu. Entries of the other sections are kept
+/// while switching.
+class SettingsForm extends ConsumerStatefulWidget {
+  const SettingsForm({
+    super.key,
+    required this.section,
+    required this.onShowSection,
+    this.onSaved,
+  });
+
+  final SettingsSection section;
+
+  /// Shows a section, e.g. the one with an invalid entry.
+  final ValueChanged<SettingsSection> onShowSection;
   final VoidCallback? onSaved;
 
   @override
@@ -179,6 +227,9 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
     _settings = _settings.copyWith(calendarEntityIds: ids);
   });
 
+  static bool _isPinValid(String pin) =>
+      RegExp(r'^\d{4,8}$').hasMatch(pin.trim());
+
   void _selectAlbum(PhotoAlbum album) => _settings = _settings.copyWith(
     albumId: album.id,
     albumName: album.name,
@@ -192,6 +243,14 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
   }
 
   Future<void> _save() async {
+    // Only the open section is on screen - the PIN lives in the general one.
+    if (!_isPinValid(_text['pin']!.text)) {
+      widget.onShowSection(SettingsSection.general);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _formKey.currentState?.validate(),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     final settings = _settings.copyWith(
       synologyUrl: _value('synologyUrl'),
@@ -263,347 +322,353 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       ],
     );
     final albums = _albums;
-    return Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-        children: [
-          section(l10n.sectionGeneral),
-          Wrap(
-            spacing: 24,
-            runSpacing: 16,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(l10n.language),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(value: '', label: Text(l10n.languageSystem)),
-                  const ButtonSegment(value: 'de', label: Text('Deutsch')),
-                  const ButtonSegment(value: 'en', label: Text('English')),
-                ],
-                selected: {_settings.languageCode ?? ''},
-                onSelectionChanged: (selection) => setState(
-                  () => _settings = _settings.copyWith(
-                    languageCode: () =>
-                        selection.first.isEmpty ? null : selection.first,
-                  ),
+    final children = switch (widget.section) {
+      SettingsSection.general => [
+        Wrap(
+          spacing: 24,
+          runSpacing: 16,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(l10n.language),
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(value: '', label: Text(l10n.languageSystem)),
+                const ButtonSegment(value: 'de', label: Text('Deutsch')),
+                const ButtonSegment(value: 'en', label: Text('English')),
+              ],
+              selected: {_settings.languageCode ?? ''},
+              onSelectionChanged: (selection) => setState(
+                () => _settings = _settings.copyWith(
+                  languageCode: () =>
+                      selection.first.isEmpty ? null : selection.first,
                 ),
-              ),
-              Text(l10n.startMode),
-              SegmentedButton<DisplayMode>(
-                segments: [
-                  ButtonSegment(
-                    value: DisplayMode.photos,
-                    label: Text(l10n.modePhotos),
-                    icon: const Icon(Icons.photo),
-                  ),
-                  ButtonSegment(
-                    value: DisplayMode.dashboard,
-                    label: Text(l10n.modeDashboard),
-                    icon: const Icon(Icons.dashboard),
-                  ),
-                ],
-                selected: {_settings.startMode},
-                onSelectionChanged: (selection) => setState(
-                  () => _settings = _settings.copyWith(
-                    startMode: selection.first,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 300,
-            child: field(
-              'pin',
-              l10n.pin,
-              isSecret: true,
-              keyboardType: TextInputType.number,
-              validator: (value) =>
-                  RegExp(r'^\d{4,8}$').hasMatch(value?.trim() ?? '')
-                  ? null
-                  : l10n.pinInvalid,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(
-                _settings.motionScreenOffMinutes == 0
-                    ? l10n.motionScreenOffNever
-                    : l10n.motionScreenOff(_settings.motionScreenOffMinutes),
-              ),
-              Expanded(
-                child: Slider(
-                  max: 60,
-                  divisions: 60,
-                  value: _settings.motionScreenOffMinutes.toDouble().clamp(
-                    0,
-                    60,
-                  ),
-                  label: '${_settings.motionScreenOffMinutes} min',
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(
-                      motionScreenOffMinutes: value.round(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Text(l10n.motionHint, style: theme.textTheme.bodyMedium),
-          section(l10n.sectionPhotos),
-          field(
-            'synologyUrl',
-            l10n.synologyUrl,
-            hint: 'http://192.168.1.10:5000',
-            keyboardType: TextInputType.url,
-          ),
-          pair(
-            field('synologyUser', l10n.user),
-            field('synologyPassword', l10n.password, isSecret: true),
-          ),
-          Row(
-            spacing: 16,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: _isLoadingAlbums ? null : _loadAlbums,
-                icon: const Icon(Icons.photo_album),
-                label: Text(l10n.loadAlbums),
-              ),
-              if (albums != null)
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    initialValue:
-                        albums.any((album) => album.id == _settings.albumId)
-                        ? _settings.albumId
-                        : null,
-                    decoration: InputDecoration(labelText: l10n.album),
-                    items: [
-                      for (final album in albums)
-                        DropdownMenuItem(
-                          value: album.id,
-                          child: Text(
-                            l10n.albumEntry(album.name, album.itemCount),
-                          ),
-                        ),
-                    ],
-                    onChanged: (id) => setState(
-                      () => _selectAlbum(
-                        albums.firstWhere((album) => album.id == id),
-                      ),
-                    ),
-                  ),
-                )
-              else if (_settings.albumName.isNotEmpty)
-                Text(l10n.currentAlbum(_settings.albumName)),
-            ],
-          ),
-          if (_albumError case final error?)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                error,
-                style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(l10n.slideSeconds(_settings.slideSeconds)),
-              Expanded(
-                child: Slider(
-                  min: 5,
-                  max: 120,
-                  divisions: 23,
-                  value: _settings.slideSeconds.toDouble().clamp(5, 120),
-                  label: '${_settings.slideSeconds} s',
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(
-                      slideSeconds: value.round(),
-                    ),
-                  ),
+            Text(l10n.startMode),
+            SegmentedButton<DisplayMode>(
+              segments: [
+                ButtonSegment(
+                  value: DisplayMode.photos,
+                  label: Text(l10n.modePhotos),
+                  icon: const Icon(Icons.photo),
                 ),
+                ButtonSegment(
+                  value: DisplayMode.dashboard,
+                  label: Text(l10n.modeDashboard),
+                  icon: const Icon(Icons.dashboard),
+                ),
+              ],
+              selected: {_settings.startMode},
+              onSelectionChanged: (selection) => setState(
+                () =>
+                    _settings = _settings.copyWith(startMode: selection.first),
               ),
-            ],
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.shuffle),
-            value: _settings.isShuffled,
-            onChanged: (value) => setState(
-              () => _settings = _settings.copyWith(isShuffled: value),
             ),
-          ),
-          section(l10n.sectionDashboard),
-          field(
-            'dashboardUrl',
-            l10n.dashboardUrl,
-            hint: 'http://homeassistant.local:8123/lovelace/0',
-            keyboardType: TextInputType.url,
-          ),
-          Text(l10n.dashboardHint, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          pair(
-            field('weatherView', l10n.weatherView),
-            field('calendarView', l10n.calendarView),
-          ),
-          pair(
-            field('warningsView', l10n.warningsView),
-            field('devicesView', l10n.devicesView),
-          ),
-          Text(l10n.dashboardViewsHint, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(l10n.idleSeconds(_settings.idleSeconds)),
-              Expanded(
-                child: Slider(
-                  min: 30,
-                  max: 600,
-                  divisions: 19,
-                  value: _settings.idleSeconds.toDouble().clamp(30, 600),
-                  label: '${_settings.idleSeconds} s',
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(
-                      idleSeconds: value.round(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          section(l10n.sectionHaInfo),
-          field(
-            'haToken',
-            l10n.haToken,
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: 300,
+          child: field(
+            'pin',
+            l10n.pin,
             isSecret: true,
-            // Far too long to type on the tablet - HA shows it as QR code.
+            keyboardType: TextInputType.number,
+            validator: (value) =>
+                _isPinValid(value ?? '') ? null : l10n.pinInvalid,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Text(
+              _settings.motionScreenOffMinutes == 0
+                  ? l10n.motionScreenOffNever
+                  : l10n.motionScreenOff(_settings.motionScreenOffMinutes),
+            ),
+            Expanded(
+              child: Slider(
+                max: 60,
+                divisions: 60,
+                value: _settings.motionScreenOffMinutes.toDouble().clamp(0, 60),
+                label: '${_settings.motionScreenOffMinutes} min',
+                onChanged: (value) => setState(
+                  () => _settings = _settings.copyWith(
+                    motionScreenOffMinutes: value.round(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Text(l10n.motionHint, style: theme.textTheme.bodyMedium),
+      ],
+      SettingsSection.photos => [
+        field(
+          'synologyUrl',
+          l10n.synologyUrl,
+          hint: 'http://192.168.1.10:5000',
+          keyboardType: TextInputType.url,
+        ),
+        pair(
+          field('synologyUser', l10n.user),
+          field('synologyPassword', l10n.password, isSecret: true),
+        ),
+        Row(
+          spacing: 16,
+          children: [
+            FilledButton.tonalIcon(
+              onPressed: _isLoadingAlbums ? null : _loadAlbums,
+              icon: const Icon(Icons.photo_album),
+              label: Text(l10n.loadAlbums),
+            ),
+            if (albums != null)
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue:
+                      albums.any((album) => album.id == _settings.albumId)
+                      ? _settings.albumId
+                      : null,
+                  decoration: InputDecoration(labelText: l10n.album),
+                  items: [
+                    for (final album in albums)
+                      DropdownMenuItem(
+                        value: album.id,
+                        child: Text(
+                          l10n.albumEntry(album.name, album.itemCount),
+                        ),
+                      ),
+                  ],
+                  onChanged: (id) => setState(
+                    () => _selectAlbum(
+                      albums.firstWhere((album) => album.id == id),
+                    ),
+                  ),
+                ),
+              )
+            else if (_settings.albumName.isNotEmpty)
+              Text(l10n.currentAlbum(_settings.albumName)),
+          ],
+        ),
+        if (_albumError case final error?)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              error,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Text(l10n.slideSeconds(_settings.slideSeconds)),
+            Expanded(
+              child: Slider(
+                min: 5,
+                max: 120,
+                divisions: 23,
+                value: _settings.slideSeconds.toDouble().clamp(5, 120),
+                label: '${_settings.slideSeconds} s',
+                onChanged: (value) => setState(
+                  () => _settings = _settings.copyWith(
+                    slideSeconds: value.round(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.shuffle),
+          value: _settings.isShuffled,
+          onChanged: (value) =>
+              setState(() => _settings = _settings.copyWith(isShuffled: value)),
+        ),
+      ],
+      SettingsSection.dashboard => [
+        field(
+          'dashboardUrl',
+          l10n.dashboardUrl,
+          hint: 'http://homeassistant.local:8123/lovelace/0',
+          keyboardType: TextInputType.url,
+        ),
+        Text(l10n.dashboardHint, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 16),
+        pair(
+          field('weatherView', l10n.weatherView),
+          field('calendarView', l10n.calendarView),
+        ),
+        pair(
+          field('warningsView', l10n.warningsView),
+          field('devicesView', l10n.devicesView),
+        ),
+        Text(l10n.dashboardViewsHint, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Text(l10n.idleSeconds(_settings.idleSeconds)),
+            Expanded(
+              child: Slider(
+                min: 30,
+                max: 600,
+                divisions: 19,
+                value: _settings.idleSeconds.toDouble().clamp(30, 600),
+                label: '${_settings.idleSeconds} s',
+                onChanged: (value) => setState(
+                  () => _settings = _settings.copyWith(
+                    idleSeconds: value.round(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+      SettingsSection.haInfo => [
+        field(
+          'haToken',
+          l10n.haToken,
+          isSecret: true,
+          // Far too long to type on the tablet - HA shows it as QR code.
+          suffix: IconButton(
+            iconSize: 32,
+            tooltip: l10n.scanQr,
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () => _scanInto('haToken'),
+          ),
+        ),
+        field(
+          'weatherEntityId',
+          l10n.weatherEntity,
+          hint: 'weather.forecast_home',
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilledButton.tonalIcon(
+              onPressed: _isLoadingCalendars ? null : _loadCalendars,
+              icon: const Icon(Icons.calendar_month),
+              label: Text(l10n.loadCalendars),
+            ),
+            for (final calendar
+                in _calendars ??
+                    [
+                      for (final id in _settings.calendarEntityIds)
+                        HaCalendar(entityId: id, name: id),
+                    ])
+              FilterChip(
+                label: Text(calendar.name),
+                selected: _settings.calendarEntityIds.contains(
+                  calendar.entityId,
+                ),
+                onSelected: (isSelected) =>
+                    _toggleCalendar(calendar.entityId, isSelected),
+              ),
+          ],
+        ),
+        if (_calendarError case final error?)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              error,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilledButton.tonalIcon(
+              onPressed: _isLoadingPlayers ? null : _loadPlayers,
+              icon: const Icon(Icons.music_note),
+              label: Text(l10n.loadPlayers),
+            ),
+            for (final player
+                in _players ??
+                    [
+                      for (final id in _settings.mediaPlayerEntityIds)
+                        HaMediaPlayer(entityId: id, name: id),
+                    ])
+              FilterChip(
+                label: Text(player.name),
+                selected: _settings.mediaPlayerEntityIds.contains(
+                  player.entityId,
+                ),
+                onSelected: (isSelected) =>
+                    _togglePlayer(player.entityId, isSelected),
+              ),
+          ],
+        ),
+        if (_playerError case final error?)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              error,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
+      ],
+      SettingsSection.mqtt => [
+        pair(
+          field('mqttHost', l10n.mqttHost, hint: 'homeassistant.local'),
+          field('mqttPort', l10n.mqttPort, keyboardType: TextInputType.number),
+        ),
+        pair(
+          field('mqttUser', l10n.user),
+          field('mqttPassword', l10n.password, isSecret: true),
+        ),
+        field('deviceName', l10n.deviceName),
+        Text(l10n.mqttHint, style: theme.textTheme.bodyMedium),
+      ],
+      SettingsSection.updates => [
+        pair(
+          field('updateRepo', l10n.updateRepo, hint: 'Schoaf/ha-display'),
+          field(
+            'githubToken',
+            l10n.githubToken,
+            isSecret: true,
             suffix: IconButton(
               iconSize: 32,
               tooltip: l10n.scanQr,
               icon: const Icon(Icons.qr_code_scanner),
-              onPressed: () => _scanInto('haToken'),
+              onPressed: () => _scanInto('githubToken'),
             ),
           ),
-          field(
-            'weatherEntityId',
-            l10n.weatherEntity,
-            hint: 'weather.forecast_home',
+        ),
+        Text(l10n.updateHint, style: theme.textTheme.bodyMedium),
+      ],
+    };
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+              children: [section(widget.section.title(l10n)), ...children],
+            ),
           ),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: _isLoadingCalendars ? null : _loadCalendars,
-                icon: const Icon(Icons.calendar_month),
-                label: Text(l10n.loadCalendars),
-              ),
-              for (final calendar
-                  in _calendars ??
-                      [
-                        for (final id in _settings.calendarEntityIds)
-                          HaCalendar(entityId: id, name: id),
-                      ])
-                FilterChip(
-                  label: Text(calendar.name),
-                  selected: _settings.calendarEntityIds.contains(
-                    calendar.entityId,
-                  ),
-                  onSelected: (isSelected) =>
-                      _toggleCalendar(calendar.entityId, isSelected),
+          const Divider(height: 1),
+          // Always in reach, whichever section is open.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: _save,
+                icon: const Icon(Icons.save),
+                label: Text(l10n.save),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(200, 56),
+                  textStyle: const TextStyle(fontSize: 18),
                 ),
-            ],
-          ),
-          if (_calendarError case final error?)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                error,
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: _isLoadingPlayers ? null : _loadPlayers,
-                icon: const Icon(Icons.music_note),
-                label: Text(l10n.loadPlayers),
-              ),
-              for (final player
-                  in _players ??
-                      [
-                        for (final id in _settings.mediaPlayerEntityIds)
-                          HaMediaPlayer(entityId: id, name: id),
-                      ])
-                FilterChip(
-                  label: Text(player.name),
-                  selected: _settings.mediaPlayerEntityIds.contains(
-                    player.entityId,
-                  ),
-                  onSelected: (isSelected) =>
-                      _togglePlayer(player.entityId, isSelected),
-                ),
-            ],
-          ),
-          if (_playerError case final error?)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                error,
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 16),
-          Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
-          section(l10n.sectionMqtt),
-          pair(
-            field('mqttHost', l10n.mqttHost, hint: 'homeassistant.local'),
-            field(
-              'mqttPort',
-              l10n.mqttPort,
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          pair(
-            field('mqttUser', l10n.user),
-            field('mqttPassword', l10n.password, isSecret: true),
-          ),
-          field('deviceName', l10n.deviceName),
-          Text(l10n.mqttHint, style: theme.textTheme.bodyMedium),
-          section(l10n.sectionUpdates),
-          pair(
-            field('updateRepo', l10n.updateRepo, hint: 'Schoaf/ha-display'),
-            field(
-              'githubToken',
-              l10n.githubToken,
-              isSecret: true,
-              suffix: IconButton(
-                iconSize: 32,
-                tooltip: l10n.scanQr,
-                icon: const Icon(Icons.qr_code_scanner),
-                onPressed: () => _scanInto('githubToken'),
-              ),
-            ),
-          ),
-          Text(l10n.updateHint, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 32),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.save),
-              label: Text(l10n.save),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(200, 56),
-                textStyle: const TextStyle(fontSize: 18),
               ),
             ),
           ),

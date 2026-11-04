@@ -23,6 +23,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   int? _versionCode;
   String? _updateStatus;
   bool _isCheckingUpdate = false;
+  var _section = SettingsSection.general;
 
   @override
   void initState() {
@@ -134,6 +135,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                     onTap: () => _show(DisplayMode.dashboard),
                   ),
                   const Divider(),
+                  ...settingsSectionTiles(
+                    l10n,
+                    selected: _section,
+                    onSelect: (section) => setState(() => _section = section),
+                  ),
+                  const Divider(),
                   ListTile(
                     leading: _isCheckingUpdate
                         ? const SizedBox.square(
@@ -178,7 +185,11 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             ),
             const VerticalDivider(width: 1),
             Expanded(
-              child: SettingsForm(onSaved: () => Navigator.of(context).pop()),
+              child: SettingsForm(
+                section: _section,
+                onShowSection: (section) => setState(() => _section = section),
+                onSaved: () => Navigator.of(context).pop(),
+              ),
             ),
           ],
         ),

@@ -66,13 +66,43 @@ class HaDisplayApp extends ConsumerWidget {
 }
 
 /// First start: nothing to show yet.
-class _SetupScreen extends StatelessWidget {
+class _SetupScreen extends StatefulWidget {
   const _SetupScreen();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    appBar: AppBar(title: Text(AppLocalizations.of(context).setupTitle)),
-    body: const SettingsForm(),
-  );
+  State<_SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends State<_SetupScreen> {
+  var _section = SettingsSection.general;
+
+  void _show(SettingsSection section) => setState(() => _section = section);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(title: Text(l10n.setupTitle)),
+      body: Row(
+        children: [
+          SizedBox(
+            width: AppSizes.menuPaneWidth,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              children: settingsSectionTiles(
+                l10n,
+                selected: _section,
+                onSelect: _show,
+              ),
+            ),
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(
+            child: SettingsForm(section: _section, onShowSection: _show),
+          ),
+        ],
+      ),
+    );
+  }
 }
