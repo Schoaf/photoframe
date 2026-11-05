@@ -631,6 +631,22 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             ),
           ),
         const SizedBox(height: 16),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.finishedFlash),
+          value: _settings.isFinishedFlashOn,
+          onChanged: (value) => setState(
+            () => _settings = _settings.copyWith(isFinishedFlashOn: value),
+          ),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.finishedSpeech),
+          value: _settings.isFinishedSpeechOn,
+          onChanged: (value) => setState(
+            () => _settings = _settings.copyWith(isFinishedSpeechOn: value),
+          ),
+        ),
         Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
       ],
       SettingsSection.mqtt => [

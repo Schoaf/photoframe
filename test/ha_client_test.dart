@@ -156,6 +156,26 @@ void main() {
     expect(dismissed.visible([phone, car]), [phone, car]);
   });
 
+  test('only an appliance leaving at its end counts as finished', () {
+    final now = DateTime(2026, 11, 5, 12);
+    final washer = RunningDevice(
+      name: 'Waschmaschine',
+      end: now.add(const Duration(minutes: 2)),
+    );
+    final dryer = RunningDevice(
+      name: 'Trockner',
+      end: now.add(const Duration(hours: 1)),
+    );
+    const roborock = RunningDevice(name: 'Roborock', progress: 97);
+    const unknown = RunningDevice(name: 'Unbekannt');
+    final finished = FinishedDevices();
+
+    expect(finished.update([washer, dryer, roborock, unknown], now), isEmpty);
+    expect(finished.update([washer, dryer, roborock, unknown], now), isEmpty);
+    expect(finished.update([], now), ['Waschmaschine', 'Roborock']);
+    expect(finished.update([], now), isEmpty);
+  });
+
   group('running devices', () {
     final now = DateTime(2026, 11, 1, 12);
 

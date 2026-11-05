@@ -12,6 +12,7 @@ Kiosk app for a wall tablet: a photo frame with a Home Assistant overlay and das
 - **Child lock:** hardware keys, swiping and taps do nothing, and only HA switches the screen. A lock icon shows on touch.
 - **Private mode:** hides the calendar.
 - **Charging:** a device on the charger shows as a big battery in the middle with its name and level. Swipe it away until it next charges.
+- **Appliance done (optional):** the whole screen blinks with "X ist fertig", and/or the tablet says it.
 - **Screen off without motion:** the front camera turns the screen off after a set time without motion and on again at motion. The brightness below which the room counts as dark is set in the app.
 - **Kiosk:** device owner, boots into the app, and the menu is behind a PIN. The settings are split into sections, and the app updates itself from GitHub releases.
 
@@ -200,6 +201,8 @@ template:
 - They show below the weather with their remaining time and a bar from 0 to 100 %.
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
+
+**Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech at the media volume.
 
 **Charging:** Add the attribute `ladend` to `sensor.tablet_warnungen`. It finds every device with a charging sensor and a battery sensor; devices labelled `tablet_hide_entity` are left out.
 

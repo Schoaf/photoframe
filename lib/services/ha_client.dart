@@ -131,6 +131,15 @@ class RunningDevice {
     return elapsed * ((100 - progress.clamp(0, 100)) / progress);
   }
 
+  /// So close to the end that it going away means it finished - not that
+  /// it was cancelled or went offline.
+  bool isNearlyDone(DateTime now) {
+    final left = remaining(now);
+    if (left != null && left <= const Duration(minutes: 5)) return true;
+    final fraction = this.fraction(now);
+    return fraction != null && fraction >= 0.95;
+  }
+
   /// 0..1 for the bar: as reported, or from [start] and [end].
   double? fraction(DateTime now) {
     if (progress case final progress?) return (progress / 100).clamp(0, 1);

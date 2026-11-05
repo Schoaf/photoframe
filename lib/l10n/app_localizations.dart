@@ -656,6 +656,24 @@ abstract class AppLocalizations {
   /// **'Dunkel unter Helligkeit: {level}'**
   String motionDarkLevel(int level);
 
+  /// No description provided for @deviceFinished.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} ist fertig'**
+  String deviceFinished(String name);
+
+  /// No description provided for @finishedFlash.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät fertig: Bildschirm blinkt mit Meldung'**
+  String get finishedFlash;
+
+  /// No description provided for @finishedSpeech.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät fertig: Tablet sagt es an'**
+  String get finishedSpeech;
+
   /// No description provided for @motionScreenOffNever.
   ///
   /// In de, this message translates to:

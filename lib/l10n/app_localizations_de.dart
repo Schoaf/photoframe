@@ -334,6 +334,17 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String deviceFinished(String name) {
+    return '$name ist fertig';
+  }
+
+  @override
+  String get finishedFlash => 'Gerät fertig: Bildschirm blinkt mit Meldung';
+
+  @override
+  String get finishedSpeech => 'Gerät fertig: Tablet sagt es an';
+
+  @override
   String get motionScreenOffNever => 'Bildschirm aus ohne Bewegung: nie';
 
   @override

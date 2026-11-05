@@ -35,6 +35,8 @@ class Settings {
     this.githubToken = '',
     this.slideSeconds = 15,
     this.isShuffled = true,
+    this.isFinishedFlashOn = false,
+    this.isFinishedSpeechOn = false,
     this.startMode = DisplayMode.photos,
     this.pin = '',
     this.languageCode,
@@ -96,6 +98,12 @@ class Settings {
   final String githubToken;
   final int slideSeconds;
   final bool isShuffled;
+
+  /// An appliance finished: the whole screen blinks with a message.
+  final bool isFinishedFlashOn;
+
+  /// An appliance finished: the tablet says so.
+  final bool isFinishedSpeechOn;
   final DisplayMode startMode;
 
   /// Unlocks the menu; empty until set in the settings screen.
@@ -140,6 +148,8 @@ class Settings {
     String? githubToken,
     int? slideSeconds,
     bool? isShuffled,
+    bool? isFinishedFlashOn,
+    bool? isFinishedSpeechOn,
     DisplayMode? startMode,
     String? pin,
     String? Function()? languageCode,
@@ -172,6 +182,8 @@ class Settings {
     githubToken: githubToken ?? this.githubToken,
     slideSeconds: slideSeconds ?? this.slideSeconds,
     isShuffled: isShuffled ?? this.isShuffled,
+    isFinishedFlashOn: isFinishedFlashOn ?? this.isFinishedFlashOn,
+    isFinishedSpeechOn: isFinishedSpeechOn ?? this.isFinishedSpeechOn,
     startMode: startMode ?? this.startMode,
     pin: pin ?? this.pin,
     languageCode: languageCode != null ? languageCode() : this.languageCode,
@@ -219,6 +231,8 @@ Future<Settings> loadSettings() async {
     githubToken: secrets[_kGithubToken] ?? '',
     slideSeconds: prefs.getInt('slide_seconds') ?? 15,
     isShuffled: prefs.getBool('is_shuffled') ?? true,
+    isFinishedFlashOn: prefs.getBool('finished_flash') ?? false,
+    isFinishedSpeechOn: prefs.getBool('finished_speech') ?? false,
     startMode:
         DisplayMode.values.asNameMap()[prefs.getString('start_mode')] ??
         DisplayMode.photos,
@@ -260,6 +274,8 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setString('update_repo', settings.updateRepo);
   await prefs.setInt('slide_seconds', settings.slideSeconds);
   await prefs.setBool('is_shuffled', settings.isShuffled);
+  await prefs.setBool('finished_flash', settings.isFinishedFlashOn);
+  await prefs.setBool('finished_speech', settings.isFinishedSpeechOn);
   await prefs.setString('start_mode', settings.startMode.name);
   if (settings.languageCode case final code?) {
     await prefs.setString('language_code', code);

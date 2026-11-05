@@ -11,6 +11,7 @@ import '../state/mqtt.dart';
 import '../state/settings.dart';
 import '../state/updates.dart';
 import '../utils/tap_sequence.dart';
+import '../widgets/finished_alert.dart';
 import '../widgets/pin_dialog.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'menu_screen.dart';
@@ -132,6 +133,7 @@ class _DisplayScreenState extends ConsumerState<DisplayScreen>
                     ),
                   ),
                 ),
+              const FinishedAlert(),
               if (display.isBlackedOut)
                 GestureDetector(
                   // A touch wakes it, like the power button would.

@@ -333,6 +333,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String deviceFinished(String name) {
+    return '$name is done';
+  }
+
+  @override
+  String get finishedFlash => 'Appliance done: screen blinks with a message';
+
+  @override
+  String get finishedSpeech => 'Appliance done: the tablet says it';
+
+  @override
   String get motionScreenOffNever => 'Screen off without motion: never';
 
   @override

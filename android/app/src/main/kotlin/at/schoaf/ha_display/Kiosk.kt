@@ -40,6 +40,7 @@ class Kiosk(
         get() = prefs.getBoolean("child_locked", false)
         private set(value) = prefs.edit().putBoolean("child_locked", value).apply()
 
+    private val speaker = Speaker(activity)
     private val motion = MotionDetector(activity) { channel.invokeMethod("motion", null) }
 
     // What Home Assistant asked for last - the power button may disagree.
@@ -59,6 +60,10 @@ class Kiosk(
                 result.success(null)
             }
             "stopMotion" -> { motion.stop(); result.success(null) }
+            "speak" -> {
+                speaker.speak(call.argument<String>("text")!!, call.argument<String>("languageTag")!!)
+                result.success(null)
+            }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
             "isDeviceOwner" -> result.success(isDeviceOwner)
             "versionCode" -> result.success(AppUpdater.versionCode(activity))
@@ -179,7 +184,10 @@ class Kiosk(
         window.attributes = params
     }
 
-    fun dispose() = motion.stop()
+    fun dispose() {
+        motion.stop()
+        speaker.dispose()
+    }
 
     @Suppress("DEPRECATION")
     private fun removeDeviceOwner() {

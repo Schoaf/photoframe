@@ -65,3 +65,20 @@ class DismissedCharging {
     ];
   }
 }
+
+/// Tells which appliances just finished: those that left the running list
+/// at the very end of their program.
+class FinishedDevices {
+  var _last = <RunningDevice>[];
+
+  List<String> update(List<RunningDevice> running, DateTime now) {
+    final finished = [
+      for (final device in _last)
+        if (device.isNearlyDone(now) &&
+            !running.any((other) => other.name == device.name))
+          device.name,
+    ];
+    _last = running;
+    return finished;
+  }
+}
