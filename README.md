@@ -204,7 +204,7 @@ template:
 
 **Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech at the media volume.
 
-**Charging:** Add the attribute `ladend` to `sensor.tablet_warnungen`. It finds every device with a charging sensor and a battery sensor; devices labelled `tablet_hide_entity` are left out.
+**Charging:** Add the attribute `ladend` to `sensor.tablet_warnungen`. It finds every device with a charging sensor and a battery sensor. Devices at 100 % (a vacuum resting in its dock) and devices labelled `tablet_hide_entity` are left out.
 
 ```yaml
           ladend: >
@@ -213,7 +213,7 @@ template:
             {% for charging in states.binary_sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'battery_charging') | selectattr('state', 'eq', 'on') %}
               {% set dev = device_id(charging.entity_id) %}
               {% set batteries = (device_entities(dev) | select('search', '^sensor[.]') | select('is_state_attr', 'device_class', 'battery') | select('has_value') | list) if dev and dev not in hidden else [] %}
-              {% if batteries %}
+              {% if batteries and states(batteries[0]) | float(0) < 100 %}
                 {% set ns.items = ns.items + [{'name': device_attr(dev, 'name_by_user') or device_attr(dev, 'name'), 'icon': state_attr(batteries[0], 'icon'), 'ladung': states(batteries[0]) | float(none)}] %}
               {% endif %}
             {% endfor %}
