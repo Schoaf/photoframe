@@ -142,6 +142,18 @@ class RunningDevice {
   }
 }
 
+/// A device on the charger, from the `ladend` attribute of
+/// [warningsEntityId].
+class ChargingDevice {
+  const ChargingDevice({required this.name, required this.level, this.icon});
+
+  final String name;
+
+  /// 0..100.
+  final double level;
+  final String? icon;
+}
+
 /// What the overlay shows.
 class HaSnapshot {
   const HaSnapshot({
@@ -149,6 +161,7 @@ class HaSnapshot {
     this.tomorrow,
     this.warnings = const [],
     this.running = const [],
+    this.charging = const [],
     this.nowPlaying,
     this.isTokenInvalid = false,
   });
@@ -157,8 +170,33 @@ class HaSnapshot {
   final WeatherDay? tomorrow;
   final List<HaWarning> warnings;
   final List<RunningDevice> running;
+  final List<ChargingDevice> charging;
   final NowPlaying? nowPlaying;
   final bool isTokenInvalid;
+}
+
+double? _number(Object? value) => switch (value) {
+  final num value => value.toDouble(),
+  final String value => double.tryParse(value),
+  _ => null,
+};
+
+/// Reads the `ladend` attribute of [warningsEntityId].
+List<ChargingDevice> parseCharging(HaEntity? entity) {
+  final list = entity?.attributes['ladend'];
+  if (list is! List) return const [];
+  return [
+    for (final entry in list.whereType<Map<String, dynamic>>())
+      if ((entry['name'], _number(entry['ladung'])) case (
+        final String name,
+        final double level,
+      ))
+        ChargingDevice(
+          name: name,
+          level: level.clamp(0, 100),
+          icon: entry['icon'] as String?,
+        ),
+  ];
 }
 
 /// Reads the `laufend` attribute of [warningsEntityId].
@@ -167,11 +205,6 @@ List<RunningDevice> parseRunning(HaEntity? entity) {
   if (list is! List) return const [];
   DateTime? time(Object? value) =>
       value is String ? DateTime.tryParse(value)?.toLocal() : null;
-  double? number(Object? value) => switch (value) {
-    final num value => value.toDouble(),
-    final String value => double.tryParse(value),
-    _ => null,
-  };
   return [
     for (final entry in list.whereType<Map<String, dynamic>>())
       if (entry['name'] is String)
@@ -180,7 +213,7 @@ List<RunningDevice> parseRunning(HaEntity? entity) {
           icon: entry['icon'] as String?,
           end: time(entry['ende']),
           start: time(entry['start']),
-          progress: number(entry['fortschritt']),
+          progress: _number(entry['fortschritt']),
           view: entry['ansicht'] as String?,
         ),
   ];
@@ -343,6 +376,7 @@ class HaClient {
     tomorrow: parseTomorrow(_forecast, DateTime.now()),
     warnings: parseWarnings(_store.entities[warningsEntityId]),
     running: parseRunning(_store.entities[warningsEntityId]),
+    charging: parseCharging(_store.entities[warningsEntityId]),
     nowPlaying: parseNowPlaying(_store.entities, playerEntityIds),
   );
 

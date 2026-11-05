@@ -129,6 +129,33 @@ void main() {
     ]);
   });
 
+  test('reads the charging devices', () {
+    final charging = parseCharging(
+      const HaEntity('0', {
+        'ladend': [
+          {'name': 'Staubsauger', 'ladung': '73', 'icon': 'mdi:robot-vacuum'},
+          {'name': 'Telefon', 'ladung': 120},
+          {'name': 'ohne Ladung', 'ladung': null},
+          {'ladung': 10},
+        ],
+      }),
+    );
+    expect(charging.map((device) => device.name), ['Staubsauger', 'Telefon']);
+    expect(charging.first.level, 73);
+    expect(charging.last.level, 100);
+    expect(parseCharging(null), isEmpty);
+  });
+
+  test('a dismissed battery returns the next time it charges', () {
+    const phone = ChargingDevice(name: 'Telefon', level: 50);
+    const car = ChargingDevice(name: 'Auto', level: 20);
+    final dismissed = DismissedCharging()..dismiss('Telefon');
+
+    expect(dismissed.visible([phone, car]), [car]);
+    expect(dismissed.visible([car]), [car]);
+    expect(dismissed.visible([phone, car]), [phone, car]);
+  });
+
   group('running devices', () {
     final now = DateTime(2026, 11, 1, 12);
 

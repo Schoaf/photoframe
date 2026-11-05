@@ -44,6 +44,7 @@ class HaOverlay extends ConsumerStatefulWidget {
 
 class _HaOverlayState extends ConsumerState<HaOverlay> {
   final _dismissed = DismissedWarnings();
+  final _dismissedCharging = DismissedCharging();
   late DateTime _now;
   Timer? _clock;
 
@@ -80,6 +81,7 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
     final agenda = isPrivate
         ? const <AgendaDay>[]
         : buildAgenda(ref.watch(calendarProvider), _now);
+    final charging = _dismissedCharging.visible(info.charging);
     final bottom = widget.isLifted ? 112.0 : 32.0;
     final settings = ref.watch(settingsProvider);
     final isChildLocked = ref.watch(
@@ -105,6 +107,27 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           child: _TapArea(
             onTap: opener(settings.weatherView),
             child: _InfoPanel(now: _now, info: info),
+          ),
+        ),
+        Positioned.fill(
+          child: Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 24,
+              runSpacing: 24,
+              children: [
+                for (final device in charging)
+                  Dismissible(
+                    key: ValueKey(device.name),
+                    direction: isChildLocked
+                        ? DismissDirection.none
+                        : DismissDirection.horizontal,
+                    onDismissed: (_) =>
+                        setState(() => _dismissedCharging.dismiss(device.name)),
+                    child: _ChargingBattery(device: device),
+                  ),
+              ],
+            ),
           ),
         ),
         AnimatedPositioned(
@@ -152,6 +175,110 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A big battery in the middle of the screen, filled to the charge level.
+class _ChargingBattery extends StatelessWidget {
+  const _ChargingBattery({required this.device});
+
+  final ChargingDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = switch (device.level) {
+      < 20 => const Color(0xFFD32F2F),
+      < 50 => const Color(0xFFEF6C00),
+      _ => const Color(0xFF2E7D32),
+    };
+    return Container(
+      width: AppSizes.batteryWidth,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xCC000000),
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 12,
+            children: [
+              Icon(warningIcon(device.icon), size: 32, color: Colors.white),
+              Flexible(
+                child: Text(
+                  device.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 130,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white, width: 6),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: device.level / 100,
+                        child: ColoredBox(color: fill),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 4,
+                        children: [
+                          const Icon(
+                            Icons.bolt,
+                            size: 56,
+                            color: Colors.white,
+                            shadows: _textShadows,
+                          ),
+                          Text(
+                            '${device.level.round()} %',
+                            style: const TextStyle(
+                              fontSize: 64,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              shadows: _textShadows,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                width: 14,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.horizontal(
+                    right: Radius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

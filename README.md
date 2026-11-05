@@ -11,6 +11,7 @@ Kiosk app for a wall tablet: a photo frame with a Home Assistant overlay and das
 - **Control from HA (MQTT):** screen on/off, mode, brightness, next photo, reload, child lock and private mode.
 - **Child lock:** hardware keys, swiping and taps do nothing, and only HA switches the screen. A lock icon shows on touch.
 - **Private mode:** hides the calendar.
+- **Charging:** a device on the charger shows as a big battery in the middle with its name and level. Swipe it away until it next charges.
 - **Screen off without motion:** the front camera turns the screen off after a set time without motion and on again at motion. The brightness below which the room counts as dark is set in the app.
 - **Kiosk:** device owner, boots into the app, and the menu is behind a PIN. The settings are split into sections, and the app updates itself from GitHub releases.
 
@@ -199,6 +200,22 @@ template:
 - They show below the weather with their remaining time and a bar from 0 to 100 %.
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
+
+**Charging:** Add the attribute `ladend` to `sensor.tablet_warnungen`. It finds every device with a charging sensor and a battery sensor; devices labelled `tablet_hide_entity` are left out.
+
+```yaml
+          ladend: >
+            {% set ns = namespace(items=[]) %}
+            {% set hidden = label_devices('tablet_hide_entity') %}
+            {% for charging in states.binary_sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', 'battery_charging') | selectattr('state', 'eq', 'on') %}
+              {% set dev = device_id(charging.entity_id) %}
+              {% set batteries = (device_entities(dev) | select('search', '^sensor[.]') | select('is_state_attr', 'device_class', 'battery') | select('has_value') | list) if dev and dev not in hidden else [] %}
+              {% if batteries %}
+                {% set ns.items = ns.items + [{'name': device_attr(dev, 'name_by_user') or device_attr(dev, 'name'), 'icon': state_attr(batteries[0], 'icon'), 'ladung': states(batteries[0]) | float(none)}] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.items }}
+```
 
 **2. Notices from "Wartung"** come from `sensor.maintenance_issues`, a trigger template sensor that applies the rules of HA's counter (its `issues` attribute lists the entity ids):
 

@@ -16,6 +16,7 @@ class AppSizes {
   static const deviceTileMinWidth = 300.0;
   static const deviceTileHeight = 88.0;
   static const agendaWidth = 460.0;
+  static const batteryWidth = 460.0;
   static const galleryColumns = 6;
   static const menuPaneWidth = 340.0;
   static const keypadButton = 80.0;

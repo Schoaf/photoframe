@@ -50,3 +50,18 @@ class DismissedWarnings {
     ];
   }
 }
+
+/// Batteries swiped away stay hidden until that device stops charging.
+class DismissedCharging {
+  final _names = <String>{};
+
+  void dismiss(String name) => _names.add(name);
+
+  List<ChargingDevice> visible(List<ChargingDevice> active) {
+    _names.retainWhere((name) => active.any((device) => device.name == name));
+    return [
+      for (final device in active)
+        if (!_names.contains(device.name)) device,
+    ];
+  }
+}
