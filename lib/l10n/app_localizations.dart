@@ -566,6 +566,18 @@ abstract class AppLocalizations {
   /// **'ganztägig'**
   String get allDay;
 
+  /// No description provided for @noEvents.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute und morgen keine Termine'**
+  String get noEvents;
+
+  /// No description provided for @calendarUnavailable.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalender nicht erreichbar'**
+  String get calendarUnavailable;
+
   /// No description provided for @calendars.
   ///
   /// In de, this message translates to:

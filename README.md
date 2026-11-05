@@ -316,7 +316,7 @@ A tap on the overlay opens a view of the dashboard:
 
 ## Calendar
 
-- **Where it shows:** Today's and tomorrow's events appear in the top left. All-day events come first, today's past events drop off, and at most 6 entries show.
+- **Where it shows:** Today's and tomorrow's events appear in the top left. All-day events come first, today's past events drop off, and at most 6 entries show. With nothing to show it says "Heute und morgen keine Termine", or "Kalender nicht erreichbar" if HA couldn't be read.
 - **Which calendars:** Set them up in HA (Settings → Devices & services: Google Calendar, CalDAV for iCloud/Nextcloud/Synology, Remote Calendar for an ICS address, Local Calendar). Then pick them in the app's settings under "Kalender laden".
 - **How it reads them:** The app uses HA's calendar API with the Tablet user's token and re-reads every 5 minutes.
 

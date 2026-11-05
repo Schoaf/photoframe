@@ -78,9 +78,10 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
     final isPrivate = ref.watch(
       displayProvider.select((display) => display.isPrivate),
     );
-    final agenda = isPrivate
-        ? const <AgendaDay>[]
-        : buildAgenda(ref.watch(calendarProvider), _now);
+    final calendar = isPrivate
+        ? const CalendarState()
+        : ref.watch(calendarProvider);
+    final agenda = buildAgenda(calendar.events, _now);
     final charging = _dismissedCharging.visible(info.charging);
     final bottom = widget.isLifted ? 112.0 : 32.0;
     final settings = ref.watch(settingsProvider);
@@ -99,6 +100,15 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
             child: _TapArea(
               onTap: opener(settings.calendarView),
               child: _AgendaPanel(days: agenda),
+            ),
+          )
+        else if (calendar.status != CalendarStatus.loading)
+          Positioned(
+            top: 24 - _tapMargin,
+            left: 32 - _tapMargin,
+            child: _TapArea(
+              onTap: opener(settings.calendarView),
+              child: _AgendaNote(status: calendar.status),
             ),
           ),
         Positioned(
@@ -440,6 +450,32 @@ class _AgendaPanel extends StatelessWidget {
               ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Stands in for an empty agenda, so that it can't be taken for a fault - and
+/// a fault can't be taken for a free day.
+class _AgendaNote extends StatelessWidget {
+  const _AgendaNote({required this.status});
+
+  final CalendarStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(
+        status == CalendarStatus.failed
+            ? l10n.calendarUnavailable
+            : l10n.noEvents,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: AppSizes.captionFontSize,
+          shadows: _textShadows,
+        ),
       ),
     );
   }

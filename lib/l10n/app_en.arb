@@ -78,6 +78,8 @@
   "remainingHours": "{time} h left",
   "today": "Today",
   "allDay": "all day",
+  "noEvents": "No events today or tomorrow",
+  "calendarUnavailable": "Calendar unavailable",
   "calendars": "Calendars",
   "loadCalendars": "Load calendars",
   "noCalendars": "No calendars found. Calendars are set up in HA under Devices & services.",

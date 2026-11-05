@@ -283,6 +283,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get allDay => 'ganztägig';
 
   @override
+  String get noEvents => 'Heute und morgen keine Termine';
+
+  @override
+  String get calendarUnavailable => 'Kalender nicht erreichbar';
+
+  @override
   String get calendars => 'Kalender';
 
   @override

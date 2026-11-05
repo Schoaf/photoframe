@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ha_display/l10n/app_localizations.dart';
 import 'package:ha_display/services/ha_client.dart';
+import 'package:ha_display/services/ha_calendar.dart';
+import 'package:ha_display/state/calendar.dart';
 import 'package:ha_display/state/ha_info.dart';
 import 'package:ha_display/theme/app_theme.dart';
 import 'package:ha_display/widgets/ha_overlay.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeHaInfo extends HaInfoNotifier {
   _FakeHaInfo(this.snapshot);
@@ -16,10 +19,20 @@ class _FakeHaInfo extends HaInfoNotifier {
   HaSnapshot build() => snapshot;
 }
 
+class _FakeCalendar extends CalendarNotifier {
+  _FakeCalendar(this.calendar);
+
+  final CalendarState calendar;
+
+  @override
+  CalendarState build() => calendar;
+}
+
 Future<void> _pumpOverlay(
   WidgetTester tester,
-  List<RunningDevice> running,
-) async {
+  List<RunningDevice> running, {
+  CalendarState calendar = const CalendarState(),
+}) async {
   tester.view.physicalSize = const Size(1280, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -31,6 +44,7 @@ Future<void> _pumpOverlay(
         haInfoProvider.overrideWith(
           () => _FakeHaInfo(HaSnapshot(running: running)),
         ),
+        calendarProvider.overrideWith(() => _FakeCalendar(calendar)),
       ],
       child: const MaterialApp(
         locale: Locale('de'),
@@ -65,6 +79,69 @@ bool _isPulsing(WidgetTester tester) =>
     kAlwaysCompleteAnimation;
 
 void main() {
+  const noEvents = 'Heute und morgen keine Termine';
+  const unavailable = 'Kalender nicht erreichbar';
+
+  testWidgets('says so when the calendars have no events', (tester) async {
+    await _pumpOverlay(
+      tester,
+      const [],
+      calendar: const CalendarState(status: CalendarStatus.loaded),
+    );
+    expect(find.text(noEvents), findsOneWidget);
+    expect(find.text(unavailable), findsNothing);
+  });
+
+  testWidgets('tells a failed read from a free day', (tester) async {
+    await _pumpOverlay(
+      tester,
+      const [],
+      calendar: const CalendarState(status: CalendarStatus.failed),
+    );
+    expect(find.text(unavailable), findsOneWidget);
+    expect(find.text(noEvents), findsNothing);
+  });
+
+  testWidgets('shows no note while loading or without calendars', (
+    tester,
+  ) async {
+    await _pumpOverlay(tester, const []);
+    expect(find.text(noEvents), findsNothing);
+    expect(find.text(unavailable), findsNothing);
+  });
+
+  testWidgets('private mode hides the note too', (tester) async {
+    SharedPreferences.setMockInitialValues({'private_mode': true});
+    addTearDown(() => SharedPreferences.setMockInitialValues({}));
+    await _pumpOverlay(
+      tester,
+      const [],
+      calendar: const CalendarState(status: CalendarStatus.loaded),
+    );
+    expect(find.text(noEvents), findsNothing);
+  });
+
+  testWidgets('keeps the last events after a failed read', (tester) async {
+    final now = DateTime.now();
+    await _pumpOverlay(
+      tester,
+      const [],
+      calendar: CalendarState(
+        status: CalendarStatus.failed,
+        events: [
+          CalendarEvent(
+            title: 'Zahnarzt',
+            start: now.add(const Duration(hours: 1)),
+            end: now.add(const Duration(hours: 2)),
+            isAllDay: false,
+          ),
+        ],
+      ),
+    );
+    expect(find.text('Zahnarzt'), findsOneWidget);
+    expect(find.text(unavailable), findsNothing);
+  });
+
   testWidgets('appliance tiles are at least the minimum width', (tester) async {
     final now = DateTime.now();
     await _pumpOverlay(tester, [

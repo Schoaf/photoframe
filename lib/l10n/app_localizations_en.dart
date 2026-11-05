@@ -282,6 +282,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allDay => 'all day';
 
   @override
+  String get noEvents => 'No events today or tomorrow';
+
+  @override
+  String get calendarUnavailable => 'Calendar unavailable';
+
+  @override
   String get calendars => 'Calendars';
 
   @override
