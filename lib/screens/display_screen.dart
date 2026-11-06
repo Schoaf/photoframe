@@ -56,7 +56,7 @@ class _DisplayScreenState extends ConsumerState<DisplayScreen>
     final display = ref.read(displayProvider.notifier);
     if (state == AppLifecycleState.resumed) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      display.reportScreenOn(true);
+      display.reportResumed();
     } else if (state == AppLifecycleState.paused) {
       display.reportScreenOn(false);
     }

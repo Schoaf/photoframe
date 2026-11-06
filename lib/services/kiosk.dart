@@ -8,7 +8,21 @@ class Kiosk {
 
   Future<void> startLock() => _channel.invokeMethod('startLock');
 
+  /// Leaves the lock and sends the app to the back - it keeps running, so
+  /// Home Assistant can still press keys.
   Future<void> stopLock() => _channel.invokeMethod('stopLock');
+
+  /// Presses `back`, `home` or `recents`; false without the key service
+  /// (README: adb step).
+  Future<bool> pressKey(String key) async =>
+      await _channel.invokeMethod<bool>('pressKey', {'key': key}) ?? false;
+
+  /// In percent of the maximum.
+  Future<int> mediaVolume() async =>
+      await _channel.invokeMethod<int>('mediaVolume') ?? 0;
+
+  Future<void> setMediaVolume(int percent) =>
+      _channel.invokeMethod('setMediaVolume', {'percent': percent});
 
   /// false when the screen can't really be switched off (not device owner).
   Future<bool> screenOff() async =>

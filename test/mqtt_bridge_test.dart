@@ -25,7 +25,11 @@ void main() {
     when(() => kiosk.isChildLocked()).thenAnswer((_) async => false);
     when(() => kiosk.setChildLock(any())).thenAnswer((_) async {});
     when(() => kiosk.isAutoBrightness()).thenAnswer((_) async => false);
+    when(() => kiosk.mediaVolume()).thenAnswer((_) async => 40);
     when(() => kiosk.setAutoBrightness(any())).thenAnswer((_) async => true);
+    when(() => kiosk.pressKey(any())).thenAnswer((_) async => true);
+    when(() => kiosk.stopLock()).thenAnswer((_) async {});
+    when(() => kiosk.setMediaVolume(any())).thenAnswer((_) async {});
     container = ProviderContainer(
       overrides: [
         kioskProvider.overrideWithValue(kiosk),
@@ -70,6 +74,38 @@ void main() {
     expect(mode['availability_topic'], 'ha_display/abc123/availability');
     expect((mode['device'] as Map)['name'], 'Wohnzimmer');
   });
+
+  test('Home Assistant presses the keys and sets the volume', () async {
+    for (final key in ['back', 'home', 'recents']) {
+      expect(
+        applyMqttCommand(
+          topics,
+          topics.command('key_$key'),
+          'PRESS',
+          display(),
+        ),
+        isTrue,
+      );
+      verify(() => kiosk.pressKey(key)).called(1);
+    }
+    applyMqttCommand(topics, topics.command('media_volume'), '130', display());
+    await pumpEventQueue();
+    verify(() => kiosk.setMediaVolume(100)).called(1);
+  });
+
+  test(
+    'an ended kiosk behind other apps does not count as screen off',
+    () async {
+      await display().endKiosk();
+      display().reportScreenOn(false);
+      expect(container.read(displayProvider).isScreenOn, isTrue);
+
+      display().reportResumed();
+      expect(container.read(displayProvider).isKioskEnded, isFalse);
+      display().reportScreenOn(false);
+      expect(container.read(displayProvider).isScreenOn, isFalse);
+    },
+  );
 
   test('automatic brightness leaves the brightness to Android', () async {
     applyMqttCommand(topics, topics.command('brightness'), '128', display());
@@ -154,6 +190,7 @@ void main() {
       'ha_display/abc123/private/state': 'OFF',
       'ha_display/abc123/mode/state': 'dashboard',
       'ha_display/abc123/auto_brightness/state': 'OFF',
+      'ha_display/abc123/media_volume/state': '40',
       'ha_display/abc123/brightness/state': '128',
     });
   });

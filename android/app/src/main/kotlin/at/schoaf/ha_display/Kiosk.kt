@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
@@ -25,6 +26,7 @@ class Kiosk(
     private val dpm = activity.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
     private val activityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     private val power = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
+    private val audio = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val admin = ComponentName(activity, KioskAdminReceiver::class.java)
     private val prefs = activity.getSharedPreferences("kiosk", Context.MODE_PRIVATE)
 
@@ -51,7 +53,12 @@ class Kiosk(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "startLock" -> { isEnabled = true; enterLock(); result.success(null) }
-            "stopLock" -> { isEnabled = false; leaveLock(); result.success(null) }
+            "stopLock" -> {
+                isEnabled = false
+                leaveLock()
+                activity.moveTaskToBack(true)
+                result.success(null)
+            }
             "screenOff" -> result.success(screenOff())
             "screenOn" -> { screenOn(); result.success(null) }
             "setChildLock" -> { isChildLocked = call.argument<Boolean>("value") == true; result.success(null) }
@@ -71,6 +78,9 @@ class Kiosk(
                 result.success(null)
             }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
+            "pressKey" -> result.success(KeyService.press(call.argument<String>("key")!!))
+            "mediaVolume" -> result.success(mediaVolume())
+            "setMediaVolume" -> { setMediaVolume(call.argument<Int>("percent")!!); result.success(null) }
             "isAutoBrightness" -> result.success(isAutoBrightness())
             "setAutoBrightness" -> result.success(setAutoBrightness(call.argument<Boolean>("value") == true))
             "isDeviceOwner" -> result.success(isDeviceOwner)
@@ -84,9 +94,14 @@ class Kiosk(
         }
     }
 
-    // Called from onResume as well: lock task mode only starts from a
-    // foreground activity.
-    fun enterLock() {
+    // Coming back to the front ends a "Kiosk beenden".
+    fun onResume() {
+        isEnabled = true
+        enterLock()
+    }
+
+    // Lock task mode only starts from a foreground activity.
+    private fun enterLock() {
         if (!isEnabled) return
         if (isDeviceOwner) {
             dpm.setLockTaskPackages(admin, arrayOf(activity.packageName))
@@ -161,6 +176,8 @@ class Kiosk(
             "ha_display:wake",
         )
         wakeLock.acquire(3000)
+        // After "Kiosk beenden" the screen comes on with what was open.
+        if (!isEnabled) return
         activity.startActivity(
             Intent(activity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
         )
@@ -190,6 +207,16 @@ class Kiosk(
         params.screenBrightness = value?.toFloat()
             ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         window.attributes = params
+    }
+
+    private fun mediaVolume(): Int {
+        val maximum = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        return audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100 / maximum
+    }
+
+    private fun setMediaVolume(percent: Int) {
+        val maximum = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        audio.setStreamVolume(AudioManager.STREAM_MUSIC, (percent * maximum + 50) / 100, 0)
     }
 
     private fun isAutoBrightness() = Settings.System.getInt(

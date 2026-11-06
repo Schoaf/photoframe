@@ -33,6 +33,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     kiosk = _MockKiosk();
     when(() => kiosk.isAutoBrightness()).thenAnswer((_) async => false);
+    when(() => kiosk.mediaVolume()).thenAnswer((_) async => 40);
     when(() => kiosk.isChildLocked()).thenAnswer((_) async => false);
     when(() => kiosk.speak(any(), any(), any())).thenAnswer((_) async {});
   });

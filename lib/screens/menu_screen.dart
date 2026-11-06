@@ -70,9 +70,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   }
 
   Future<void> _endKiosk() async {
-    await ref.read(kioskProvider).stopLock();
-    // Starting the app again locks it again (main → startLock).
-    await SystemNavigator.pop();
+    final display = ref.read(displayProvider.notifier);
+    // Coming back locks again - not into the open menu.
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await display.endKiosk();
   }
 
   Future<void> _removeDeviceOwner() async {

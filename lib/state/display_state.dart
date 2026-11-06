@@ -15,6 +15,8 @@ class DisplayState {
     this.isPrivate = false,
     this.brightness,
     this.isAutoBrightness = false,
+    this.mediaVolume,
+    this.isKioskEnded = false,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
     this.dashboardView,
@@ -41,6 +43,12 @@ class DisplayState {
   /// Android's light sensor sets the brightness; [brightness] doesn't apply.
   final bool isAutoBrightness;
 
+  /// In percent, null until read.
+  final int? mediaVolume;
+
+  /// "Kiosk beenden": the app runs behind the others until it's opened again.
+  final bool isKioskEnded;
+
   /// Bumped per "next photo" / "reload" command; screens react to changes.
   final int nextPhotoRequests;
   final int reloadRequests;
@@ -58,6 +66,8 @@ class DisplayState {
     bool? isPrivate,
     int? brightness,
     bool? isAutoBrightness,
+    int? mediaVolume,
+    bool? isKioskEnded,
     int? nextPhotoRequests,
     int? reloadRequests,
     String? Function()? dashboardView,
@@ -70,6 +80,8 @@ class DisplayState {
     isPrivate: isPrivate ?? this.isPrivate,
     brightness: brightness ?? this.brightness,
     isAutoBrightness: isAutoBrightness ?? this.isAutoBrightness,
+    mediaVolume: mediaVolume ?? this.mediaVolume,
+    isKioskEnded: isKioskEnded ?? this.isKioskEnded,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
     dashboardView: dashboardView != null ? dashboardView() : this.dashboardView,
@@ -88,6 +100,9 @@ class DisplayNotifier extends Notifier<DisplayState> {
     // Kept natively, so a reboot doesn't lift it.
     _kiosk.isChildLocked().then((isLocked) {
       if (isLocked) state = state.copyWith(isChildLocked: true);
+    });
+    _kiosk.mediaVolume().then((volume) {
+      state = state.copyWith(mediaVolume: volume);
     });
     // Android keeps it across restarts.
     _kiosk.isAutoBrightness().then((isAuto) {
@@ -126,9 +141,20 @@ class DisplayNotifier extends Notifier<DisplayState> {
     }
   }
 
+  Future<void> endKiosk() async {
+    state = state.copyWith(isKioskEnded: true);
+    await _kiosk.stopLock();
+  }
+
+  void reportResumed() {
+    state = state.copyWith(isKioskEnded: false);
+    reportScreenOn(true);
+  }
+
   /// The power button switched the panel on/off by hand - under child lock
-  /// the kiosk switches it right back.
+  /// the kiosk switches it right back. Going behind other apps isn't "off".
   void reportScreenOn(bool isOn) {
+    if (state.isKioskEnded) return;
     if (isOn == state.isScreenOn || state.isBlackedOut) return;
     if (state.isChildLocked) return;
     state = state.copyWith(isScreenOn: isOn);
@@ -161,6 +187,13 @@ class DisplayNotifier extends Notifier<DisplayState> {
     state = state.copyWith(isAutoBrightness: isOn);
     if (state.isScreenOn) await _kiosk.setBrightness(_windowBrightness);
   }
+
+  Future<void> setMediaVolume(int percent) async {
+    state = state.copyWith(mediaVolume: percent.clamp(0, 100));
+    await _kiosk.setMediaVolume(state.mediaVolume!);
+  }
+
+  Future<void> pressKey(String key) => _kiosk.pressKey(key);
 
   void requestNextPhoto() =>
       state = state.copyWith(nextPhotoRequests: state.nextPhotoRequests + 1);

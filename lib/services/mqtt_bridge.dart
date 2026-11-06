@@ -7,6 +7,13 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import '../state/display_state.dart';
 import '../state/settings.dart';
 
+/// The tablet's keys Home Assistant can press: key, name, icon.
+const _keys = [
+  ('back', 'Key back', 'mdi:arrow-left'),
+  ('home', 'Key home', 'mdi:home-outline'),
+  ('recents', 'Key recent apps', 'mdi:view-sequential-outline'),
+];
+
 /// Topics and Home Assistant MQTT discovery for one tablet. Pure, so it can
 /// be tested without a broker.
 class MqttTopics {
@@ -76,6 +83,20 @@ class MqttTopics {
         'state_topic': state('auto_brightness'),
         'command_topic': command('auto_brightness'),
       }),
+      topic('number', 'media_volume'): jsonEncode({
+        ...entity('media_volume', 'Media volume', 'mdi:volume-high'),
+        'state_topic': state('media_volume'),
+        'command_topic': command('media_volume'),
+        'min': 0,
+        'max': 100,
+        'mode': 'slider',
+        'unit_of_measurement': '%',
+      }),
+      for (final (key, name, icon) in _keys)
+        topic('button', 'key_$key'): jsonEncode({
+          ...entity('key_$key', name, icon),
+          'command_topic': command('key_$key'),
+        }),
       topic('button', 'next_photo'): jsonEncode({
         ...entity('next_photo', 'Next photo', 'mdi:skip-next'),
         'command_topic': command('next_photo'),
@@ -96,6 +117,8 @@ class MqttTopics {
     state('auto_brightness'): display.isAutoBrightness ? 'ON' : 'OFF',
     if (display.brightness case final brightness?)
       state('brightness'): '$brightness',
+    if (display.mediaVolume case final volume?)
+      state('media_volume'): '$volume',
   };
 }
 
@@ -127,6 +150,12 @@ bool applyMqttCommand(
   } else if (topic == topics.command('auto_brightness')) {
     if (payload != 'ON' && payload != 'OFF') return false;
     display.setAutoBrightness(payload == 'ON');
+  } else if (topic == topics.command('media_volume')) {
+    final volume = double.tryParse(payload);
+    if (volume == null) return false;
+    display.setMediaVolume(volume.round());
+  } else if (_keys.any((key) => topic == topics.command('key_${key.$1}'))) {
+    display.pressKey(topic.split('/')[2].substring('key_'.length));
   } else if (topic == topics.command('next_photo')) {
     display.requestNextPhoto();
   } else if (topic == topics.command('reload')) {

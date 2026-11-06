@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.PowerManager
 import android.view.KeyEvent
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
@@ -41,6 +42,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         unregisterReceiver(screenReceiver)
+        KeyService.setAppInFront(false)
         kiosk.dispose()
         super.onDestroy()
     }
@@ -54,7 +56,15 @@ class MainActivity : FlutterActivity() {
 
     override fun onResume() {
         super.onResume()
-        kiosk.enterLock()
+        KeyService.setAppInFront(true)
+        kiosk.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // With the screen off the app is still what shows when it comes on.
+        val power = getSystemService(POWER_SERVICE) as PowerManager
+        if (power.isInteractive) KeyService.setAppInFront(false)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean =

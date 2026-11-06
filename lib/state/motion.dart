@@ -36,7 +36,8 @@ class MotionScreenOff {
   }
 
   void check(DateTime now) {
-    if (!currentState().isScreenOn) return;
+    final state = currentState();
+    if (!state.isScreenOn || state.isKioskEnded) return;
     if (now.difference(_lastMotion) < timeout) return;
     _isOffByMotion = true;
     display.setScreenOn(false);

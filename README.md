@@ -59,7 +59,7 @@ The settings screen opens on first start:
 
 - switch between photos and dashboard
 - settings, including the Tablet user's token, the weather entity and the time until the photos come back
-- "Kiosk beenden" (the next app start locks again)
+- "Kiosk beenden": the app goes behind the others and a bar with Back, Home, Recent apps and HA Display appears on screen. HA Display returns to the app, which locks again. Without the accessibility step under [Home Assistant](#home-assistant) there's no bar, and on a tablet with hidden keys no way back: don't use it before that step.
 - "Device Owner entfernen" (needed before uninstalling)
 
 ### 3. Home Assistant user for the tablet
@@ -89,16 +89,23 @@ The tablet announces itself via MQTT discovery as a device (name from the settin
 | `select.<name>_mode` | `photos` / `dashboard` |
 | `number.<name>_brightness` | 0–255 |
 | `switch.<name>_automatic_brightness` | Android's automatic brightness; setting a brightness switches it off. Needs the step below once |
+| `number.<name>_media_volume` | Media volume in percent |
+| `button.<name>_key_back`, `_key_home`, `_key_recent_apps` | Press these keys, for a tablet whose keys are out of reach. Need the step below once |
 | `button.<name>_next_photo` | Next photo |
 | `button.<name>_reload` | Reload photos/dashboard |
 
 The device is unavailable while the app is offline (MQTT last will).
 
-Automatic brightness may only be changed after this step, once per installation:
+Automatic brightness and the keys need these steps, once per installation:
 
 ```bash
 adb shell appops set at.schoaf.ha_display WRITE_SETTINGS allow
+adb shell settings get secure enabled_accessibility_services
+adb shell settings put secure enabled_accessibility_services <list from before>:at.schoaf.ha_display/.KeyService
+adb shell settings put secure accessibility_enabled 1
 ```
+
+The `put` replaces the whole list, so keep what `get` shows; with nothing there, leave out the list and the colon. The service reads nothing from other apps.
 
 Example: screen off when nobody is home, on again when someone arrives:
 

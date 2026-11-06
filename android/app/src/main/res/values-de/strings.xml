@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="key_service_description">Drückt Zurück, Home und Letzte Apps für Home Assistant und zeigt diese Tasten am Schirm, solange HA Display nicht im Vordergrund ist.</string>
+</resources>
