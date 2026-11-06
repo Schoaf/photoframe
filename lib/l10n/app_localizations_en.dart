@@ -350,6 +350,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finishedSpeech => 'Appliance done: the tablet says it';
 
   @override
+  String finishedSpeechVolume(int percent) {
+    return 'Announcement volume: $percent %';
+  }
+
+  @override
+  String get speechTest => 'Test';
+
+  @override
+  String get speechSample => 'This is how loud announcements are';
+
+  @override
   String get motionScreenOffNever => 'Screen off without motion: never';
 
   @override

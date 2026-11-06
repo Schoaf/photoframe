@@ -46,7 +46,13 @@ class _FinishedAlertState extends ConsumerState<FinishedAlert>
       final l10n = AppLocalizations.of(context);
       final language = Localizations.localeOf(context).toLanguageTag();
       for (final name in names) {
-        ref.read(kioskProvider).speak(l10n.deviceFinished(name), language);
+        ref
+            .read(kioskProvider)
+            .speak(
+              l10n.deviceFinished(name),
+              language,
+              settings.finishedSpeechVolume / 100,
+            );
       }
     }
     if (!settings.isFinishedFlashOn) return;

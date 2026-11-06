@@ -33,7 +33,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     kiosk = _MockKiosk();
     when(() => kiosk.isChildLocked()).thenAnswer((_) async => false);
-    when(() => kiosk.speak(any(), any())).thenAnswer((_) async {});
+    when(() => kiosk.speak(any(), any(), any())).thenAnswer((_) async {});
   });
 
   Future<void> pump(
@@ -78,7 +78,11 @@ void main() {
       tester,
       const FinishedAlert(),
       const HaSnapshot(),
-      const Settings(isFinishedFlashOn: true, isFinishedSpeechOn: true),
+      const Settings(
+        isFinishedFlashOn: true,
+        isFinishedSpeechOn: true,
+        finishedSpeechVolume: 30,
+      ),
     );
     info.show(running);
     await tester.pump();
@@ -86,7 +90,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Waschmaschine ist fertig'), findsOneWidget);
-    verify(() => kiosk.speak('Waschmaschine ist fertig', 'de')).called(1);
+    verify(() => kiosk.speak('Waschmaschine ist fertig', 'de', 0.3)).called(1);
 
     await tester.tap(find.text('Waschmaschine ist fertig'));
     await tester.pump();
@@ -106,7 +110,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Waschmaschine ist fertig'), findsNothing);
-    verifyNever(() => kiosk.speak(any(), any()));
+    verifyNever(() => kiosk.speak(any(), any(), any()));
   });
 
   testWidgets('shows a charging device until it is swiped away', (

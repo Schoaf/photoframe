@@ -686,6 +686,24 @@ abstract class AppLocalizations {
   /// **'Gerät fertig: Tablet sagt es an'**
   String get finishedSpeech;
 
+  /// No description provided for @finishedSpeechVolume.
+  ///
+  /// In de, this message translates to:
+  /// **'Lautstärke der Ansage: {percent} %'**
+  String finishedSpeechVolume(int percent);
+
+  /// No description provided for @speechTest.
+  ///
+  /// In de, this message translates to:
+  /// **'Probe'**
+  String get speechTest;
+
+  /// No description provided for @speechSample.
+  ///
+  /// In de, this message translates to:
+  /// **'So laut ist die Ansage'**
+  String get speechSample;
+
   /// No description provided for @motionScreenOffNever.
   ///
   /// In de, this message translates to:

@@ -37,6 +37,7 @@ class Settings {
     this.isShuffled = true,
     this.isFinishedFlashOn = false,
     this.isFinishedSpeechOn = false,
+    this.finishedSpeechVolume = 50,
     this.startMode = DisplayMode.photos,
     this.pin = '',
     this.languageCode,
@@ -104,6 +105,9 @@ class Settings {
 
   /// An appliance finished: the tablet says so.
   final bool isFinishedSpeechOn;
+
+  /// Volume of what the tablet says, in percent of the maximum.
+  final int finishedSpeechVolume;
   final DisplayMode startMode;
 
   /// Unlocks the menu; empty until set in the settings screen.
@@ -150,6 +154,7 @@ class Settings {
     bool? isShuffled,
     bool? isFinishedFlashOn,
     bool? isFinishedSpeechOn,
+    int? finishedSpeechVolume,
     DisplayMode? startMode,
     String? pin,
     String? Function()? languageCode,
@@ -184,6 +189,7 @@ class Settings {
     isShuffled: isShuffled ?? this.isShuffled,
     isFinishedFlashOn: isFinishedFlashOn ?? this.isFinishedFlashOn,
     isFinishedSpeechOn: isFinishedSpeechOn ?? this.isFinishedSpeechOn,
+    finishedSpeechVolume: finishedSpeechVolume ?? this.finishedSpeechVolume,
     startMode: startMode ?? this.startMode,
     pin: pin ?? this.pin,
     languageCode: languageCode != null ? languageCode() : this.languageCode,
@@ -233,6 +239,7 @@ Future<Settings> loadSettings() async {
     isShuffled: prefs.getBool('is_shuffled') ?? true,
     isFinishedFlashOn: prefs.getBool('finished_flash') ?? false,
     isFinishedSpeechOn: prefs.getBool('finished_speech') ?? false,
+    finishedSpeechVolume: prefs.getInt('finished_speech_volume') ?? 50,
     startMode:
         DisplayMode.values.asNameMap()[prefs.getString('start_mode')] ??
         DisplayMode.photos,
@@ -276,6 +283,7 @@ Future<void> saveSettings(Settings settings) async {
   await prefs.setBool('is_shuffled', settings.isShuffled);
   await prefs.setBool('finished_flash', settings.isFinishedFlashOn);
   await prefs.setBool('finished_speech', settings.isFinishedSpeechOn);
+  await prefs.setInt('finished_speech_volume', settings.finishedSpeechVolume);
   await prefs.setString('start_mode', settings.startMode.name);
   if (settings.languageCode case final code?) {
     await prefs.setString('language_code', code);

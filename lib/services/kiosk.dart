@@ -23,11 +23,14 @@ class Kiosk {
   Future<bool> isChildLocked() async =>
       await _channel.invokeMethod<bool>('isChildLocked') ?? false;
 
-  /// Says [text] over the media volume; [languageTag] e.g. `de`.
-  Future<void> speak(String text, String languageTag) => _channel.invokeMethod(
-    'speak',
-    {'text': text, 'languageTag': languageTag},
-  );
+  /// Says [text] at [volume] (0..1) of the media volume's maximum, which
+  /// goes back afterwards; [languageTag] e.g. `de`.
+  Future<void> speak(String text, String languageTag, double volume) =>
+      _channel.invokeMethod('speak', {
+        'text': text,
+        'languageTag': languageTag,
+        'volume': volume,
+      });
 
   /// Watches the room through the front camera; [onMotion] runs per motion
   /// (at most every 2 s), also while the screen is off. Below [darkLevel]

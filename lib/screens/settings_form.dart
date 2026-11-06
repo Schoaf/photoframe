@@ -6,6 +6,7 @@ import '../models/photo_item.dart';
 import '../services/ha_calendar.dart';
 import '../services/ha_media.dart';
 import '../services/synology_photos_client.dart';
+import '../state/display_state.dart';
 import '../state/settings.dart';
 import 'qr_scan_screen.dart';
 
@@ -647,6 +648,38 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
             () => _settings = _settings.copyWith(isFinishedSpeechOn: value),
           ),
         ),
+        if (_settings.isFinishedSpeechOn)
+          Row(
+            children: [
+              Text(l10n.finishedSpeechVolume(_settings.finishedSpeechVolume)),
+              Expanded(
+                child: Slider(
+                  max: 100,
+                  divisions: 20,
+                  value: _settings.finishedSpeechVolume.toDouble().clamp(
+                    0,
+                    100,
+                  ),
+                  label: '${_settings.finishedSpeechVolume} %',
+                  onChanged: (value) => setState(
+                    () => _settings = _settings.copyWith(
+                      finishedSpeechVolume: value.round(),
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => ref
+                    .read(kioskProvider)
+                    .speak(
+                      l10n.speechSample,
+                      Localizations.localeOf(context).toLanguageTag(),
+                      _settings.finishedSpeechVolume / 100,
+                    ),
+                child: Text(l10n.speechTest),
+              ),
+            ],
+          ),
         Text(l10n.haInfoHint, style: theme.textTheme.bodyMedium),
       ],
       SettingsSection.mqtt => [

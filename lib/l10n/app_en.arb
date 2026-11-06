@@ -98,6 +98,9 @@
   "deviceFinished": "{name} is done",
   "finishedFlash": "Appliance done: screen blinks with a message",
   "finishedSpeech": "Appliance done: the tablet says it",
+  "finishedSpeechVolume": "Announcement volume: {percent} %",
+  "speechTest": "Test",
+  "speechSample": "This is how loud announcements are",
   "motionScreenOffNever": "Screen off without motion: never",
   "motionHint": "The front camera detects motion – evaluated on the tablet only, nothing is stored or sent. Motion switches the screen back on, unless Home Assistant switched it off. When the room is darker than the set brightness (0–255), no motion counts – lower = more sensitive in little light."
 }

@@ -202,7 +202,7 @@ template:
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
 
-**Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech at the media volume.
+**Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech, at the volume set below that switch; "Probe" plays a sample. That volume is the media volume while it speaks, so music playing on the tablet changes along with it until the voice ends.
 
 **Charging:** Add the attribute `ladend` to `sensor.tablet_warnungen`. It finds every device with a charging sensor (class `battery_charging`, or the companion app's "Is charging" or "Battery state", which have to be switched on in the app) and a battery sensor. Devices at 100 % (a vacuum resting in its dock) and devices labelled `tablet_hide_entity` are left out.
 

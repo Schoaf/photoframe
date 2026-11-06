@@ -351,6 +351,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get finishedSpeech => 'Gerät fertig: Tablet sagt es an';
 
   @override
+  String finishedSpeechVolume(int percent) {
+    return 'Lautstärke der Ansage: $percent %';
+  }
+
+  @override
+  String get speechTest => 'Probe';
+
+  @override
+  String get speechSample => 'So laut ist die Ansage';
+
+  @override
   String get motionScreenOffNever => 'Bildschirm aus ohne Bewegung: nie';
 
   @override

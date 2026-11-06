@@ -206,6 +206,16 @@
   },
   "finishedFlash": "Gerät fertig: Bildschirm blinkt mit Meldung",
   "finishedSpeech": "Gerät fertig: Tablet sagt es an",
+  "finishedSpeechVolume": "Lautstärke der Ansage: {percent} %",
+  "@finishedSpeechVolume": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "speechTest": "Probe",
+  "speechSample": "So laut ist die Ansage",
   "motionScreenOffNever": "Bildschirm aus ohne Bewegung: nie",
   "motionHint": "Die Frontkamera erkennt Bewegung – ausgewertet nur am Tablet, nichts wird gespeichert oder gesendet. Bei Bewegung geht der Bildschirm wieder an, außer Home Assistant hat ihn ausgeschaltet. Ist der Raum dunkler als die eingestellte Helligkeit (0–255), zählt keine Bewegung – kleiner = empfindlicher bei wenig Licht."
 }

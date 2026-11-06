@@ -61,7 +61,11 @@ class Kiosk(
             }
             "stopMotion" -> { motion.stop(); result.success(null) }
             "speak" -> {
-                speaker.speak(call.argument<String>("text")!!, call.argument<String>("languageTag")!!)
+                speaker.speak(
+                    call.argument<String>("text")!!,
+                    call.argument<String>("languageTag")!!,
+                    call.argument<Double>("volume")!!,
+                )
                 result.success(null)
             }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
