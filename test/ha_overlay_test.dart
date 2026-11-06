@@ -64,13 +64,13 @@ Color? _tileColor(WidgetTester tester) =>
             as BoxDecoration?)
         ?.color;
 
-/// The fade right around the appliance icon (the slide-in fades too).
+/// The fade right around the whole tile (the slide-in fades too).
 bool _isPulsing(WidgetTester tester) =>
     tester
         .widget<FadeTransition>(
           find
               .ancestor(
-                of: find.byType(Icon),
+                of: find.byType(AnimatedContainer),
                 matching: find.byType(FadeTransition),
               )
               .first,

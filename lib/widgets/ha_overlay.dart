@@ -634,7 +634,7 @@ class _RunningTileState extends State<_RunningTile>
       _pulse.value = 1;
     }
     final foreground = isAlmostDone ? Colors.black87 : Colors.white;
-    return AnimatedContainer(
+    final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 600),
       // Wider when the text needs it.
       constraints: const BoxConstraints(minWidth: AppSizes.deviceTileMinWidth),
@@ -648,13 +648,10 @@ class _RunningTileState extends State<_RunningTile>
         child: Row(
           spacing: 12,
           children: [
-            FadeTransition(
-              opacity: isNearlyDone ? _pulse : kAlwaysCompleteAnimation,
-              child: Icon(
-                warningIcon(device.icon),
-                size: AppSizes.deviceTileHeight - 16,
-                color: foreground,
-              ),
+            Icon(
+              warningIcon(device.icon),
+              size: AppSizes.deviceTileHeight - 16,
+              color: foreground,
             ),
             Expanded(
               child: Column(
@@ -697,6 +694,10 @@ class _RunningTileState extends State<_RunningTile>
           ],
         ),
       ),
+    );
+    return FadeTransition(
+      opacity: isNearlyDone ? _pulse : kAlwaysCompleteAnimation,
+      child: tile,
     );
   }
 }
