@@ -24,6 +24,8 @@ void main() {
     when(() => kiosk.setBrightness(any())).thenAnswer((_) async {});
     when(() => kiosk.isChildLocked()).thenAnswer((_) async => false);
     when(() => kiosk.setChildLock(any())).thenAnswer((_) async {});
+    when(() => kiosk.isAutoBrightness()).thenAnswer((_) async => false);
+    when(() => kiosk.setAutoBrightness(any())).thenAnswer((_) async => true);
     container = ProviderContainer(
       overrides: [
         kioskProvider.overrideWithValue(kiosk),
@@ -55,6 +57,7 @@ void main() {
         'homeassistant/switch/ha_display_abc123/private/config',
         'homeassistant/select/ha_display_abc123/mode/config',
         'homeassistant/number/ha_display_abc123/brightness/config',
+        'homeassistant/switch/ha_display_abc123/auto_brightness/config',
         'homeassistant/button/ha_display_abc123/next_photo/config',
         'homeassistant/button/ha_display_abc123/reload/config',
       ]),
@@ -66,6 +69,48 @@ void main() {
     expect(mode['command_topic'], 'ha_display/abc123/mode/set');
     expect(mode['availability_topic'], 'ha_display/abc123/availability');
     expect((mode['device'] as Map)['name'], 'Wohnzimmer');
+  });
+
+  test('automatic brightness leaves the brightness to Android', () async {
+    applyMqttCommand(topics, topics.command('brightness'), '128', display());
+    await pumpEventQueue();
+    applyMqttCommand(
+      topics,
+      topics.command('auto_brightness'),
+      'ON',
+      display(),
+    );
+    await pumpEventQueue();
+    expect(container.read(displayProvider).isAutoBrightness, isTrue);
+    verify(() => kiosk.setAutoBrightness(true)).called(1);
+    verify(() => kiosk.setBrightness(null)).called(1);
+  });
+
+  test('a set brightness ends automatic brightness', () async {
+    applyMqttCommand(
+      topics,
+      topics.command('auto_brightness'),
+      'ON',
+      display(),
+    );
+    await pumpEventQueue();
+    applyMqttCommand(topics, topics.command('brightness'), '51', display());
+    await pumpEventQueue();
+    expect(container.read(displayProvider).isAutoBrightness, isFalse);
+    verify(() => kiosk.setAutoBrightness(false)).called(1);
+    verify(() => kiosk.setBrightness(0.2)).called(1);
+  });
+
+  test('automatic brightness stays off without the permission', () async {
+    when(() => kiosk.setAutoBrightness(any())).thenAnswer((_) async => false);
+    applyMqttCommand(
+      topics,
+      topics.command('auto_brightness'),
+      'ON',
+      display(),
+    );
+    await pumpEventQueue();
+    expect(container.read(displayProvider).isAutoBrightness, isFalse);
   });
 
   test('screen OFF/ON commands switch the panel via the kiosk', () async {
@@ -108,6 +153,7 @@ void main() {
       'ha_display/abc123/child_lock/state': 'OFF',
       'ha_display/abc123/private/state': 'OFF',
       'ha_display/abc123/mode/state': 'dashboard',
+      'ha_display/abc123/auto_brightness/state': 'OFF',
       'ha_display/abc123/brightness/state': '128',
     });
   });

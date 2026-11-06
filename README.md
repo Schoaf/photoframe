@@ -88,10 +88,17 @@ The tablet announces itself via MQTT discovery as a device (name from the settin
 | `switch.<name>_private` | Private mode: the agenda isn't shown (the dashboard stays as it is) |
 | `select.<name>_mode` | `photos` / `dashboard` |
 | `number.<name>_brightness` | 0–255 |
+| `switch.<name>_automatic_brightness` | Android's automatic brightness; setting a brightness switches it off. Needs the step below once |
 | `button.<name>_next_photo` | Next photo |
 | `button.<name>_reload` | Reload photos/dashboard |
 
 The device is unavailable while the app is offline (MQTT last will).
+
+Automatic brightness may only be changed after this step, once per installation:
+
+```bash
+adb shell appops set at.schoaf.ha_display WRITE_SETTINGS allow
+```
 
 Example: screen off when nobody is home, on again when someone arrives:
 

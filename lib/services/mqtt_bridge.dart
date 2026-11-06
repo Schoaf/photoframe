@@ -67,6 +67,15 @@ class MqttTopics {
         'max': 255,
         'mode': 'slider',
       }),
+      topic('switch', 'auto_brightness'): jsonEncode({
+        ...entity(
+          'auto_brightness',
+          'Automatic brightness',
+          'mdi:brightness-auto',
+        ),
+        'state_topic': state('auto_brightness'),
+        'command_topic': command('auto_brightness'),
+      }),
       topic('button', 'next_photo'): jsonEncode({
         ...entity('next_photo', 'Next photo', 'mdi:skip-next'),
         'command_topic': command('next_photo'),
@@ -84,6 +93,7 @@ class MqttTopics {
     state('child_lock'): display.isChildLocked ? 'ON' : 'OFF',
     state('private'): display.isPrivate ? 'ON' : 'OFF',
     state('mode'): display.mode.name,
+    state('auto_brightness'): display.isAutoBrightness ? 'ON' : 'OFF',
     if (display.brightness case final brightness?)
       state('brightness'): '$brightness',
   };
@@ -114,6 +124,9 @@ bool applyMqttCommand(
     final brightness = double.tryParse(payload);
     if (brightness == null) return false;
     display.setBrightness(brightness.round());
+  } else if (topic == topics.command('auto_brightness')) {
+    if (payload != 'ON' && payload != 'OFF') return false;
+    display.setAutoBrightness(payload == 'ON');
   } else if (topic == topics.command('next_photo')) {
     display.requestNextPhoto();
   } else if (topic == topics.command('reload')) {

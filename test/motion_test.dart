@@ -18,6 +18,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     kiosk = _MockKiosk();
+    when(() => kiosk.isAutoBrightness()).thenAnswer((_) async => false);
     when(() => kiosk.screenOff()).thenAnswer((_) async => true);
     when(() => kiosk.screenOn()).thenAnswer((_) async {});
     when(() => kiosk.setBrightness(any())).thenAnswer((_) async {});

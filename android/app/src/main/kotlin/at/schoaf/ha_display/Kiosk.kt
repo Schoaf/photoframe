@@ -10,6 +10,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
 import io.flutter.plugin.common.MethodCall
@@ -69,6 +71,8 @@ class Kiosk(
                 result.success(null)
             }
             "setBrightness" -> { setBrightness(call.argument<Double>("value")); result.success(null) }
+            "isAutoBrightness" -> result.success(isAutoBrightness())
+            "setAutoBrightness" -> result.success(setAutoBrightness(call.argument<Boolean>("value") == true))
             "isDeviceOwner" -> result.success(isDeviceOwner)
             "versionCode" -> result.success(AppUpdater.versionCode(activity))
             "installUpdate" -> {
@@ -188,6 +192,29 @@ class Kiosk(
         window.attributes = params
     }
 
+    private fun isAutoBrightness() = Settings.System.getInt(
+        activity.contentResolver,
+        Settings.System.SCREEN_BRIGHTNESS_MODE,
+        Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL,
+    ) == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+
+    // false without the permission from the README's adb step.
+    private fun setAutoBrightness(isOn: Boolean): Boolean {
+        if (!Settings.System.canWrite(activity)) {
+            Log.w(TAG, "may not change the brightness mode")
+            return false
+        }
+        return Settings.System.putInt(
+            activity.contentResolver,
+            Settings.System.SCREEN_BRIGHTNESS_MODE,
+            if (isOn) {
+                Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+            } else {
+                Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+            },
+        )
+    }
+
     fun dispose() {
         motion.stop()
         speaker.dispose()
@@ -201,6 +228,7 @@ class Kiosk(
     }
 
     private companion object {
+        const val TAG = "Kiosk"
         val BLOCKED_KEYS = setOf(
             KeyEvent.KEYCODE_VOLUME_UP,
             KeyEvent.KEYCODE_VOLUME_DOWN,

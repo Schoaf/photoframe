@@ -14,6 +14,7 @@ class DisplayState {
     this.isChildLocked = false,
     this.isPrivate = false,
     this.brightness,
+    this.isAutoBrightness = false,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
     this.dashboardView,
@@ -37,6 +38,9 @@ class DisplayState {
   /// 0..255, null for the system brightness.
   final int? brightness;
 
+  /// Android's light sensor sets the brightness; [brightness] doesn't apply.
+  final bool isAutoBrightness;
+
   /// Bumped per "next photo" / "reload" command; screens react to changes.
   final int nextPhotoRequests;
   final int reloadRequests;
@@ -53,6 +57,7 @@ class DisplayState {
     bool? isChildLocked,
     bool? isPrivate,
     int? brightness,
+    bool? isAutoBrightness,
     int? nextPhotoRequests,
     int? reloadRequests,
     String? Function()? dashboardView,
@@ -64,6 +69,7 @@ class DisplayState {
     isChildLocked: isChildLocked ?? this.isChildLocked,
     isPrivate: isPrivate ?? this.isPrivate,
     brightness: brightness ?? this.brightness,
+    isAutoBrightness: isAutoBrightness ?? this.isAutoBrightness,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
     dashboardView: dashboardView != null ? dashboardView() : this.dashboardView,
@@ -82,6 +88,10 @@ class DisplayNotifier extends Notifier<DisplayState> {
     // Kept natively, so a reboot doesn't lift it.
     _kiosk.isChildLocked().then((isLocked) {
       if (isLocked) state = state.copyWith(isChildLocked: true);
+    });
+    // Android keeps it across restarts.
+    _kiosk.isAutoBrightness().then((isAuto) {
+      if (isAuto) state = state.copyWith(isAutoBrightness: true);
     });
     SharedPreferences.getInstance().then((prefs) {
       if (prefs.getBool(_privateKey) ?? false) {
@@ -107,7 +117,7 @@ class DisplayNotifier extends Notifier<DisplayState> {
     if (isOn == state.isScreenOn) return;
     if (isOn) {
       state = state.copyWith(isScreenOn: true, isBlackedOut: false);
-      await _kiosk.setBrightness(_brightnessValue(state.brightness));
+      await _kiosk.setBrightness(_windowBrightness);
       await _kiosk.screenOn();
     } else {
       final isReallyOff = await _kiosk.screenOff();
@@ -136,10 +146,20 @@ class DisplayNotifier extends Notifier<DisplayState> {
   }
 
   Future<void> setBrightness(int brightness) async {
-    state = state.copyWith(brightness: brightness.clamp(0, 255));
-    if (state.isScreenOn) {
-      await _kiosk.setBrightness(_brightnessValue(state.brightness));
-    }
+    state = state.copyWith(
+      brightness: brightness.clamp(0, 255),
+      isAutoBrightness: false,
+    );
+    await _kiosk.setAutoBrightness(false);
+    if (state.isScreenOn) await _kiosk.setBrightness(_windowBrightness);
+  }
+
+  /// Stays off when the app may not change it - Home Assistant then shows
+  /// the switch off.
+  Future<void> setAutoBrightness(bool isOn) async {
+    if (!await _kiosk.setAutoBrightness(isOn)) return;
+    state = state.copyWith(isAutoBrightness: isOn);
+    if (state.isScreenOn) await _kiosk.setBrightness(_windowBrightness);
   }
 
   void requestNextPhoto() =>
@@ -150,8 +170,12 @@ class DisplayNotifier extends Notifier<DisplayState> {
 
   static const _privateKey = 'private_mode';
 
-  static double? _brightnessValue(int? brightness) =>
-      brightness == null ? null : brightness / 255;
+  /// null leaves the brightness to Android.
+  double? get _windowBrightness => switch (state) {
+    DisplayState(isAutoBrightness: true) => null,
+    DisplayState(:final brightness?) => brightness / 255,
+    _ => null,
+  };
 
   /// Falls back to the other mode when the wanted one isn't configured.
   static DisplayMode _availableMode(Settings settings, DisplayMode wanted) =>

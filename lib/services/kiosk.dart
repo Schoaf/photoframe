@@ -51,6 +51,15 @@ class Kiosk {
   Future<void> setBrightness(double? value) =>
       _channel.invokeMethod('setBrightness', {'value': value});
 
+  /// Android's own automatic brightness, set by the light sensor.
+  Future<bool> isAutoBrightness() async =>
+      await _channel.invokeMethod<bool>('isAutoBrightness') ?? false;
+
+  /// false when the app may not change it (README: adb step).
+  Future<bool> setAutoBrightness(bool isOn) async =>
+      await _channel.invokeMethod<bool>('setAutoBrightness', {'value': isOn}) ??
+      false;
+
   Future<bool> isDeviceOwner() async =>
       await _channel.invokeMethod<bool>('isDeviceOwner') ?? false;
 
