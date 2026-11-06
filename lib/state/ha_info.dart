@@ -10,7 +10,17 @@ class HaInfoNotifier extends Notifier<HaSnapshot> {
 
   @override
   HaSnapshot build() {
-    final settings = ref.watch(settingsProvider);
+    ref.watch(
+      settingsProvider.select(
+        (settings) => (
+          settings.dashboardUrl,
+          settings.haToken,
+          settings.weatherEntityId,
+          settings.mediaPlayerEntityIds,
+        ),
+      ),
+    );
+    final settings = ref.read(settingsProvider);
     if (!settings.hasHaInfo) return const HaSnapshot();
     final client = HaClient(
       baseUrl: settings.dashboardUrl,

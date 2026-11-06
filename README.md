@@ -96,6 +96,8 @@ The tablet announces itself via MQTT discovery as a device (name from the settin
 
 The device is unavailable while the app is offline (MQTT last will).
 
+**Settings from afar:** Under "Configuration" on the device's page in HA you also find seconds per photo, shuffle, back to photos, screen off without motion, dark level, the appliance-done blinking and announcement, its volume with a test button, and the start mode. They work like entities anywhere in HA and apply right away, and the tablet remembers them. Passwords, tokens, addresses and the PIN stay on the tablet.
+
 Automatic brightness and the keys need these steps, once per installation:
 
 ```bash

@@ -27,7 +27,16 @@ class CalendarState {
 class CalendarNotifier extends Notifier<CalendarState> {
   @override
   CalendarState build() {
-    final settings = ref.watch(settingsProvider);
+    ref.watch(
+      settingsProvider.select(
+        (settings) => (
+          settings.dashboardUrl,
+          settings.haToken,
+          settings.calendarEntityIds,
+        ),
+      ),
+    );
+    final settings = ref.read(settingsProvider);
     if (!settings.hasHaInfo || settings.calendarEntityIds.isEmpty) {
       return const CalendarState();
     }

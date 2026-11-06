@@ -30,15 +30,30 @@ final deviceIdProvider = Provider<String>((ref) => throw UnimplementedError());
 /// Runs while the app runs (watched by the display screen); reconnects with
 /// new settings when they change.
 final mqttBridgeProvider = Provider<MqttBridge?>((ref) {
-  final settings = ref.watch(settingsProvider);
+  // Home Assistant changes other settings over this very connection.
+  ref.watch(
+    settingsProvider.select(
+      (settings) => (
+        settings.mqttHost,
+        settings.mqttPort,
+        settings.mqttUser,
+        settings.mqttPassword,
+        settings.deviceName,
+      ),
+    ),
+  );
+  final settings = ref.read(settingsProvider);
   if (!settings.hasMqtt) return null;
   final bridge = MqttBridge(
     settings: settings,
     topics: MqttTopics(ref.watch(deviceIdProvider)),
     display: ref.read(displayProvider.notifier),
+    settingsNotifier: ref.read(settingsProvider.notifier),
     currentState: () => ref.read(displayProvider),
+    currentSettings: () => ref.read(settingsProvider),
   );
-  ref.listen(displayProvider, (_, state) => bridge.publishState(state));
+  ref.listen(displayProvider, (_, _) => bridge.publishState());
+  ref.listen(settingsProvider, (_, _) => bridge.publishState());
   bridge.start();
   ref.onDispose(bridge.stop);
   return bridge;

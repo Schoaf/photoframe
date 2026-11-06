@@ -10,7 +10,17 @@ import 'settings.dart';
 const _refreshInterval = Duration(hours: 1);
 
 final synologyClientProvider = Provider<SynologyPhotosClient>((ref) {
-  final settings = ref.watch(settingsProvider);
+  ref.watch(
+    settingsProvider.select(
+      (settings) => (
+        settings.synologyUrl,
+        settings.synologyUser,
+        settings.synologyPassword,
+        settings.albumPassphrase,
+      ),
+    ),
+  );
+  final settings = ref.read(settingsProvider);
   return SynologyPhotosClient(
     baseUrl: settings.synologyUrl,
     user: settings.synologyUser,
@@ -24,7 +34,13 @@ final synologyClientProvider = Provider<SynologyPhotosClient>((ref) {
 class AlbumItemsNotifier extends AsyncNotifier<List<PhotoItem>> {
   @override
   Future<List<PhotoItem>> build() async {
-    final settings = ref.watch(settingsProvider);
+    ref.watch(
+      settingsProvider.select(
+        (settings) =>
+            (settings.hasPhotos, settings.albumId, settings.isShuffled),
+      ),
+    );
+    final settings = ref.read(settingsProvider);
     final albumId = settings.albumId;
     if (!settings.hasPhotos || albumId == null) return const [];
     final timer = Timer(_refreshInterval, ref.invalidateSelf);

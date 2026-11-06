@@ -19,6 +19,7 @@ class DisplayState {
     this.isKioskEnded = false,
     this.nextPhotoRequests = 0,
     this.reloadRequests = 0,
+    this.speechTestRequests = 0,
     this.dashboardView,
     this.viewRequests = 0,
   });
@@ -49,9 +50,10 @@ class DisplayState {
   /// "Kiosk beenden": the app runs behind the others until it's opened again.
   final bool isKioskEnded;
 
-  /// Bumped per "next photo" / "reload" command; screens react to changes.
+  /// Bumped per "next photo" / "reload" / "test announcement" command; screens react to changes.
   final int nextPhotoRequests;
   final int reloadRequests;
+  final int speechTestRequests;
 
   /// Dashboard view to show (e.g. `wetter`), null for the main view; the
   /// dashboard switches to it whenever [viewRequests] changes.
@@ -70,6 +72,7 @@ class DisplayState {
     bool? isKioskEnded,
     int? nextPhotoRequests,
     int? reloadRequests,
+    int? speechTestRequests,
     String? Function()? dashboardView,
     int? viewRequests,
   }) => DisplayState(
@@ -84,6 +87,7 @@ class DisplayState {
     isKioskEnded: isKioskEnded ?? this.isKioskEnded,
     nextPhotoRequests: nextPhotoRequests ?? this.nextPhotoRequests,
     reloadRequests: reloadRequests ?? this.reloadRequests,
+    speechTestRequests: speechTestRequests ?? this.speechTestRequests,
     dashboardView: dashboardView != null ? dashboardView() : this.dashboardView,
     viewRequests: viewRequests ?? this.viewRequests,
   );
@@ -200,6 +204,9 @@ class DisplayNotifier extends Notifier<DisplayState> {
 
   void requestReload() =>
       state = state.copyWith(reloadRequests: state.reloadRequests + 1);
+
+  void requestSpeechTest() =>
+      state = state.copyWith(speechTestRequests: state.speechTestRequests + 1);
 
   static const _privateKey = 'private_mode';
 

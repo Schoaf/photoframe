@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ha_display/services/kiosk.dart';
 import 'package:ha_display/services/mqtt_bridge.dart';
@@ -28,6 +29,7 @@ void main() {
     when(() => kiosk.mediaVolume()).thenAnswer((_) async => 40);
     when(() => kiosk.setAutoBrightness(any())).thenAnswer((_) async => true);
     when(() => kiosk.pressKey(any())).thenAnswer((_) async => true);
+    FlutterSecureStorage.setMockInitialValues({});
     when(() => kiosk.stopLock()).thenAnswer((_) async {});
     when(() => kiosk.setMediaVolume(any())).thenAnswer((_) async {});
     container = ProviderContainer(
@@ -49,6 +51,60 @@ void main() {
   tearDown(() => container.dispose());
 
   DisplayNotifier display() => container.read(displayProvider.notifier);
+
+  bool command(String entity, String payload) => applyMqttCommand(
+    topics,
+    topics.command(entity),
+    payload,
+    display(),
+    container.read(settingsProvider.notifier),
+  );
+
+  Map<String, String> states() => topics.states(
+    container.read(displayProvider),
+    container.read(settingsProvider),
+  );
+
+  test('Home Assistant changes settings and sees them', () async {
+    expect(command('slide_seconds', '30'), isTrue);
+    expect(command('finished_speech', 'ON'), isTrue);
+    expect(command('start_mode', 'dashboard'), isTrue);
+    await pumpEventQueue();
+
+    final settings = container.read(settingsProvider);
+    expect(settings.slideSeconds, 30);
+    expect(settings.isFinishedSpeechOn, isTrue);
+    expect(settings.startMode, DisplayMode.dashboard);
+    expect(states()['ha_display/abc123/slide_seconds/state'], '30');
+    expect(states()['ha_display/abc123/finished_speech/state'], 'ON');
+    expect(states()['ha_display/abc123/start_mode/state'], 'dashboard');
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt('slide_seconds'), 30);
+  });
+
+  test('settings from Home Assistant stay in range', () async {
+    command('slide_seconds', '1');
+    command('finished_speech_volume', '500');
+    await pumpEventQueue();
+    final settings = container.read(settingsProvider);
+    expect(settings.slideSeconds, 5);
+    expect(settings.finishedSpeechVolume, 100);
+    expect(command('slide_seconds', 'many'), isFalse);
+    expect(command('shuffle', 'maybe'), isFalse);
+    expect(command('start_mode', 'nothing'), isFalse);
+  });
+
+  test('settings entities are listed as configuration', () {
+    final config = jsonDecode(
+      topics.discoveryConfigs(
+        'Wohnzimmer',
+      )['homeassistant/number/ha_display_abc123/finished_speech_volume/config']!,
+    ) as Map<String, dynamic>;
+    expect(config['entity_category'], 'config');
+    expect(config['max'], 100);
+    expect(config['unit_of_measurement'], '%');
+  });
 
   test('announces all entities with a shared device and availability', () {
     final configs = topics.discoveryConfigs('Wohnzimmer');
@@ -77,18 +133,10 @@ void main() {
 
   test('Home Assistant presses the keys and sets the volume', () async {
     for (final key in ['back', 'home', 'recents']) {
-      expect(
-        applyMqttCommand(
-          topics,
-          topics.command('key_$key'),
-          'PRESS',
-          display(),
-        ),
-        isTrue,
-      );
+      expect(command('key_$key', 'PRESS'), isTrue);
       verify(() => kiosk.pressKey(key)).called(1);
     }
-    applyMqttCommand(topics, topics.command('media_volume'), '130', display());
+    command('media_volume', '130');
     await pumpEventQueue();
     verify(() => kiosk.setMediaVolume(100)).called(1);
   });
@@ -108,14 +156,9 @@ void main() {
   );
 
   test('automatic brightness leaves the brightness to Android', () async {
-    applyMqttCommand(topics, topics.command('brightness'), '128', display());
+    command('brightness', '128');
     await pumpEventQueue();
-    applyMqttCommand(
-      topics,
-      topics.command('auto_brightness'),
-      'ON',
-      display(),
-    );
+    command('auto_brightness', 'ON');
     await pumpEventQueue();
     expect(container.read(displayProvider).isAutoBrightness, isTrue);
     verify(() => kiosk.setAutoBrightness(true)).called(1);
@@ -123,14 +166,9 @@ void main() {
   });
 
   test('a set brightness ends automatic brightness', () async {
-    applyMqttCommand(
-      topics,
-      topics.command('auto_brightness'),
-      'ON',
-      display(),
-    );
+    command('auto_brightness', 'ON');
     await pumpEventQueue();
-    applyMqttCommand(topics, topics.command('brightness'), '51', display());
+    command('brightness', '51');
     await pumpEventQueue();
     expect(container.read(displayProvider).isAutoBrightness, isFalse);
     verify(() => kiosk.setAutoBrightness(false)).called(1);
@@ -139,26 +177,18 @@ void main() {
 
   test('automatic brightness stays off without the permission', () async {
     when(() => kiosk.setAutoBrightness(any())).thenAnswer((_) async => false);
-    applyMqttCommand(
-      topics,
-      topics.command('auto_brightness'),
-      'ON',
-      display(),
-    );
+    command('auto_brightness', 'ON');
     await pumpEventQueue();
     expect(container.read(displayProvider).isAutoBrightness, isFalse);
   });
 
   test('screen OFF/ON commands switch the panel via the kiosk', () async {
-    expect(
-      applyMqttCommand(topics, topics.command('screen'), 'OFF', display()),
-      isTrue,
-    );
+    expect(command('screen', 'OFF'), isTrue);
     await pumpEventQueue();
     expect(container.read(displayProvider).isScreenOn, isFalse);
     verify(() => kiosk.screenOff()).called(1);
 
-    applyMqttCommand(topics, topics.command('screen'), 'ON', display());
+    command('screen', 'ON');
     await pumpEventQueue();
     expect(container.read(displayProvider).isScreenOn, isTrue);
     verify(() => kiosk.screenOn()).called(1);
@@ -167,7 +197,7 @@ void main() {
   test('without device owner, screen off blacks out instead', () async {
     when(() => kiosk.screenOff()).thenAnswer((_) async => false);
 
-    applyMqttCommand(topics, topics.command('screen'), 'OFF', display());
+    command('screen', 'OFF');
     await pumpEventQueue();
 
     expect(container.read(displayProvider).isBlackedOut, isTrue);
@@ -175,29 +205,32 @@ void main() {
   });
 
   test('mode, brightness and buttons update the display state', () async {
-    applyMqttCommand(topics, topics.command('mode'), 'dashboard', display());
-    applyMqttCommand(topics, topics.command('brightness'), '128.0', display());
-    applyMqttCommand(topics, topics.command('next_photo'), 'PRESS', display());
+    command('mode', 'dashboard');
+    command('brightness', '128.0');
+    command('next_photo', 'PRESS');
     await pumpEventQueue();
 
     final state = container.read(displayProvider);
     expect(state.mode, DisplayMode.dashboard);
     expect(state.brightness, 128);
     expect(state.nextPhotoRequests, 1);
-    expect(topics.states(state), {
-      'ha_display/abc123/screen/state': 'ON',
-      'ha_display/abc123/child_lock/state': 'OFF',
-      'ha_display/abc123/private/state': 'OFF',
-      'ha_display/abc123/mode/state': 'dashboard',
-      'ha_display/abc123/auto_brightness/state': 'OFF',
-      'ha_display/abc123/media_volume/state': '40',
-      'ha_display/abc123/brightness/state': '128',
-    });
+    expect(
+      topics.states(state, const Settings()),
+      allOf(
+        containsPair('ha_display/abc123/screen/state', 'ON'),
+        containsPair('ha_display/abc123/child_lock/state', 'OFF'),
+        containsPair('ha_display/abc123/private/state', 'OFF'),
+        containsPair('ha_display/abc123/mode/state', 'dashboard'),
+        containsPair('ha_display/abc123/auto_brightness/state', 'OFF'),
+        containsPair('ha_display/abc123/media_volume/state', '40'),
+        containsPair('ha_display/abc123/brightness/state', '128'),
+      ),
+    );
   });
 
   test('child lock keeps the screen as Home Assistant set it', () async {
-    applyMqttCommand(topics, topics.command('child_lock'), 'ON', display());
-    applyMqttCommand(topics, topics.command('screen'), 'OFF', display());
+    command('child_lock', 'ON');
+    command('screen', 'OFF');
     await pumpEventQueue();
     verify(() => kiosk.setChildLock(true)).called(1);
 
@@ -206,11 +239,17 @@ void main() {
     final state = container.read(displayProvider);
     expect(state.isChildLocked, isTrue);
     expect(state.isScreenOn, isFalse);
-    expect(topics.states(state)['ha_display/abc123/child_lock/state'], 'ON');
+    expect(
+      topics.states(
+        state,
+        const Settings(),
+      )['ha_display/abc123/child_lock/state'],
+      'ON',
+    );
   });
 
   test('private mode survives a restart', () async {
-    applyMqttCommand(topics, topics.command('private'), 'ON', display());
+    command('private', 'ON');
     await pumpEventQueue();
     expect(container.read(displayProvider).isPrivate, isTrue);
 
@@ -219,17 +258,14 @@ void main() {
     await pumpEventQueue();
     final state = container.read(displayProvider);
     expect(state.isPrivate, isTrue);
-    expect(topics.states(state)['ha_display/abc123/private/state'], 'ON');
+    expect(
+      topics.states(state, const Settings())['ha_display/abc123/private/state'],
+      'ON',
+    );
   });
 
   test('ignores unknown payloads and topics', () {
-    expect(
-      applyMqttCommand(topics, topics.command('mode'), 'tv', display()),
-      isFalse,
-    );
-    expect(
-      applyMqttCommand(topics, 'ha_display/abc123/x/set', '1', display()),
-      isFalse,
-    );
+    expect(command('mode', 'tv'), isFalse);
+    expect(command('x', '1'), isFalse);
   });
 }

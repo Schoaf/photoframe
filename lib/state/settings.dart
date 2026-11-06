@@ -314,6 +314,13 @@ class SettingsNotifier extends Notifier<Settings> {
     await saveSettings(settings);
     state = settings;
   }
+
+  /// Applies right away - Home Assistant may set several in a row, and each
+  /// has to build on the one before.
+  Future<void> change(Settings Function(Settings) apply) async {
+    state = apply(state);
+    await saveSettings(state);
+  }
 }
 
 final settingsProvider = NotifierProvider<SettingsNotifier, Settings>(

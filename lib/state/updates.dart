@@ -10,7 +10,12 @@ const _checkInterval = Duration(hours: 24);
 /// Checks for updates at start and once a day (watched by the display
 /// screen); errors are ignored - the next check tries again.
 final autoUpdateProvider = Provider<void>((ref) {
-  final settings = ref.watch(settingsProvider);
+  ref.watch(
+    settingsProvider.select(
+      (settings) => (settings.updateRepo, settings.githubToken),
+    ),
+  );
+  final settings = ref.read(settingsProvider);
   if (settings.updateRepo.trim().isEmpty) return;
   final updater = AppUpdater(
     repo: settings.updateRepo,

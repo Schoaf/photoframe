@@ -14,6 +14,131 @@ const _keys = [
   ('recents', 'Key recent apps', 'mdi:view-sequential-outline'),
 ];
 
+/// A number in the settings that Home Assistant can set.
+class _NumberSetting {
+  const _NumberSetting({
+    required this.key,
+    required this.name,
+    required this.icon,
+    required this.unit,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.read,
+    required this.write,
+  });
+
+  final String key;
+  final String name;
+  final String icon;
+  final String unit;
+  final int min;
+  final int max;
+  final int step;
+  final int Function(Settings) read;
+  final Settings Function(Settings, int) write;
+}
+
+/// An on/off in the settings that Home Assistant can set.
+class _SwitchSetting {
+  const _SwitchSetting({
+    required this.key,
+    required this.name,
+    required this.icon,
+    required this.read,
+    required this.write,
+  });
+
+  final String key;
+  final String name;
+  final String icon;
+  final bool Function(Settings) read;
+  final Settings Function(Settings, bool) write;
+}
+
+final _numberSettings = [
+  _NumberSetting(
+    key: 'slide_seconds',
+    name: 'Seconds per photo',
+    icon: 'mdi:timer-outline',
+    unit: 's',
+    min: 5,
+    max: 120,
+    step: 5,
+    read: (settings) => settings.slideSeconds,
+    write: (settings, value) => settings.copyWith(slideSeconds: value),
+  ),
+  _NumberSetting(
+    key: 'idle_seconds',
+    name: 'Back to photos after',
+    icon: 'mdi:image-move',
+    unit: 's',
+    min: 30,
+    max: 600,
+    step: 30,
+    read: (settings) => settings.idleSeconds,
+    write: (settings, value) => settings.copyWith(idleSeconds: value),
+  ),
+  _NumberSetting(
+    key: 'motion_screen_off_minutes',
+    name: 'Screen off without motion after',
+    icon: 'mdi:motion-sensor-off',
+    unit: 'min',
+    min: 0,
+    max: 60,
+    step: 1,
+    read: (settings) => settings.motionScreenOffMinutes,
+    write: (settings, value) =>
+        settings.copyWith(motionScreenOffMinutes: value),
+  ),
+  _NumberSetting(
+    key: 'motion_dark_level',
+    name: 'Dark below brightness',
+    icon: 'mdi:weather-night',
+    unit: '',
+    min: 0,
+    max: 60,
+    step: 1,
+    read: (settings) => settings.motionDarkLevel,
+    write: (settings, value) => settings.copyWith(motionDarkLevel: value),
+  ),
+  _NumberSetting(
+    key: 'finished_speech_volume',
+    name: 'Announcement volume',
+    icon: 'mdi:account-voice',
+    unit: '%',
+    min: 0,
+    max: 100,
+    step: 5,
+    read: (settings) => settings.finishedSpeechVolume,
+    write: (settings, value) => settings.copyWith(finishedSpeechVolume: value),
+  ),
+];
+
+final _switchSettings = [
+  _SwitchSetting(
+    key: 'shuffle',
+    name: 'Shuffle photos',
+    icon: 'mdi:shuffle',
+    read: (settings) => settings.isShuffled,
+    write: (settings, value) => settings.copyWith(isShuffled: value),
+  ),
+  _SwitchSetting(
+    key: 'finished_flash',
+    name: 'Appliance done: blink',
+    icon: 'mdi:flash',
+    read: (settings) => settings.isFinishedFlashOn,
+    write: (settings, value) => settings.copyWith(isFinishedFlashOn: value),
+  ),
+  _SwitchSetting(
+    key: 'finished_speech',
+    name: 'Appliance done: announce',
+    icon: 'mdi:account-voice',
+    read: (settings) => settings.isFinishedSpeechOn,
+    write: (settings, value) => settings.copyWith(isFinishedSpeechOn: value),
+  ),
+];
+
 /// Topics and Home Assistant MQTT discovery for one tablet. Pure, so it can
 /// be tested without a broker.
 class MqttTopics {
@@ -42,6 +167,8 @@ class MqttTopics {
       'availability_topic': availability,
       'device': device,
     };
+    // Listed under "Configuration" on the device's page in Home Assistant.
+    const config = {'entity_category': 'config'};
     String topic(String component, String key) =>
         'homeassistant/$component/ha_display_$deviceId/$key/config';
     return {
@@ -97,6 +224,37 @@ class MqttTopics {
           ...entity('key_$key', name, icon),
           'command_topic': command('key_$key'),
         }),
+      for (final setting in _numberSettings)
+        topic('number', setting.key): jsonEncode({
+          ...entity(setting.key, setting.name, setting.icon),
+          ...config,
+          'state_topic': state(setting.key),
+          'command_topic': command(setting.key),
+          'min': setting.min,
+          'max': setting.max,
+          'step': setting.step,
+          'mode': 'slider',
+          if (setting.unit.isNotEmpty) 'unit_of_measurement': setting.unit,
+        }),
+      for (final setting in _switchSettings)
+        topic('switch', setting.key): jsonEncode({
+          ...entity(setting.key, setting.name, setting.icon),
+          ...config,
+          'state_topic': state(setting.key),
+          'command_topic': command(setting.key),
+        }),
+      topic('select', 'start_mode'): jsonEncode({
+        ...entity('start_mode', 'Start mode', 'mdi:play-box-outline'),
+        ...config,
+        'state_topic': state('start_mode'),
+        'command_topic': command('start_mode'),
+        'options': [for (final mode in DisplayMode.values) mode.name],
+      }),
+      topic('button', 'speech_test'): jsonEncode({
+        ...entity('speech_test', 'Test announcement', 'mdi:account-voice'),
+        ...config,
+        'command_topic': command('speech_test'),
+      }),
       topic('button', 'next_photo'): jsonEncode({
         ...entity('next_photo', 'Next photo', 'mdi:skip-next'),
         'command_topic': command('next_photo'),
@@ -108,8 +266,13 @@ class MqttTopics {
     };
   }
 
-  /// Retained state topics for [display].
-  Map<String, String> states(DisplayState display) => {
+  /// Retained state topics for [display] and [settings].
+  Map<String, String> states(DisplayState display, Settings settings) => {
+    for (final setting in _numberSettings)
+      state(setting.key): '${setting.read(settings)}',
+    for (final setting in _switchSettings)
+      state(setting.key): setting.read(settings) ? 'ON' : 'OFF',
+    state('start_mode'): settings.startMode.name,
     state('screen'): display.isScreenOn ? 'ON' : 'OFF',
     state('child_lock'): display.isChildLocked ? 'ON' : 'OFF',
     state('private'): display.isPrivate ? 'ON' : 'OFF',
@@ -122,14 +285,29 @@ class MqttTopics {
   };
 }
 
-/// Applies one received command to the display. Returns false for unknown
-/// topics/payloads.
+/// Applies one received command to the display or the settings. Returns
+/// false for unknown topics/payloads.
 bool applyMqttCommand(
   MqttTopics topics,
   String topic,
   String payload,
   DisplayNotifier display,
+  SettingsNotifier settings,
 ) {
+  for (final setting in _numberSettings) {
+    if (topic != topics.command(setting.key)) continue;
+    final value = double.tryParse(payload);
+    if (value == null) return false;
+    final number = value.round().clamp(setting.min, setting.max);
+    settings.change((current) => setting.write(current, number));
+    return true;
+  }
+  for (final setting in _switchSettings) {
+    if (topic != topics.command(setting.key)) continue;
+    if (payload != 'ON' && payload != 'OFF') return false;
+    settings.change((current) => setting.write(current, payload == 'ON'));
+    return true;
+  }
   if (topic == topics.command('screen')) {
     if (payload != 'ON' && payload != 'OFF') return false;
     display.setScreenOn(payload == 'ON');
@@ -156,6 +334,12 @@ bool applyMqttCommand(
     display.setMediaVolume(volume.round());
   } else if (_keys.any((key) => topic == topics.command('key_${key.$1}'))) {
     display.pressKey(topic.split('/')[2].substring('key_'.length));
+  } else if (topic == topics.command('start_mode')) {
+    final mode = DisplayMode.values.asNameMap()[payload];
+    if (mode == null) return false;
+    settings.change((current) => current.copyWith(startMode: mode));
+  } else if (topic == topics.command('speech_test')) {
+    display.requestSpeechTest();
   } else if (topic == topics.command('next_photo')) {
     display.requestNextPhoto();
   } else if (topic == topics.command('reload')) {
@@ -173,13 +357,17 @@ class MqttBridge {
     required this.settings,
     required this.topics,
     required this.display,
+    required this.settingsNotifier,
     required this.currentState,
+    required this.currentSettings,
   });
 
   final Settings settings;
   final MqttTopics topics;
   final DisplayNotifier display;
+  final SettingsNotifier settingsNotifier;
   final DisplayState Function() currentState;
+  final Settings Function() currentSettings;
   MqttServerClient? _client;
   StreamSubscription<List<MqttReceivedMessage<MqttMessage>>>? _updates;
   Map<String, String> _lastStates = const {};
@@ -234,12 +422,12 @@ class MqttBridge {
     }
     _publish(topics.availability, 'online');
     _lastStates = const {};
-    publishState(currentState());
+    publishState();
   }
 
   /// Publishes only what changed since the last call.
-  void publishState(DisplayState state) {
-    final states = topics.states(state);
+  void publishState() {
+    final states = topics.states(currentState(), currentSettings());
     for (final MapEntry(:key, :value) in states.entries) {
       if (_lastStates[key] != value) _publish(key, value);
     }
@@ -252,7 +440,13 @@ class MqttBridge {
       final payload = MqttPublishPayload.bytesToStringAsString(
         publish.payload.message,
       ).trim();
-      applyMqttCommand(topics, message.topic, payload, display);
+      applyMqttCommand(
+        topics,
+        message.topic,
+        payload,
+        display,
+        settingsNotifier,
+      );
     }
   }
 

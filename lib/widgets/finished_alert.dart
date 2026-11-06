@@ -62,6 +62,14 @@ class _FinishedAlertState extends ConsumerState<FinishedAlert>
     _end = Timer(_flashDuration, _stop);
   }
 
+  void _speakSample() => ref
+      .read(kioskProvider)
+      .speak(
+        AppLocalizations.of(context).speechSample,
+        Localizations.localeOf(context).toLanguageTag(),
+        ref.read(settingsProvider).finishedSpeechVolume / 100,
+      );
+
   void _stop() {
     _end?.cancel();
     _blink.stop();
@@ -73,6 +81,10 @@ class _FinishedAlertState extends ConsumerState<FinishedAlert>
     ref.listen(
       haInfoProvider.select((info) => info.running),
       (_, running) => _onRunning(running),
+    );
+    ref.listen(
+      displayProvider.select((display) => display.speechTestRequests),
+      (_, _) => _speakSample(),
     );
     if (_names.isEmpty) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
