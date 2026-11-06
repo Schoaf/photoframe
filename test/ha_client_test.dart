@@ -226,5 +226,19 @@ void main() {
       );
       expect(dryer.fraction(now), closeTo(0.25, 0.001));
     });
+
+    test('past its end the time is unknown and the bar full', () {
+      final now = DateTime(2026, 11, 6, 12);
+      final dryer = RunningDevice(
+        name: 'Trockner',
+        end: now.subtract(const Duration(minutes: 10)),
+        start: now.subtract(const Duration(hours: 2)),
+        progress: 92,
+      );
+      expect(dryer.isOverdue(now), isTrue);
+      expect(dryer.remaining(now), isNull);
+      expect(dryer.fraction(now), 1);
+      expect(dryer.isNearlyDone(now), isTrue);
+    });
   });
 }

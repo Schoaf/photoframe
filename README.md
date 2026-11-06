@@ -195,12 +195,12 @@ template:
           laufend: >
             {% set ns = namespace(items=[]) %}
             {% set geraete = [
-              ['Geschirrspüler', 'mdi:dishwasher', 'sensor.geschirrspuler_programm_endzeit', 'sensor.geschirrspuler_programm_fortschritt'],
-              ['Waschmaschine', 'mdi:washing-machine', 'sensor.waschmaschine_programm_endzeit', 'sensor.waschmaschine_programm_fortschritt'],
-              ['Trockner', 'mdi:tumble-dryer', 'sensor.dryer_expected_end', 'sensor.dryer_progress'],
+              ['Geschirrspüler', 'mdi:dishwasher', 'sensor.geschirrspuler_programm_endzeit', 'sensor.geschirrspuler_programm_fortschritt', ''],
+              ['Waschmaschine', 'mdi:washing-machine', 'sensor.waschmaschine_programm_endzeit', 'sensor.waschmaschine_programm_fortschritt', 'input_select.washer_status'],
+              ['Trockner', 'mdi:tumble-dryer', 'sensor.dryer_expected_end', 'sensor.dryer_progress', 'input_select.dryer_status'],
             ] %}
-            {% for name, icon, ende, fortschritt in geraete %}
-              {% if has_value(ende) and as_datetime(states(ende)) > now() %}
+            {% for name, icon, ende, fortschritt, status in geraete %}
+              {% if has_value(ende) and (as_datetime(states(ende)) > now() or is_state(status, 'Läuft')) %}
                 {% set ns.items = ns.items + [{'name': name, 'icon': icon, 'ende': states(ende), 'fortschritt': states(fortschritt) | float(none)}] %}
               {% endif %}
             {% endfor %}
@@ -216,6 +216,7 @@ template:
 
 - They show below the weather with their remaining time and a bar from 0 to 100 %.
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
+- The fifth column of `geraete` is an optional status entity. While it says `Läuft`, an appliance past its end time stays listed, with a full bar and "noch ? min".
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
 
 **Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech, at the volume set below that switch; "Probe" plays a sample. That volume is the media volume while it speaks, so music playing on the tablet changes along with it until the voice ends.

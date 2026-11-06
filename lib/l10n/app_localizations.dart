@@ -554,6 +554,12 @@ abstract class AppLocalizations {
   /// **'noch {time} h'**
   String remainingHours(String time);
 
+  /// No description provided for @remainingUnknown.
+  ///
+  /// In de, this message translates to:
+  /// **'noch ? min'**
+  String get remainingUnknown;
+
   /// No description provided for @today.
   ///
   /// In de, this message translates to:

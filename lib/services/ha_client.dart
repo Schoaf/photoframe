@@ -117,12 +117,17 @@ class RunningDevice {
   /// Dashboard view for this appliance, if the template names one.
   final String? view;
 
+  /// Past its [end] and still running - how much longer is anyone's guess.
+  bool isOverdue(DateTime now) {
+    final end = this.end;
+    return end != null && !end.isAfter(now);
+  }
+
   /// From [end], or estimated from [start] and [progress] - e.g. the
-  /// Roborock only reports how far it is.
+  /// Roborock only reports how far it is. null when unknown.
   Duration? remaining(DateTime now) {
     if (end case final end?) {
-      final left = end.difference(now);
-      return left.isNegative ? Duration.zero : left;
+      return isOverdue(now) ? null : end.difference(now);
     }
     final progress = this.progress;
     final start = this.start;
@@ -142,6 +147,7 @@ class RunningDevice {
 
   /// 0..1 for the bar: as reported, or from [start] and [end].
   double? fraction(DateTime now) {
+    if (isOverdue(now)) return 1;
     if (progress case final progress?) return (progress / 100).clamp(0, 1);
     final start = this.start;
     final end = this.end;

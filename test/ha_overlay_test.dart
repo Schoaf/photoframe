@@ -142,6 +142,26 @@ void main() {
     expect(find.text(unavailable), findsNothing);
   });
 
+  testWidgets('an appliance past its end shows an unknown time, no pulse', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    await _pumpOverlay(tester, [
+      RunningDevice(
+        name: 'Trockner',
+        end: now.subtract(const Duration(minutes: 5)),
+        progress: 90,
+      ),
+    ]);
+    expect(find.text('noch ? min'), findsOneWidget);
+    expect(_tileColor(tester), const Color(0xE6FB8C00));
+    expect(_isPulsing(tester), isFalse);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, 1);
+  });
+
   testWidgets('appliance tiles are at least the minimum width', (tester) async {
     final now = DateTime.now();
     await _pumpOverlay(tester, [

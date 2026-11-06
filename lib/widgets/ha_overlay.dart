@@ -609,6 +609,7 @@ class _RunningTileState extends State<_RunningTile>
     final next = [
       remaining - _almostDone,
       remaining - _nearlyDone,
+      remaining,
     ].where((left) => left > Duration.zero).firstOrNull;
     if (next != null) {
       _nextStep = Timer(next, () => mounted ? setState(() {}) : null);
@@ -625,7 +626,9 @@ class _RunningTileState extends State<_RunningTile>
     final minutes = remaining == null
         ? null
         : (remaining.inSeconds / 60).ceil();
-    final isAlmostDone = remaining != null && remaining <= _almostDone;
+    final isOverdue = device.isOverdue(now);
+    final isAlmostDone =
+        isOverdue || (remaining != null && remaining <= _almostDone);
     final isNearlyDone = remaining != null && remaining <= _nearlyDone;
     _scheduleNextStep(remaining);
     if (isNearlyDone && !_pulse.isAnimating) {
@@ -659,12 +662,14 @@ class _RunningTileState extends State<_RunningTile>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 10,
                 children: [
-                  if (minutes != null)
+                  if (minutes != null || isOverdue)
                     // Away from the icon; the bar below still starts there.
                     Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
-                        minutes < 60
+                        minutes == null
+                            ? l10n.remainingUnknown
+                            : minutes < 60
                             ? l10n.remainingMinutes(minutes)
                             : l10n.remainingHours(
                                 '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',

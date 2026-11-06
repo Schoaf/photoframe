@@ -276,6 +276,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get remainingUnknown => '? min left';
+
+  @override
   String get today => 'Today';
 
   @override

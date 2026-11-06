@@ -163,6 +163,7 @@
       }
     }
   },
+  "remainingUnknown": "noch ? min",
   "today": "Heute",
   "allDay": "ganztägig",
   "noEvents": "Heute und morgen keine Termine",

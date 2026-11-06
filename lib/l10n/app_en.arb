@@ -76,6 +76,7 @@
   "githubToken": "GitHub token (private repository only)",
   "remainingMinutes": "{minutes} min left",
   "remainingHours": "{time} h left",
+  "remainingUnknown": "? min left",
   "today": "Today",
   "allDay": "all day",
   "noEvents": "No events today or tomorrow",
