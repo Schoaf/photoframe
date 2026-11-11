@@ -139,7 +139,8 @@ class Kiosk(
             // Wasn't locked.
         }
         if (isDeviceOwner) {
-            dpm.setKeyguardDisabled(admin, false)
+            // The keyguard stays off: it would show at once, and the app
+            // (shown when locked) would stay in front on top of it.
             dpm.setStatusBarDisabled(admin, false)
             dpm.clearPackagePersistentPreferredActivities(admin, activity.packageName)
         }
