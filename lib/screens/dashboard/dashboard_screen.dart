@@ -57,6 +57,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
+      ..setOnConsoleMessage((message) {
+        if (message.level == JavaScriptLogLevel.error ||
+            message.level == JavaScriptLogLevel.warning) {
+          debugPrint('WebView ${message.level.name}: ${message.message}');
+        }
+      })
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (error) {
