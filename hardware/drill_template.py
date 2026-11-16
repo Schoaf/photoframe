@@ -9,13 +9,15 @@ from pathlib import Path
 PT = 72 / 25.4
 PAGE_W, PAGE_H = 210, 297
 
-# From the right inner edge / top, seen from the back.
-PLUNGERS = [(53.65, "Power"), (74.65, "Lauter/Leiser"), (85.65, "Lauter/Leiser")]
-PLUNGER_TOP = 12.35
-PLUNGER_HOLE = 5.5
-USB = (2.25, 19.6, 91, 109)
+INNER_H = 211.5
+# From the right inner edge / bottom, seen from the back.
+PLUNGERS = [(54.5, "Power"), (75.5, "Lauter/Leiser"), (86.5, "Lauter/Leiser")]
+PLUNGER_BOTTOM = 18.1
+PLUNGER_HOLE = 5
+# From the right inner edge / top.
+USB = (2.25, 20.6, 96.75, 114.75)
 # From the left inner edge / top, seen from the back.
-SPEAKERS = [(17.6, 25.6, 44.35, 63.35), (17.6, 25.6, 136.65, 155.65)]
+SPEAKERS = [(18.6, 26.6, 50.1, 69.1), (18.6, 26.6, 142.4, 161.4)]
 SPEAKER_HOLE = 5
 
 
@@ -69,23 +71,25 @@ class Page:
 
 def right_corner():
     page = Page()
-    cx, cy = 185, 25  # inner corner top right
-    page.text(20, 12, "Bohrschablone 1/2 - Rückwand von HINTEN, Ecke OBEN RECHTS", 11)
+    cx, cy = 185, 270  # inner corner bottom right
+    page.text(20, 12, "Bohrschablone 1/2 - Rückwand von HINTEN, Ecke UNTEN RECHTS", 11)
     page.width(0.8)
     page.line(cx - 150, cy, cx, cy)
-    page.line(cx, cy, cx, cy + 130)
-    page.text(cx - 150, cy - 2, "Oberkante Rückwand - hier anlegen")
-    page.text(cx - 40, cy + 135, "Rechte Kante - hier anlegen")
+    page.line(cx, cy, cx, cy - 180)
+    page.text(cx - 150, cy + 5, "Unterkante Rückwand - hier anlegen")
+    page.text(cx - 40, cy - 184, "Rechte Kante - hier anlegen")
     page.width(0.3)
     for i, (dx, label) in enumerate(PLUNGERS):
-        x, y = cx - dx, cy + PLUNGER_TOP
+        x, y = cx - dx, cy - PLUNGER_BOTTOM
         page.hole(x, y, PLUNGER_HOLE)
-        page.text(x - 6, y + 9 + (i % 2) * 5, label, 7)
-    page.text(cx - 95, cy + 32, f"3 Löcher {PLUNGER_HOLE} mm für die Druckstifte")
+        page.text(x - 6, y - 7 - (i % 2) * 5, label, 7)
+    page.text(cx - 95, cy - 45, f"3 Löcher {PLUNGER_HOLE} mm für die Druckstifte")
+    # USB measured from the top: the bottom edge is INNER_H below it.
     r1, r2, t1, t2 = USB
-    page.rect(cx - r2, cy + t1, cx - r1, cy + t2)
-    page.text(cx - 70, cy + (t1 + t2) / 2, "USB-Kabel: ausschneiden ->")
-    page.scale_bar(30, 250)
+    top = cy - INNER_H
+    page.rect(cx - r2, top + t1, cx - r1, top + t2)
+    page.text(cx - 70, top + (t1 + t2) / 2, "USB-Kabel: ausschneiden ->")
+    page.scale_bar(30, 40)
     return page
 
 
