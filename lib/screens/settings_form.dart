@@ -59,14 +59,12 @@ class SettingsForm extends ConsumerStatefulWidget {
     super.key,
     required this.section,
     required this.onShowSection,
-    this.onSaved,
   });
 
   final SettingsSection section;
 
   /// Shows a section, e.g. the one with an invalid entry.
   final ValueChanged<SettingsSection> onShowSection;
-  final VoidCallback? onSaved;
 
   @override
   ConsumerState<SettingsForm> createState() => _SettingsFormState();
@@ -280,7 +278,6 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context).settingsSaved)),
     );
-    widget.onSaved?.call();
   }
 
   @override

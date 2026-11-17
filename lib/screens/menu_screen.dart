@@ -189,7 +189,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
               child: SettingsForm(
                 section: _section,
                 onShowSection: (section) => setState(() => _section = section),
-                onSaved: () => Navigator.of(context).pop(),
               ),
             ),
           ],
