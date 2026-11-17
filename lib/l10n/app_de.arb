@@ -115,7 +115,7 @@
     }
   },
   "sectionHaInfo": "Wetter und Hinweise aus Home Assistant",
-  "haToken": "Token des Tablet-Benutzers",
+  "haToken": "Langlebiger Home-Assistant-Token des Tablet-Benutzers",
   "weatherEntity": "Wetter-Entität",
   "haInfoHint": "Einen eigenen HA-Benutzer „Tablet“ ohne Administrator-Rechte anlegen, dort unter Profil → Sicherheit ein langlebiges Token erstellen und mit diesem Benutzer auch im Dashboard anmelden. Hinweise kommen aus dem Sensor sensor.tablet_warnungen (siehe README).",
   "synologyWrongPassword": "Benutzer oder Passwort falsch.",

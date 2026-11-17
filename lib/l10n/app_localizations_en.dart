@@ -203,7 +203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionHaInfo => 'Weather and notices from Home Assistant';
 
   @override
-  String get haToken => 'Token of the tablet user';
+  String get haToken => 'Long-lived Home Assistant token of the tablet user';
 
   @override
   String get weatherEntity => 'Weather entity';

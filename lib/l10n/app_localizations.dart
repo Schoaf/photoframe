@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @haToken.
   ///
   /// In de, this message translates to:
-  /// **'Token des Tablet-Benutzers'**
+  /// **'Langlebiger Home-Assistant-Token des Tablet-Benutzers'**
   String get haToken;
 
   /// No description provided for @weatherEntity.
