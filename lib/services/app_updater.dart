@@ -4,10 +4,10 @@ import 'package:dio/dio.dart';
 
 import 'kiosk.dart';
 
-const _releaseAssetName = 'ha-display.apk';
+const _releaseAssetName = 'PhotoFrame.apk';
 
 /// The latest GitHub release: tag `v1.1.0+2` (pubspec version), asset
-/// `ha-display.apk` - as tool/publish_release.sh creates it.
+/// `PhotoFrame.apk` - as tool/publish_release.sh creates it.
 class ReleaseInfo {
   const ReleaseInfo({
     required this.versionName,
@@ -145,7 +145,7 @@ class AppUpdater {
     if (release.versionCode <= await kiosk.versionCode()) {
       return UpdateResult.upToDate;
     }
-    final apk = File('${Directory.systemTemp.path}/ha-display-update.apk');
+    final apk = File('${Directory.systemTemp.path}/PhotoFrame-update.apk');
     try {
       await _download(release.apkAssetUrl, apk.path);
     } on DioException catch (e) {

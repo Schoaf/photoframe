@@ -270,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String updateInvalidRelease(String tag) {
-    return 'The latest release \"$tag\" doesn\'t fit: it needs a tag like v1.1.0+2 and the file ha-display.apk.';
+    return 'The latest release \"$tag\" doesn\'t fit: it needs a tag like v1.1.0+2 and the file PhotoFrame.apk.';
   }
 
   @override

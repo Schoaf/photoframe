@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ha_display/services/app_updater.dart';
 
 void main() {
-  Map<String, dynamic> release(String tag, {String asset = 'ha-display.apk'}) =>
+  Map<String, dynamic> release(String tag, {String asset = 'PhotoFrame.apk'}) =>
       {
         'tag_name': tag,
         'assets': [

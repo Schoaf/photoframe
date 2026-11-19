@@ -18,5 +18,5 @@ if [ ! -f android/key.properties ]; then
 fi
 
 flutter build apk --release
-cp build/app/outputs/flutter-apk/app-release.apk build/ha-display.apk
-gh release create "$tag" build/ha-display.apk --title "$tag" --generate-notes
+cp build/app/outputs/flutter-apk/app-release.apk build/PhotoFrame.apk
+gh release create "$tag" build/PhotoFrame.apk --title "$tag" --generate-notes

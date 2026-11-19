@@ -74,7 +74,7 @@
   "updateFailed": "Update failed. {message}",
   "updateRepoNotFound": "Repository \"{repo}\" not found. Check the name (owner/name) – a private repository needs a token.",
   "updateNoRelease": "The repository has no release yet. Create one with tool/publish_release.sh.",
-  "updateInvalidRelease": "The latest release \"{tag}\" doesn't fit: it needs a tag like v1.1.0+2 and the file ha-display.apk.",
+  "updateInvalidRelease": "The latest release \"{tag}\" doesn't fit: it needs a tag like v1.1.0+2 and the file PhotoFrame.apk.",
   "updateTokenInvalid": "The GitHub token is invalid or expired.",
   "updateNoAccess": "No access to the repository. The token needs read access (Contents: Read).",
   "updateRateLimited": "GitHub counted too many requests. Try again later.",

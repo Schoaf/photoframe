@@ -271,7 +271,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String updateInvalidRelease(String tag) {
-    return 'Das neueste Release „$tag“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.';
+    return 'Das neueste Release „$tag“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei PhotoFrame.apk.';
   }
 
   @override

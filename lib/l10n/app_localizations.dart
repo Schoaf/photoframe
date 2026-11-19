@@ -545,7 +545,7 @@ abstract class AppLocalizations {
   /// No description provided for @updateInvalidRelease.
   ///
   /// In de, this message translates to:
-  /// **'Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.'**
+  /// **'Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei PhotoFrame.apk.'**
   String updateInvalidRelease(String tag);
 
   /// No description provided for @updateTokenInvalid.

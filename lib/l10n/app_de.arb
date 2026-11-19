@@ -154,7 +154,7 @@
     }
   },
   "updateNoRelease": "Das Repository hat noch kein Release. Mit tool/publish_release.sh eines erstellen.",
-  "updateInvalidRelease": "Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.",
+  "updateInvalidRelease": "Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei PhotoFrame.apk.",
   "@updateInvalidRelease": {
     "placeholders": {
       "tag": {
