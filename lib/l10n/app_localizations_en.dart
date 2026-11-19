@@ -256,8 +256,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String updateFailed(String message) {
-    return 'Update failed: $message';
+    return 'Update failed. $message';
   }
+
+  @override
+  String updateRepoNotFound(String repo) {
+    return 'Repository \"$repo\" not found. Check the name (owner/name) – a private repository needs a token.';
+  }
+
+  @override
+  String get updateNoRelease =>
+      'The repository has no release yet. Create one with tool/publish_release.sh.';
+
+  @override
+  String updateInvalidRelease(String tag) {
+    return 'The latest release \"$tag\" doesn\'t fit: it needs a tag like v1.1.0+2 and the file ha-display.apk.';
+  }
+
+  @override
+  String get updateTokenInvalid => 'The GitHub token is invalid or expired.';
+
+  @override
+  String get updateNoAccess =>
+      'No access to the repository. The token needs read access (Contents: Read).';
+
+  @override
+  String get updateRateLimited =>
+      'GitHub counted too many requests. Try again later.';
+
+  @override
+  String get updateOffline =>
+      'GitHub can\'t be reached. Check the internet connection.';
 
   @override
   String get updateRepo => 'GitHub repository';

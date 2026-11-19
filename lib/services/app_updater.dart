@@ -40,6 +40,29 @@ class ReleaseInfo {
 
 enum UpdateResult { upToDate, installing }
 
+enum UpdateProblem {
+  repoNotFound,
+  noRelease,
+  invalidRelease,
+  tokenInvalid,
+  noAccess,
+  rateLimited,
+  offline,
+  unknown,
+}
+
+/// A failed update check, with a reason the menu can show in words.
+class UpdateException implements Exception {
+  const UpdateException(this.problem, [this.detail = '']);
+
+  final UpdateProblem problem;
+  final String detail;
+
+  @override
+  String toString() =>
+      'UpdateException($problem${detail.isEmpty ? '' : ': $detail'})';
+}
+
 /// Checks the GitHub releases of [repo] and installs a newer APK.
 class AppUpdater {
   AppUpdater({
@@ -63,21 +86,71 @@ class AppUpdater {
     if (token.isNotEmpty) 'Authorization': 'Bearer $token',
   };
 
-  Future<ReleaseInfo?> latestRelease() async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      'https://api.github.com/repos/${repo.trim()}/releases/latest',
-      options: Options(headers: _headers),
-    );
-    return ReleaseInfo.fromJson(response.data!);
+  String get _repoUrl => 'https://api.github.com/repos/${repo.trim()}';
+
+  Future<ReleaseInfo> latestRelease() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '$_repoUrl/releases/latest',
+        options: Options(headers: _headers),
+      );
+      final release = ReleaseInfo.fromJson(response.data!);
+      if (release == null) {
+        throw UpdateException(
+          UpdateProblem.invalidRelease,
+          '${response.data!['tag_name']}',
+        );
+      }
+      return release;
+    } on DioException catch (e) {
+      // GitHub answers 404 both for a missing repo and for one without
+      // releases - ask for the repo to tell them apart.
+      if (e.response?.statusCode == 404) {
+        throw UpdateException(
+          await _repoExists()
+              ? UpdateProblem.noRelease
+              : UpdateProblem.repoNotFound,
+        );
+      }
+      throw _problemOf(e);
+    }
+  }
+
+  Future<bool> _repoExists() async {
+    try {
+      await _dio.get<void>(_repoUrl, options: Options(headers: _headers));
+      return true;
+    } on DioException {
+      return false;
+    }
+  }
+
+  static UpdateException _problemOf(DioException e) {
+    final response = e.response;
+    if (response == null) {
+      return UpdateException(UpdateProblem.offline, '${e.message ?? e.type}');
+    }
+    final status = response.statusCode;
+    if (status == 401) return const UpdateException(UpdateProblem.tokenInvalid);
+    if (status == 403 || status == 429) {
+      return response.headers.value('x-ratelimit-remaining') == '0'
+          ? const UpdateException(UpdateProblem.rateLimited)
+          : const UpdateException(UpdateProblem.noAccess);
+    }
+    return UpdateException(UpdateProblem.unknown, 'HTTP $status');
   }
 
   Future<UpdateResult> checkAndInstall() async {
     final release = await latestRelease();
-    if (release == null || release.versionCode <= await kiosk.versionCode()) {
+    if (release.versionCode <= await kiosk.versionCode()) {
       return UpdateResult.upToDate;
     }
     final apk = File('${Directory.systemTemp.path}/ha-display-update.apk');
-    await _download(release.apkAssetUrl, apk.path);
+    try {
+      await _download(release.apkAssetUrl, apk.path);
+    } on DioException catch (e) {
+      throw _problemOf(e);
+    }
     await kiosk.installUpdate(apk.path);
     return UpdateResult.installing;
   }

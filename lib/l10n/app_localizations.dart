@@ -527,8 +527,50 @@ abstract class AppLocalizations {
   /// No description provided for @updateFailed.
   ///
   /// In de, this message translates to:
-  /// **'Update fehlgeschlagen: {message}'**
+  /// **'Update fehlgeschlagen. {message}'**
   String updateFailed(String message);
+
+  /// No description provided for @updateRepoNotFound.
+  ///
+  /// In de, this message translates to:
+  /// **'Repository „{repo}“ nicht gefunden. Name prüfen (Besitzer/Name) – bei einem privaten Repository ist ein Token nötig.'**
+  String updateRepoNotFound(String repo);
+
+  /// No description provided for @updateNoRelease.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Repository hat noch kein Release. Mit tool/publish_release.sh eines erstellen.'**
+  String get updateNoRelease;
+
+  /// No description provided for @updateInvalidRelease.
+  ///
+  /// In de, this message translates to:
+  /// **'Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.'**
+  String updateInvalidRelease(String tag);
+
+  /// No description provided for @updateTokenInvalid.
+  ///
+  /// In de, this message translates to:
+  /// **'Das GitHub-Token ist ungültig oder abgelaufen.'**
+  String get updateTokenInvalid;
+
+  /// No description provided for @updateNoAccess.
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zugriff auf das Repository. Das Token braucht Lesezugriff (Contents: Read).'**
+  String get updateNoAccess;
+
+  /// No description provided for @updateRateLimited.
+  ///
+  /// In de, this message translates to:
+  /// **'GitHub hat zu viele Anfragen gezählt. Später erneut versuchen.'**
+  String get updateRateLimited;
+
+  /// No description provided for @updateOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'GitHub ist nicht erreichbar. Internetverbindung prüfen.'**
+  String get updateOffline;
 
   /// No description provided for @updateRepo.
   ///

@@ -59,6 +59,19 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
         UpdateResult.upToDate => l10n.updateUpToDate,
         UpdateResult.installing => l10n.updateInstalling,
       };
+    } on UpdateException catch (e) {
+      status = l10n.updateFailed(switch (e.problem) {
+        UpdateProblem.repoNotFound => l10n.updateRepoNotFound(
+          ref.read(settingsProvider).updateRepo.trim(),
+        ),
+        UpdateProblem.noRelease => l10n.updateNoRelease,
+        UpdateProblem.invalidRelease => l10n.updateInvalidRelease(e.detail),
+        UpdateProblem.tokenInvalid => l10n.updateTokenInvalid,
+        UpdateProblem.noAccess => l10n.updateNoAccess,
+        UpdateProblem.rateLimited => l10n.updateRateLimited,
+        UpdateProblem.offline => l10n.updateOffline,
+        UpdateProblem.unknown => e.detail,
+      });
     } on Exception catch (e) {
       status = l10n.updateFailed('$e');
     }

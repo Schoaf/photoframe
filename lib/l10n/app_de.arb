@@ -137,7 +137,7 @@
   },
   "updateUpToDate": "Die App ist aktuell.",
   "updateInstalling": "Update wird installiert – die App startet gleich neu.",
-  "updateFailed": "Update fehlgeschlagen: {message}",
+  "updateFailed": "Update fehlgeschlagen. {message}",
   "@updateFailed": {
     "placeholders": {
       "message": {
@@ -145,6 +145,27 @@
       }
     }
   },
+  "updateRepoNotFound": "Repository „{repo}“ nicht gefunden. Name prüfen (Besitzer/Name) – bei einem privaten Repository ist ein Token nötig.",
+  "@updateRepoNotFound": {
+    "placeholders": {
+      "repo": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNoRelease": "Das Repository hat noch kein Release. Mit tool/publish_release.sh eines erstellen.",
+  "updateInvalidRelease": "Das neueste Release „{tag}“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.",
+  "@updateInvalidRelease": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "updateTokenInvalid": "Das GitHub-Token ist ungültig oder abgelaufen.",
+  "updateNoAccess": "Kein Zugriff auf das Repository. Das Token braucht Lesezugriff (Contents: Read).",
+  "updateRateLimited": "GitHub hat zu viele Anfragen gezählt. Später erneut versuchen.",
+  "updateOffline": "GitHub ist nicht erreichbar. Internetverbindung prüfen.",
   "updateRepo": "GitHub-Repository",
   "githubToken": "GitHub-Token (nur bei privatem Repository)",
   "remainingMinutes": "noch {minutes} min",

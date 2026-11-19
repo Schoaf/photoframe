@@ -257,8 +257,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String updateFailed(String message) {
-    return 'Update fehlgeschlagen: $message';
+    return 'Update fehlgeschlagen. $message';
   }
+
+  @override
+  String updateRepoNotFound(String repo) {
+    return 'Repository „$repo“ nicht gefunden. Name prüfen (Besitzer/Name) – bei einem privaten Repository ist ein Token nötig.';
+  }
+
+  @override
+  String get updateNoRelease =>
+      'Das Repository hat noch kein Release. Mit tool/publish_release.sh eines erstellen.';
+
+  @override
+  String updateInvalidRelease(String tag) {
+    return 'Das neueste Release „$tag“ passt nicht: Es braucht einen Tag wie v1.1.0+2 und die Datei ha-display.apk.';
+  }
+
+  @override
+  String get updateTokenInvalid =>
+      'Das GitHub-Token ist ungültig oder abgelaufen.';
+
+  @override
+  String get updateNoAccess =>
+      'Kein Zugriff auf das Repository. Das Token braucht Lesezugriff (Contents: Read).';
+
+  @override
+  String get updateRateLimited =>
+      'GitHub hat zu viele Anfragen gezählt. Später erneut versuchen.';
+
+  @override
+  String get updateOffline =>
+      'GitHub ist nicht erreichbar. Internetverbindung prüfen.';
 
   @override
   String get updateRepo => 'GitHub-Repository';
