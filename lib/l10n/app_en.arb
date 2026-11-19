@@ -79,6 +79,7 @@
   "updateNoAccess": "No access to the repository. The token needs read access (Contents: Read).",
   "updateRateLimited": "GitHub counted too many requests. Try again later.",
   "updateOffline": "GitHub can't be reached. Check the internet connection.",
+  "updateDownloading": "Downloading the update … {percent} %",
   "updateRepo": "GitHub repository",
   "githubToken": "GitHub token (private repository only)",
   "remainingMinutes": "{minutes} min left",

@@ -572,6 +572,12 @@ abstract class AppLocalizations {
   /// **'GitHub ist nicht erreichbar. Internetverbindung prüfen.'**
   String get updateOffline;
 
+  /// No description provided for @updateDownloading.
+  ///
+  /// In de, this message translates to:
+  /// **'Update wird geladen … {percent} %'**
+  String updateDownloading(int percent);
+
   /// No description provided for @updateRepo.
   ///
   /// In de, this message translates to:

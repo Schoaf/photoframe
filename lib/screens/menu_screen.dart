@@ -163,8 +163,14 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                           )
                         : const Icon(Icons.system_update),
                     title: Text(l10n.checkForUpdates),
-                    subtitle: Text(
-                      _updateStatus ?? l10n.installedVersion(_versionCode ?? 0),
+                    subtitle: ValueListenableBuilder(
+                      valueListenable: AppUpdater.downloadProgress,
+                      builder: (context, progress, _) => Text(
+                        progress != null
+                            ? l10n.updateDownloading((progress * 100).round())
+                            : _updateStatus ??
+                                  l10n.installedVersion(_versionCode ?? 0),
+                      ),
                     ),
                     enabled:
                         settings.updateRepo.isNotEmpty && !_isCheckingUpdate,

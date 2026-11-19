@@ -291,6 +291,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'GitHub ist nicht erreichbar. Internetverbindung prüfen.';
 
   @override
+  String updateDownloading(int percent) {
+    return 'Update wird geladen … $percent %';
+  }
+
+  @override
   String get updateRepo => 'GitHub-Repository';
 
   @override

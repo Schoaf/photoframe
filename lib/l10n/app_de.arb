@@ -166,6 +166,14 @@
   "updateNoAccess": "Kein Zugriff auf das Repository. Das Token braucht Lesezugriff (Contents: Read).",
   "updateRateLimited": "GitHub hat zu viele Anfragen gezählt. Später erneut versuchen.",
   "updateOffline": "GitHub ist nicht erreichbar. Internetverbindung prüfen.",
+  "updateDownloading": "Update wird geladen … {percent} %",
+  "@updateDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "updateRepo": "GitHub-Repository",
   "githubToken": "GitHub-Token (nur bei privatem Repository)",
   "remainingMinutes": "noch {minutes} min",

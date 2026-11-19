@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'kiosk.dart';
 
@@ -70,7 +71,22 @@ class AppUpdater {
     this.token = '',
     this.kiosk = const Kiosk(),
     Dio? dio,
-  }) : _dio = dio ?? Dio();
+  }) : _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 20),
+               // Time without any data, not for the whole download.
+               receiveTimeout: const Duration(seconds: 60),
+             ),
+           );
+
+  /// Share of the APK downloaded so far, 0..1; null while no download runs.
+  static final downloadProgress = ValueNotifier<double?>(null);
+
+  /// The check that is running - the daily one and one from the menu
+  /// share it instead of downloading the APK twice.
+  static Future<UpdateResult>? _running;
 
   /// `owner/name`, e.g. `Schoaf/ha-display`.
   final String repo;
@@ -140,16 +156,22 @@ class AppUpdater {
     return UpdateException(UpdateProblem.unknown, 'HTTP $status');
   }
 
-  Future<UpdateResult> checkAndInstall() async {
+  Future<UpdateResult> checkAndInstall() =>
+      _running ??= _checkAndInstall().whenComplete(() => _running = null);
+
+  Future<UpdateResult> _checkAndInstall() async {
     final release = await latestRelease();
     if (release.versionCode <= await kiosk.versionCode()) {
       return UpdateResult.upToDate;
     }
     final apk = File('${Directory.systemTemp.path}/PhotoFrame-update.apk');
+    downloadProgress.value = 0;
     try {
       await _download(release.apkAssetUrl, apk.path);
     } on DioException catch (e) {
       throw _problemOf(e);
+    } finally {
+      downloadProgress.value = null;
     }
     await kiosk.installUpdate(apk.path);
     return UpdateResult.installing;
@@ -167,6 +189,12 @@ class AppUpdater {
       ),
     );
     final location = response.headers.value('location');
-    await _dio.download(location ?? assetUrl, path);
+    await _dio.download(
+      location ?? assetUrl,
+      path,
+      onReceiveProgress: (received, total) {
+        if (total > 0) downloadProgress.value = received / total;
+      },
+    );
   }
 }
