@@ -13,6 +13,11 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // The tablet has 2 GB RAM: keep only a few decoded photos - the current
+  // one, the next and a gallery page - instead of Flutter's 100 MB.
+  PaintingBinding.instance.imageCache
+    ..maximumSize = 60
+    ..maximumSizeBytes = 40 << 20;
   final settings = await loadSettings();
   final deviceId = await loadDeviceId();
   await SystemChrome.setPreferredOrientations([

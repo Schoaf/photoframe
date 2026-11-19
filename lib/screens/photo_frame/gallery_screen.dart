@@ -101,6 +101,8 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                     imageUrl: client.thumbnailUrl(item, size: ThumbnailSize.sm),
                     cacheKey: '${item.unitId}_${item.cacheKey}_sm',
                     fit: BoxFit.cover,
+                    // Decoded at tile size, not at the thumbnail's.
+                    memCacheWidth: 300,
                     fadeInDuration: const Duration(milliseconds: 150),
                     errorWidget: (_, _, _) =>
                         const ColoredBox(color: Color(0xFF202020)),

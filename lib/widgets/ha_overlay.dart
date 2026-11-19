@@ -805,6 +805,7 @@ class _NowPlayingTileState extends ConsumerState<_NowPlayingTile> {
                                 .resolve(picture)
                                 .toString(),
                             fit: BoxFit.cover,
+                            cacheWidth: 112,
                             errorBuilder: (_, _, _) => icon,
                           ),
                   ),
