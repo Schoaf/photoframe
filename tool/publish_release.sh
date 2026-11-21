@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds the signed release APK and publishes it as GitHub release
-# v<pubspec version> (e.g. v1.1.0+2) - tablets with HA Display install it
+# v<pubspec version> (e.g. v1.1.0+2) - tablets with PhotoFrame install it
 # on their next update check. Bump `version:` in pubspec.yaml first; the
 # number after "+" must grow with every release.
 set -euo pipefail

@@ -48,7 +48,7 @@ class InstallResultReceiver : BroadcastReceiver() {
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
         if (status != PackageInstaller.STATUS_SUCCESS) {
             android.util.Log.w(
-                "HaDisplayUpdate",
+                "PhotoFrameUpdate",
                 "Update failed: $status ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)}",
             )
         }

@@ -18,7 +18,7 @@ class Settings {
     this.mqttPort = 1883,
     this.mqttUser = '',
     this.mqttPassword = '',
-    this.deviceName = 'HA Display',
+    this.deviceName = 'PhotoFrame',
     this.dashboardUrl = '',
     this.haToken = '',
     this.weatherEntityId = 'weather.forecast_home',
@@ -218,7 +218,7 @@ Future<Settings> loadSettings() async {
     mqttPort: prefs.getInt('mqtt_port') ?? 1883,
     mqttUser: prefs.getString('mqtt_user') ?? '',
     mqttPassword: secrets[_kMqttPassword] ?? '',
-    deviceName: prefs.getString('device_name') ?? 'HA Display',
+    deviceName: prefs.getString('device_name') ?? 'PhotoFrame',
     dashboardUrl: prefs.getString('dashboard_url') ?? '',
     haToken: secrets[_kHaToken] ?? '',
     weatherEntityId:

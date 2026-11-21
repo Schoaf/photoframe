@@ -1,4 +1,4 @@
-# HA Display
+# PhotoFrame
 
 Kiosk app for a wall tablet: a photo frame with a Home Assistant overlay and dashboard. Built for the Samsung Galaxy Tab A 10.1 (2016, SM-T585, Android 8.1) in landscape; needs Android 8.0 or newer.
 
@@ -59,7 +59,7 @@ The settings screen opens on first start:
 
 - switch between photos and dashboard
 - settings, including the Tablet user's token, the weather entity and the time until the photos come back
-- "Kiosk beenden": the app goes behind the others and a bar with Back, Home, Recent apps and HA Display appears on screen. HA Display returns to the app, which locks again. Without the accessibility step under [Home Assistant](#home-assistant) there's no bar, and on a tablet with hidden keys no way back: don't use it before that step.
+- "Kiosk beenden": the app goes behind the others and a bar with Back, Home, Recent apps and PhotoFrame appears on screen. PhotoFrame returns to the app, which locks again. Without the accessibility step under [Home Assistant](#home-assistant) there's no bar, and on a tablet with hidden keys no way back: don't use it before that step.
 - "Device Owner entfernen" (needed before uninstalling)
 
 ### 3. Home Assistant user for the tablet

@@ -157,7 +157,7 @@ class MqttTopics {
     final device = {
       'identifiers': ['ha_display_$deviceId'],
       'name': deviceName,
-      'manufacturer': 'HA Display',
+      'manufacturer': 'PhotoFrame',
       'model': 'Android Tablet',
     };
     Map<String, Object> entity(String key, String name, String icon) => {

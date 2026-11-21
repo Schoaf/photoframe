@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In de, this message translates to:
-  /// **'HA Display'**
+  /// **'PhotoFrame'**
   String get appTitle;
 
   /// No description provided for @setupTitle.
   ///
   /// In de, this message translates to:
-  /// **'HA Display einrichten'**
+  /// **'PhotoFrame einrichten'**
   String get setupTitle;
 
   /// No description provided for @photosLoadError.

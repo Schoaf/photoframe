@@ -269,7 +269,7 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       mqttUser: _value('mqttUser'),
       mqttPassword: _text['mqttPassword']!.text,
       deviceName: _value('deviceName').isEmpty
-          ? 'HA Display'
+          ? 'PhotoFrame'
           : _value('deviceName'),
       pin: _value('pin'),
     );

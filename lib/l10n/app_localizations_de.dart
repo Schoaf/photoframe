@@ -10,10 +10,10 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'HA Display';
+  String get appTitle => 'PhotoFrame';
 
   @override
-  String get setupTitle => 'HA Display einrichten';
+  String get setupTitle => 'PhotoFrame einrichten';
 
   @override
   String get photosLoadError =>

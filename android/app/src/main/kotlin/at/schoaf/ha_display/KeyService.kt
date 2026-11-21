@@ -48,7 +48,7 @@ class KeyService : AccessibilityService() {
             addView(key("◀", "Back") { performGlobalAction(GLOBAL_ACTION_BACK) })
             addView(key("●", "Home") { performGlobalAction(GLOBAL_ACTION_HOME) })
             addView(key("■", "Recent apps") { performGlobalAction(GLOBAL_ACTION_RECENTS) })
-            addView(key("HA Display", "HA Display") { openApp() })
+            addView(key("PhotoFrame", "PhotoFrame") { openApp() })
         }
         windows.addView(
             row,

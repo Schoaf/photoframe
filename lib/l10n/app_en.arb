@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
-  "appTitle": "HA Display",
-  "setupTitle": "Set up HA Display",
+  "appTitle": "PhotoFrame",
+  "setupTitle": "Set up PhotoFrame",
   "photosLoadError": "Couldn't load the photos – retrying.",
   "photosEmpty": "The album is empty.",
   "soundOn": "Sound on",

@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <application
-        android:label="HA Display"
+        android:label="PhotoFrame"
         android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -56,7 +56,7 @@
         <service
             android:name=".KeyService"
             android:exported="true"
-            android:label="HA Display"
+            android:label="PhotoFrame"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

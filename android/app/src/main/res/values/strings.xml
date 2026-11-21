@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="key_service_description">Presses Back, Home and Recent apps for Home Assistant and shows these keys on screen while HA Display isn\'t in front.</string>
+    <string name="key_service_description">Presses Back, Home and Recent apps for Home Assistant and shows these keys on screen while PhotoFrame isn\'t in front.</string>
 </resources>
