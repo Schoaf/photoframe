@@ -88,7 +88,7 @@ class AppUpdater {
   /// share it instead of downloading the APK twice.
   static Future<UpdateResult>? _running;
 
-  /// `owner/name`, e.g. `Schoaf/ha-display`.
+  /// `owner/name`, e.g. `Schoaf/photoframe`.
   final String repo;
 
   /// Fine-grained token with read access to [repo] - only needed while the

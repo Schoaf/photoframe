@@ -693,7 +693,7 @@ class _SettingsFormState extends ConsumerState<SettingsForm> {
       ],
       SettingsSection.updates => [
         pair(
-          field('updateRepo', l10n.updateRepo, hint: 'Schoaf/ha-display'),
+          field('updateRepo', l10n.updateRepo, hint: 'Schoaf/photoframe'),
           field(
             'githubToken',
             l10n.githubToken,
