@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -43,6 +44,7 @@ class VideoSlide extends ConsumerStatefulWidget {
 class _VideoSlideState extends ConsumerState<VideoSlide> {
   VideoPlayerController? _controller;
   bool _hasEnded = false;
+  ValueListenable<double?>? _download;
 
   @override
   void initState() {
@@ -70,6 +72,7 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
 
   @override
   void dispose() {
+    _download?.removeListener(_onDownload);
     _controller?.dispose();
     super.dispose();
   }
@@ -84,9 +87,16 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
     if (file == null) {
       final client = ref.read(synologyClientProvider);
       unawaited(downloads.request(key, () => videoUrls(client, widget.item)));
+      if (_download == null) {
+        final download = downloads.progress(key);
+        download.addListener(_onDownload);
+        setState(() => _download = download);
+      }
       widget.onLengthKnown(null);
       return;
     }
+    _download?.removeListener(_onDownload);
+    _download = null;
     final controller = VideoPlayerController.file(file);
     try {
       await controller.initialize();
@@ -112,6 +122,13 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
     await controller.seekTo(Duration.zero);
     await controller.play();
     widget.onLengthKnown(length);
+  }
+
+  /// Plays as soon as the download is there, if the slide is still shown.
+  void _onDownload() {
+    if (_download?.value == 1 && widget.isActive && _controller == null) {
+      _load();
+    }
   }
 
   void _onTick() {
@@ -141,6 +158,20 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
             child: AspectRatio(
               aspectRatio: controller.value.aspectRatio,
               child: VideoPlayer(controller),
+            ),
+          ),
+        if (_download case final download? when !isPlaying)
+          // Thin white bar at the bottom while the video downloads.
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ValueListenableBuilder(
+              valueListenable: download,
+              builder: (context, progress, _) => LinearProgressIndicator(
+                value: progress,
+                minHeight: 3,
+                color: Colors.white,
+                backgroundColor: Colors.white24,
+              ),
             ),
           ),
       ],

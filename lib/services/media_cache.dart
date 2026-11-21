@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// Photos and videos of the album, each downloaded once and then taken from
@@ -59,11 +60,17 @@ class VideoDownloads {
 
   final CacheManager _cache;
   final _queue = <String, List<String> Function()>{};
+  final _progress = <String, ValueNotifier<double?>>{};
   bool _isRunning = false;
 
   /// The downloaded video, or null while it isn't there yet.
   Future<File?> file(String key) async =>
       (await _cache.getFileFromCache(key))?.file;
+
+  /// Share of the video downloaded, 0..1, null while waiting or of unknown
+  /// size; 1 once it is on the tablet.
+  ValueListenable<double?> progress(String key) =>
+      _progress.putIfAbsent(key, () => ValueNotifier(null));
 
   /// Queues the video; [urls] are tried in order (built when the download
   /// starts, as they carry the current session).
@@ -77,13 +84,24 @@ class VideoDownloads {
     _isRunning = true;
     while (_queue.isNotEmpty) {
       final key = _queue.keys.first;
+      final progress = _progress.putIfAbsent(key, () => ValueNotifier(null));
       for (final url in _queue[key]!()) {
         try {
-          await _cache.downloadFile(url, key: key);
+          await for (final response in _cache.getFileStream(
+            url,
+            key: key,
+            withProgress: true,
+          )) {
+            progress.value = switch (response) {
+              DownloadProgress(:final progress) => progress,
+              _ => 1,
+            };
+          }
           break;
         } on Exception {
           // Not converted on the NAS (404) or Wi-Fi gone - try the next URL;
           // a failed video is queued again when it comes up next time.
+          progress.value = null;
         }
       }
       _queue.remove(key);

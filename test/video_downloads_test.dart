@@ -15,13 +15,21 @@ void main() {
     cache = _Cache();
     downloaded = [];
     when(() => cache.getFileFromCache(any())).thenAnswer((_) async => null);
-    when(() => cache.downloadFile(any(), key: any(named: 'key')))
-        .thenAnswer((invocation) async {
-          final url = invocation.positionalArguments.first as String;
-          downloaded.add(url);
-          if (url.contains('fail')) throw Exception('404');
-          return FileInfo(fs.file(url), FileSource.Online, DateTime(2100), url);
-        });
+    when(
+      () => cache.getFileStream(
+        any(),
+        key: any(named: 'key'),
+        withProgress: any(named: 'withProgress'),
+      ),
+    ).thenAnswer((invocation) {
+      final url = invocation.positionalArguments.first as String;
+      downloaded.add(url);
+      if (url.contains('fail')) return Stream.error(Exception('404'));
+      return Stream.fromIterable([
+        DownloadProgress(url, 100, 50),
+        FileInfo(fs.file(url), FileSource.Online, DateTime(2100), url),
+      ]);
+    });
   });
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
@@ -31,6 +39,19 @@ void main() {
     await settle();
     await settle();
     expect(downloaded, ['fail', 'original']);
+  });
+
+  test('reports the progress up to done', () async {
+    final downloads = VideoDownloads(cache);
+    final seen = <double?>[];
+    downloads
+        .progress('a')
+        .addListener(() => seen.add(downloads.progress('a').value));
+    await downloads.request('a', () => ['a1']);
+    for (var i = 0; i < 5; i++) {
+      await settle();
+    }
+    expect(seen, [0.5, 1]);
   });
 
   test('downloads one video after the other, each once', () async {
