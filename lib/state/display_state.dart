@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +37,8 @@ class DisplayState {
   /// only Home Assistant switches the screen.
   final bool isChildLocked;
 
-  /// Private mode: the agenda isn't shown.
+  /// Private mode: the agenda isn't shown. Ends at midnight, in case it's
+  /// forgotten.
   final bool isPrivate;
 
   /// 0..255, null for the system brightness.
@@ -97,6 +100,7 @@ final kioskProvider = Provider<Kiosk>((ref) => const Kiosk());
 
 class DisplayNotifier extends Notifier<DisplayState> {
   Kiosk get _kiosk => ref.read(kioskProvider);
+  Timer? _privateEnd;
 
   @override
   DisplayState build() {
@@ -112,9 +116,16 @@ class DisplayNotifier extends Notifier<DisplayState> {
     _kiosk.isAutoBrightness().then((isAuto) {
       if (isAuto) state = state.copyWith(isAutoBrightness: true);
     });
+    ref.onDispose(() => _privateEnd?.cancel());
     SharedPreferences.getInstance().then((prefs) {
-      if (prefs.getBool(_privateKey) ?? false) {
+      if (!(prefs.getBool(_privateKey) ?? false)) return;
+      final since = prefs.getInt(_privateSinceKey);
+      if (since != null &&
+          _isBeforeToday(DateTime.fromMillisecondsSinceEpoch(since))) {
+        setPrivate(false);
+      } else {
         state = state.copyWith(isPrivate: true);
+        _endPrivateAtMidnight();
       }
     });
     return DisplayState(mode: _availableMode(settings, settings.startMode));
@@ -171,8 +182,22 @@ class DisplayNotifier extends Notifier<DisplayState> {
 
   Future<void> setPrivate(bool isPrivate) async {
     state = state.copyWith(isPrivate: isPrivate);
+    _privateEnd?.cancel();
+    if (isPrivate) _endPrivateAtMidnight();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_privateKey, isPrivate);
+    await prefs.setInt(_privateSinceKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  void _endPrivateAtMidnight() {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day + 1);
+    _privateEnd = Timer(midnight.difference(now), () => setPrivate(false));
+  }
+
+  static bool _isBeforeToday(DateTime time) {
+    final now = DateTime.now();
+    return time.isBefore(DateTime(now.year, now.month, now.day));
   }
 
   Future<void> setBrightness(int brightness) async {
@@ -209,6 +234,7 @@ class DisplayNotifier extends Notifier<DisplayState> {
       state = state.copyWith(speechTestRequests: state.speechTestRequests + 1);
 
   static const _privateKey = 'private_mode';
+  static const _privateSinceKey = 'private_mode_since';
 
   /// null leaves the brightness to Android.
   double? get _windowBrightness => switch (state) {

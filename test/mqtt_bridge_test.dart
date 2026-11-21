@@ -264,6 +264,18 @@ void main() {
     );
   });
 
+  test('private mode from yesterday is off after a restart', () async {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    SharedPreferences.setMockInitialValues({
+      'private_mode': true,
+      'private_mode_since': yesterday.millisecondsSinceEpoch,
+    });
+    container.invalidate(displayProvider);
+    container.read(displayProvider);
+    await pumpEventQueue();
+    expect(container.read(displayProvider).isPrivate, isFalse);
+  });
+
   test('ignores unknown payloads and topics', () {
     expect(command('mode', 'tv'), isFalse);
     expect(command('x', '1'), isFalse);
