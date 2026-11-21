@@ -35,7 +35,10 @@ object AppUpdater {
                 context,
                 sessionId,
                 Intent(context, InstallResultReceiver::class.java),
-                PendingIntent.FLAG_UPDATE_CURRENT,
+                // From Android 12 the flag is required; mutable, because the
+                // installer adds the result to the intent.
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0,
             )
             session.commit(callback.intentSender)
         }
