@@ -17,8 +17,8 @@ if [ ! -f android/key.properties ]; then
   exit 1
 fi
 
-# Only 32-bit ARM: the SM-T585 runs armeabi-v7a, and the APK shrinks to a
-# third - the tablets download it over Wi-Fi.
-flutter build apk --release --target-platform android-arm
+# Only ARM: stock Android on the SM-T585 is 32-bit, LineageOS 64-bit. Without
+# x86 the APK is much smaller - the tablets download it over Wi-Fi.
+flutter build apk --release --target-platform android-arm,android-arm64
 cp build/app/outputs/flutter-apk/app-release.apk build/PhotoFrame.apk
 gh release create "$tag" build/PhotoFrame.apk --title "$tag" --generate-notes
