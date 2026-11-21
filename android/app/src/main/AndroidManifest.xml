@@ -34,14 +34,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Device owner makes this the persistent Home app (Kiosk.setAsHome),
-                 so Home returns here and the tablet boots into it. -->
+        </activity>
+        <!-- The Home entry: device owner makes it the persistent Home app
+             (Kiosk.setAsHome), so Home returns here and the tablet boots into
+             it. "Kiosk beenden" switches it off, so Home opens the launcher. -->
+        <activity-alias
+            android:name=".HomeAlias"
+            android:targetActivity=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.HOME"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
-        </activity>
+        </activity-alias>
         <receiver
             android:name=".KioskAdminReceiver"
             android:exported="true"

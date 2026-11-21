@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
@@ -144,15 +145,32 @@ class Kiosk(
             dpm.setStatusBarDisabled(admin, false)
             dpm.clearPackagePersistentPreferredActivities(admin, activity.packageName)
         }
+        // Otherwise Android keeps this app as Home, and Home would bring the
+        // kiosk right back.
+        setHomeEnabled(false)
+    }
+
+    private val homeAlias = ComponentName(activity, "${activity.packageName}.HomeAlias")
+
+    private fun setHomeEnabled(isEnabled: Boolean) {
+        activity.packageManager.setComponentEnabledSetting(
+            homeAlias,
+            if (isEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.DONT_KILL_APP,
+        )
     }
 
     // Home always returns here, and the tablet boots straight into the app.
     private fun setAsHome() {
+        setHomeEnabled(true)
+        // Drops an older entry for MainActivity itself.
+        dpm.clearPackagePersistentPreferredActivities(admin, activity.packageName)
         val filter = IntentFilter(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_HOME)
             addCategory(Intent.CATEGORY_DEFAULT)
         }
-        dpm.addPersistentPreferredActivity(admin, filter, ComponentName(activity, MainActivity::class.java))
+        dpm.addPersistentPreferredActivity(admin, filter, homeAlias)
     }
 
     // Returns false when the screen can't really be turned off (not device
