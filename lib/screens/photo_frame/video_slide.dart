@@ -97,7 +97,13 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
     }
     _download?.removeListener(_onDownload);
     _download = null;
-    final controller = VideoPlayerController.file(file);
+    // Platform view: the frames go straight to the screen like in VLC,
+    // instead of being copied into Flutter's picture - too slow on the
+    // tablets' Mali GPU.
+    final controller = VideoPlayerController.file(
+      file,
+      viewType: VideoViewType.platformView,
+    );
     try {
       await controller.initialize();
     } on Exception {
