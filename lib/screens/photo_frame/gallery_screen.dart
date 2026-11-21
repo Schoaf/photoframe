@@ -9,6 +9,7 @@ import '../../models/photo_item.dart';
 import '../../services/synology_photos_client.dart';
 import '../../state/photos.dart';
 import '../../theme/app_theme.dart';
+import '../../services/media_cache.dart';
 
 /// Back to the slideshow when nobody touches the gallery for this long.
 const _idleTimeout = Duration(minutes: 2);
@@ -100,6 +101,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                   CachedNetworkImage(
                     imageUrl: client.thumbnailUrl(item, size: ThumbnailSize.sm),
                     cacheKey: '${item.unitId}_${item.cacheKey}_sm',
+                    cacheManager: mediaCache,
                     fit: BoxFit.cover,
                     // Decoded at tile size, not at the thumbnail's.
                     memCacheWidth: 300,

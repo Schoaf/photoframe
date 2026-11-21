@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -72,32 +74,34 @@ class _VideoSlideState extends ConsumerState<VideoSlide> {
     super.dispose();
   }
 
+  /// Plays the downloaded file; until the download is there the slide
+  /// shows the poster like a photo.
   Future<void> _load() async {
-    final client = ref.read(synologyClientProvider);
-    final urls = [
-      // Synology's H.264 transcode first: the tablet can't decode 4K/HEVC
-      // originals.
-      if (widget.item.hasConvertedVideo) client.convertedVideoUrl(widget.item),
-      client.originalVideoUrl(widget.item),
-    ];
-    for (final url in urls) {
-      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-      try {
-        await controller.initialize();
-      } on Exception {
-        await controller.dispose();
-        continue;
-      }
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
-      controller.addListener(_onTick);
-      setState(() => _controller = controller);
-      if (widget.isActive) await _restart(controller);
+    final downloads = ref.read(videoDownloadsProvider);
+    final key = videoCacheKey(widget.item);
+    final file = await downloads.file(key);
+    if (!mounted) return;
+    if (file == null) {
+      final client = ref.read(synologyClientProvider);
+      unawaited(downloads.request(key, () => videoUrls(client, widget.item)));
+      widget.onLengthKnown(null);
       return;
     }
-    if (mounted) widget.onLengthKnown(null);
+    final controller = VideoPlayerController.file(file);
+    try {
+      await controller.initialize();
+    } on Exception {
+      await controller.dispose();
+      if (mounted) widget.onLengthKnown(null);
+      return;
+    }
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
+    controller.addListener(_onTick);
+    setState(() => _controller = controller);
+    if (widget.isActive) await _restart(controller);
   }
 
   Future<void> _restart(VideoPlayerController controller) async {

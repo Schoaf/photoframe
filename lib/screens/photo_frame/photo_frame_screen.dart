@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/photo_item.dart';
+import '../../services/media_cache.dart';
 import '../../services/synology_photos_client.dart';
 import '../../state/display_state.dart';
 import '../../state/photos.dart';
@@ -19,6 +20,9 @@ import 'video_slide.dart';
 
 const _overlayDuration = Duration(seconds: 5);
 const _pageAnimation = Duration(milliseconds: 900);
+
+/// How many slides ahead videos are downloaded.
+const _videosAhead = 6;
 
 /// Full-screen slideshow of the album. A tap shows the controls for a few
 /// seconds; swiping changes the photo.
@@ -73,11 +77,25 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
     // Videos schedule themselves once their length is known.
     if (!item.isVideo) _scheduleNext(_interval);
     _precache(items[(page + 1) % items.length]);
+    _downloadVideos(items, page);
   }
 
   void _precache(PhotoItem item) {
     if (item.isVideo) return;
     precacheImage(_imageProvider(item, ThumbnailSize.xl), context);
+  }
+
+  /// Videos are shown only once downloaded - start on the coming ones
+  /// early, so they are there in time.
+  void _downloadVideos(List<PhotoItem> items, int page) {
+    final client = ref.read(synologyClientProvider);
+    final downloads = ref.read(videoDownloadsProvider);
+    for (var i = 0; i <= _videosAhead && i < items.length; i++) {
+      final item = items[(page + i) % items.length];
+      if (item.isVideo) {
+        downloads.request(videoCacheKey(item), () => videoUrls(client, item));
+      }
+    }
   }
 
   CachedNetworkImageProvider _imageProvider(
@@ -87,6 +105,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
     final client = ref.read(synologyClientProvider);
     return CachedNetworkImageProvider(
       client.thumbnailUrl(item, size: size),
+      cacheManager: mediaCache,
       // The URL carries the session id, which changes on every login.
       cacheKey: '${item.unitId}_${item.cacheKey}_${size.name}',
     );
