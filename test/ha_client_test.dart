@@ -192,6 +192,11 @@ void main() {
                   .toIso8601String(),
               'fortschritt': '58',
               'ansicht': 'waschmaschine',
+              'eigenschaften': [
+                {'name': 'Programm', 'wert': 'Baumwolle', 'einheit': null},
+                {'name': 'Temperatur', 'wert': '40', 'einheit': '°C'},
+                {'name': 'ohne Wert'},
+              ],
             },
             {'name': 'Roborock', 'start': null, 'fortschritt': 40},
             {'ende': 'ohne Namen'},
@@ -206,6 +211,12 @@ void main() {
       expect(running.first.fraction(now), closeTo(0.58, 0.001));
       expect(running.first.view, 'waschmaschine');
       expect(running.last.view, isNull);
+      expect(running.first.properties.map((property) => property.name), [
+        'Programm',
+        'Temperatur',
+      ]);
+      expect(running.first.properties.last.unit, '°C');
+      expect(running.last.properties, isEmpty);
       expect(parseRunning(null), isEmpty);
     });
 

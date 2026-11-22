@@ -201,15 +201,31 @@ template:
             ] %}
             {% for name, icon, ende, fortschritt, status in geraete %}
               {% if has_value(ende) and (as_datetime(states(ende)) > now() or is_state(status, 'Läuft')) %}
-                {% set ns.items = ns.items + [{'name': name, 'icon': icon, 'ende': states(ende), 'fortschritt': states(fortschritt) | float(none)}] %}
+                {% set ns.items = ns.items + [{'name': name, 'icon': icon, 'quelle': ende, 'ende': states(ende), 'fortschritt': states(fortschritt) | float(none)}] %}
               {% endif %}
             {% endfor %}
             {% if is_state('binary_sensor.roborock_qrevo_s5v_reinigen', 'on') %}
-              {% set ns.items = ns.items + [{'name': 'Roborock', 'icon': 'mdi:robot-vacuum',
+              {% set ns.items = ns.items + [{'name': 'Roborock', 'icon': 'mdi:robot-vacuum', 'quelle': 'binary_sensor.roborock_qrevo_s5v_reinigen',
                 'start': (now() - timedelta(minutes=states('sensor.roborock_qrevo_s5v_reinigungszeit') | float(0))).isoformat(),
                 'fortschritt': states('sensor.roborock_qrevo_s5v_reinigungsfortschritt') | float(none)}] %}
             {% endif %}
-            {{ ns.items }}
+            {% set out = namespace(items=[]) %}
+            {% for item in ns.items %}
+              {% set dev = device_id(item.quelle) %}
+              {% set geraet = (device_attr(dev, 'name_by_user') or device_attr(dev, 'name')) if dev else '' %}
+              {% set props = namespace(list=[]) %}
+              {% for id in (device_entities(dev) if dev else [])
+                   | reject('is_hidden_entity')
+                   | reject('match', 'button\\.|update\\.|event\\.|image\\.|camera\\.')
+                   | select('has_value') %}
+                {% set name = state_attr(id, 'friendly_name') or id %}
+                {% set kurz = name[geraet | length:] | trim if geraet and name.startswith(geraet) else name %}
+                {% set props.list = props.list + [{'name': kurz or name, 'wert': state_translated(id),
+                  'einheit': state_attr(id, 'unit_of_measurement')}] %}
+              {% endfor %}
+              {% set out.items = out.items + [dict(item, eigenschaften=props.list | sort(attribute='name'))] %}
+            {% endfor %}
+            {{ out.items }}
 ```
 
 **Running appliances:**
@@ -218,6 +234,7 @@ template:
 - `ende` is the end time. Without it (Roborock), the app estimates the remaining time from `start` and `fortschritt` (0–100).
 - The fifth column of `geraete` is an optional status entity. While it says `Läuft`, an appliance past its end time stays listed, with a full bar and "noch ? min".
 - An appliance disappears once its end time has passed. The "fertig" notice takes over from there.
+- A tap on an appliance opens a card with what its device reports (program, temperature, spin speed, …): every entity of the device behind `quelle`, without hidden ones, buttons and updates. Hide an entity in HA to drop it from the card. An appliance with `ansicht` opens that dashboard view instead.
 
 **Appliance done:** Switch these on in the settings under "Wetter und Hinweise". Both only happen while the screen is on, and only when an appliance leaves the list in its last 5 minutes or above 95 %, so a cancelled program stays quiet. The blinking lasts 30 seconds or until a tap. The voice is Android's text to speech, at the volume set below that switch; "Probe" plays a sample. That volume is the media volume while it speaks, so music playing on the tablet changes along with it until the voice ends.
 

@@ -14,6 +14,7 @@ import '../state/ha_info.dart';
 import '../state/settings.dart';
 import '../theme/app_theme.dart';
 import '../utils/ha_icons.dart';
+import 'device_card.dart';
 
 /// Readable on any photo without a box around it.
 const _textShadows = [
@@ -181,7 +182,15 @@ class _HaOverlayState extends ConsumerState<HaOverlay> {
           bottom: bottom,
           child: _RunningRow(
             devices: info.running,
-            onOpen: (device) => opener(device.view ?? settings.devicesView),
+            onOpen: (device) => switch (device) {
+              _ when isChildLocked => null,
+              RunningDevice(:final view?) => opener(view),
+              RunningDevice(properties: [_, ...]) => () => showDeviceCard(
+                context,
+                device.name,
+              ),
+              _ => opener(settings.devicesView),
+            },
           ),
         ),
       ],
@@ -568,6 +577,15 @@ class _SlideInState extends State<_SlideIn>
   );
 }
 
+/// "noch 42 min", "noch 1:20 h", or "noch ? min" for null [minutes].
+String remainingText(AppLocalizations l10n, int? minutes) => minutes == null
+    ? l10n.remainingUnknown
+    : minutes < 60
+    ? l10n.remainingMinutes(minutes)
+    : l10n.remainingHours(
+        '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
+      );
+
 /// From here on an appliance's tile turns orange ...
 const _almostDone = Duration(minutes: 3);
 
@@ -667,13 +685,7 @@ class _RunningTileState extends State<_RunningTile>
                     Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
-                        minutes == null
-                            ? l10n.remainingUnknown
-                            : minutes < 60
-                            ? l10n.remainingMinutes(minutes)
-                            : l10n.remainingHours(
-                                '${minutes ~/ 60}:${'${minutes % 60}'.padLeft(2, '0')}',
-                              ),
+                        remainingText(l10n, minutes),
                         style: TextStyle(
                           color: foreground,
                           fontSize: 22,

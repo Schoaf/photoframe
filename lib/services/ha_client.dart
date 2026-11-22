@@ -104,6 +104,7 @@ class RunningDevice {
     this.start,
     this.progress,
     this.view,
+    this.properties = const [],
   });
 
   final String name;
@@ -116,6 +117,9 @@ class RunningDevice {
 
   /// Dashboard view for this appliance, if the template names one.
   final String? view;
+
+  /// What the device reports (program, temperature, ...), for its card.
+  final List<DeviceProperty> properties;
 
   /// Past its [end] and still running - how much longer is anyone's guess.
   bool isOverdue(DateTime now) {
@@ -155,6 +159,18 @@ class RunningDevice {
     return (now.difference(start).inSeconds / end.difference(start).inSeconds)
         .clamp(0, 1);
   }
+}
+
+/// One entity of a running appliance, as the template lists it under
+/// `eigenschaften`.
+class DeviceProperty {
+  const DeviceProperty({required this.name, required this.value, this.unit});
+
+  final String name;
+
+  /// HA's translated state, e.g. `Baumwolle`, `40`, an ISO time.
+  final String value;
+  final String? unit;
 }
 
 /// A device on the charger, from the `ladend` attribute of
@@ -230,6 +246,17 @@ List<RunningDevice> parseRunning(HaEntity? entity) {
           start: time(entry['start']),
           progress: _number(entry['fortschritt']),
           view: entry['ansicht'] as String?,
+          properties: [
+            if (entry['eigenschaften'] case final List<dynamic> properties)
+              for (final property
+                  in properties.whereType<Map<String, dynamic>>())
+                if (property['name'] is String && property['wert'] != null)
+                  DeviceProperty(
+                    name: property['name'] as String,
+                    value: '${property['wert']}',
+                    unit: property['einheit'] as String?,
+                  ),
+          ],
         ),
   ];
 }
