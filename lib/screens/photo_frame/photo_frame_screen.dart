@@ -16,6 +16,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/slide_duration.dart';
 import '../../widgets/ha_overlay.dart';
 import 'gallery_screen.dart';
+import 'short_swipe_physics.dart';
 import 'video_slide.dart';
 
 const _overlayDuration = Duration(seconds: 5);
@@ -40,6 +41,7 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
   Timer? _slideTimer;
   Timer? _overlayTimer;
   int _page = 0;
+  int _swipeStartPage = 0;
   bool _hasStarted = false;
   bool _isGalleryOpen = false;
   bool _isOverlayVisible = false;
@@ -232,33 +234,43 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          PageView.builder(
-            controller: _controller,
-            physics: isChildLocked
-                ? const NeverScrollableScrollPhysics()
-                : null,
-            onPageChanged: (page) => _onPageChanged(page, list),
-            itemBuilder: (context, page) {
-              final item = list[page % list.length];
-              if (item.isVideo) {
-                return VideoSlide(
-                  key: ValueKey('video_$page'),
-                  item: item,
-                  poster: _imageProvider(item, ThumbnailSize.xl),
-                  isActive: page == _page && !_isGalleryOpen && isShown,
-                  isSoundOn: page == _page && _isSoundOn,
-                  interval: _interval,
-                  onLengthKnown: (length) => _onVideoLength(page, length),
-                  onEnded: () => _onVideoEnded(page),
-                );
+          NotificationListener<ScrollStartNotification>(
+            onNotification: (notification) {
+              if (notification.dragDetails != null) {
+                _swipeStartPage = _controller.page?.round() ?? _page;
               }
-              return Image(
-                image: _imageProvider(item, ThumbnailSize.xl),
-                fit: BoxFit.contain,
-                gaplessPlayback: true,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              );
+              return false;
             },
+            child: PageView.builder(
+              controller: _controller,
+              physics: isChildLocked
+                  ? const NeverScrollableScrollPhysics()
+                  : ShortSwipePhysics(startPage: () => _swipeStartPage),
+              // The physics snap to the pages themselves.
+              pageSnapping: false,
+              onPageChanged: (page) => _onPageChanged(page, list),
+              itemBuilder: (context, page) {
+                final item = list[page % list.length];
+                if (item.isVideo) {
+                  return VideoSlide(
+                    key: ValueKey('video_$page'),
+                    item: item,
+                    poster: _imageProvider(item, ThumbnailSize.xl),
+                    isActive: page == _page && !_isGalleryOpen && isShown,
+                    isSoundOn: page == _page && _isSoundOn,
+                    interval: _interval,
+                    onLengthKnown: (length) => _onVideoLength(page, length),
+                    onEnded: () => _onVideoEnded(page),
+                  );
+                }
+                return Image(
+                  image: _imageProvider(item, ThumbnailSize.xl),
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                );
+              },
+            ),
           ),
           haOverlay,
           // No gallery or controls for children - they get the lock below.
