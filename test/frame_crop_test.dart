@@ -16,11 +16,19 @@ void main() {
     expect(FrameCrop.parse('[rahmen ganz]')?.isWhole, isTrue);
   });
 
+  test('reads a part zoomed out past the photo', () {
+    expect(
+      FrameCrop.parse('[rahmen -0.3000 0.0000 1.3000 1.0000]')?.rect,
+      const Rect.fromLTRB(-0.3, 0, 1.3, 1),
+    );
+  });
+
   test('ignores descriptions without a valid marker', () {
     expect(FrameCrop.parse(null), isNull);
     expect(FrameCrop.parse('Urlaub'), isNull);
     expect(FrameCrop.parse('[rahmen 0.5 0.2 0.4 0.5]'), isNull);
-    expect(FrameCrop.parse('[rahmen 0 0 1.5 1]'), isNull);
+    // Nothing of the photo in it.
+    expect(FrameCrop.parse('[rahmen 1.2 0 2 1]'), isNull);
   });
 
   test('a photo item carries the crop of its description', () {

@@ -5,7 +5,8 @@ const frameAspect = 16 / 10;
 
 /// How a photo is to be shown, set with the photoframe-client app and kept
 /// in the photo's description on the NAS: a 16:10 part of it ([rect],
-/// fractions of the upright photo) or the whole photo ([isWhole]).
+/// fractions of the upright photo) or the whole photo ([isWhole]). Zoomed
+/// out further than the photo covers, [rect] reaches past 0 or 1.
 ///
 /// The marker format is shared with photoframe-client - change both.
 class FrameCrop {
@@ -19,7 +20,7 @@ class FrameCrop {
   final bool isWhole;
 
   static final _marker = RegExp(
-    r'\[rahmen(?: ganz| ([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+))\]',
+    r'\[rahmen(?: ganz| (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+))\]',
   );
 
   /// The crop in [description], or null when it has none.
@@ -32,7 +33,8 @@ class FrameCrop {
     ];
     if (values.contains(null)) return null;
     final [left!, top!, right!, bottom!] = values;
-    if (left < 0 || top < 0 || right > 1 || bottom > 1) return null;
+    // Some of the photo must be in it.
+    if (left >= 1 || top >= 1 || right <= 0 || bottom <= 0) return null;
     if (left >= right || top >= bottom) return null;
     return FrameCrop(Rect.fromLTRB(left, top, right, bottom));
   }
