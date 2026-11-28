@@ -1,3 +1,5 @@
+import 'frame_crop.dart';
+
 /// One photo or video of the Synology Photos album.
 class PhotoItem {
   const PhotoItem({
@@ -9,6 +11,7 @@ class PhotoItem {
     this.takenAt,
     this.place,
     this.convertedQuality,
+    this.crop,
   });
 
   /// Item id (download/streaming).
@@ -30,6 +33,9 @@ class PhotoItem {
   final String? convertedQuality;
 
   bool get hasConvertedVideo => convertedQuality != null;
+
+  /// How photoframe-client says to show the photo; null when not set.
+  final FrameCrop? crop;
 
   /// Reads one entry of `SYNO.Foto.Browse.Item list`.
   factory PhotoItem.fromJson(Map<String, dynamic> json) {
@@ -61,6 +67,7 @@ class PhotoItem {
       convertedQuality: qualities.contains('medium')
           ? 'medium'
           : qualities.firstOrNull,
+      crop: FrameCrop.parse(additional['description'] as String?),
     );
   }
 }

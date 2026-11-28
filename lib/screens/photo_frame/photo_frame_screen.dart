@@ -16,6 +16,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/slide_duration.dart';
 import '../../widgets/ha_overlay.dart';
 import 'gallery_screen.dart';
+import 'photo_slide.dart';
 import 'short_swipe_physics.dart';
 import 'video_slide.dart';
 
@@ -263,11 +264,9 @@ class _PhotoFrameScreenState extends ConsumerState<PhotoFrameScreen> {
                     onEnded: () => _onVideoEnded(page),
                   );
                 }
-                return Image(
+                return PhotoSlide(
                   image: _imageProvider(item, ThumbnailSize.xl),
-                  fit: BoxFit.contain,
-                  gaplessPlayback: true,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  crop: item.crop,
                 );
               },
             ),

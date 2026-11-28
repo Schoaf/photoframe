@@ -105,6 +105,7 @@ class SynologyPhotosClient {
         'resolution',
         'address',
         'video_convert',
+        'description',
       ]),
     }, (json) => items.add(PhotoItem.fromJson(json)));
     return items;
